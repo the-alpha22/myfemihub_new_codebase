@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "bridgeai-e6529",
+  "private_key_id": "a1067e94e977f896bf9c1b8a0c3aeeb671860d57",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDM5pzSs3ywCK8Y\n7cACbC8K25afhri7H+5ld/nhzhfaR5UdTJrl/GM5epB2p6KsxuXmgk9XzmuB5xKo\n7SNLVn1sGnYqoDaKX4Dd8VSP8/buEoaC1Xs+7RolaMS5YmDERPVNV5MRZJiwVllg\nmjIOyf0nu+VC4cuSvIn8bVwObCIr6oXeDL6/GGCIm8act2DMdIIIUjVfCmR4yWlt\nIZXhh5pWvdZg9peUJ3Apm45HNeZYmG8pA/HStEbb86TXAEmkwyDDjEMdpSfCj3+Z\nL59u+thY/4E0C68bS3YN1jLGrZPm66ZYZJX4xxpUxDlUzA4o4T3I4iQNZRUYs1c/\n6HQb9z41AgMBAAECggEAANOQdczaO+d6hpWE2klbJhhRfdoUJK/mJh6lQoy1gU9a\nI1udSdYCdV7Bm9i2JUS3XorSkYRA2eX5Hp+FvhQoBJczRLzdvJ6gTuKDprCL6GGL\ndFfCG+AlKRVYDqitAVx6q3ywSljmb9RrFb6+7kg3q0KELQuy/5tzh4+WFqwrP1u5\nb7+70SCBxlrx1gEDbOCiuZdBTB2OqlCdLWJy1kuNTydM0xr2FEgbXr87oeGXjCxA\nta6ixYEuaaEEkfdK+BObVUTEg79M4Iny4VTyZuZjQ1av1kZ2RAyj/7ieyj0UAK76\nxrVcx3A98kHl6+cWj/kUDw/Xa2pKBDolMpKBl/vO8wKBgQD/hNOAEsWt4xf8MUWn\n/NCmPzi+FWfK+YlC8ASGo1/iaH0+QiIRFKLlRHm5yZ2nn5Oeq3ErsICZj8PanTvz\nZ0OG9lBsCtr4BkCZlsQS7HuA5l3xbFwbRftdmRPXvqFrdEIrM6hzkauJSHJX8mVd\nxfu1QxNxZnUcMefEBqv2zBPXlwKBgQDNSWLEWnGYei5LujD494yHAytKYNewZ2rg\nsyr+h9gYVSANinsUj1RQShX+i3S6WaOMOlGHSzgpnQE3RGZBbRHoEBqK7SCIfwx1\nTGrKfOPiCpc16Z/FLgUuCdact+KWHjVEE46+4G6REoSEcuQ8lLVWf3SKPyRxcGZw\n4SeKqwtyEwKBgQCKZr3Qv1pHp5wUQ/QA29WAVvo7K4j+zk7k7PDmpJOJJSPBlzyw\nl8br/D0avvQgGTVyWlaAXagqhU6GmWghnStcbQp+mxqkAW74QkuOHH2BAkacQB9b\nvno65nFzCJSSiXRVxjNV9e89+vnEXU0+j8CZG+3qHJ8OWJG7AgofMccFnQKBgQCQ\nKVPxve39/Pdb+LIBdJ48Be61udJeMBHvIAM2YaFQXR84QyJx6sFz7MMLUVW0s9RV\nWnL8hsc2+enrrN3+XiDwDbcGDsYE9OuDyBlKf2/swjE0DA9GAi5jCUesILo/X5Fa\ncD2TL7qVqCJlfOVo4amCx9jIaNUn0J4v8P26tKlB/wKBgBJe9UmZ/+DaGh2+i0X/\nTuQNXvjgb1K2L3GuKmFQILKVKdQowHVA6D/lSXK0wuGz7KxDn2jOk++Cip5d3gXM\nnAQRmEUh3HRf4U+ptNluSvn8mqkRTvQk4Ax89bF7RFCry8N0tgo4iDbNpQjDLEq5\na5KV+ZpM8PS7LzyOi6FoFXtC\n-----END PRIVATE KEY-----\n",
+  "client_email": "bridgeai-e6529@appspot.gserviceaccount.com",
+  "client_id": "108497113168891627622",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/bridgeai-e6529%40appspot.gserviceaccount.com"
+}

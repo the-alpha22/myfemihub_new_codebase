@@ -1,0 +1,70 @@
+{
+  "project_info": {
+    "project_number": "450652021008",
+    "project_id": "femihub-7047b",
+    "storage_bucket": "femihub-7047b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:450652021008:android:e7a3063d13bf850d344595",
+        "android_client_info": {
+          "package_name": "obtek.technologies.bridge_ai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "450652021008-1hot2lpa689kcosekd93qi9lv6c9tdat.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "obtek.technologies.bridge_ai",
+            "certificate_hash": "bf0a17334dc73402df23919009f0c2f9bae072bb"
+          }
+        },
+        {
+          "client_id": "450652021008-31qa1a6aa9fuu7rlsijceafjh8lcfe61.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "obtek.technologies.bridge_ai",
+            "certificate_hash": "f52b9e5378170dff8f2f4f791d4a8d6fc0187dba"
+          }
+        },
+        {
+          "client_id": "450652021008-37laao481p4m08g93987vj47o03o8t1o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "obtek.technologies.bridge_ai",
+            "certificate_hash": "cfa9964ec111abbb6303e2b92ebf741370c3a4d1"
+          }
+        },
+        {
+          "client_id": "450652021008-oe3o3t2cakf5tbcno2lgesbjf19o5n19.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCW3jsfNpuybXqMOocB9wOth4kdMAUP0Zg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "450652021008-oe3o3t2cakf5tbcno2lgesbjf19o5n19.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "450652021008-20pja2esg9ch00qnt75c3p5njbb8phga.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "obtek.technologies.bridgeAi"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
