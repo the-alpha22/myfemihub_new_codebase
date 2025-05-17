@@ -16,7 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class PaymentFinal extends StatefulWidget {
   PaymentFinal({
@@ -42,6 +41,7 @@ class PaymentFinal extends StatefulWidget {
 class _PaymentFinalState extends State<PaymentFinal> {
   final ref = "ref${DateTime.now().microsecondsSinceEpoch.toString()}";
   TextEditingController paymentnumber = TextEditingController();
+  TextEditingController phone = TextEditingController(text: "+256");
   var oCcy = NumberFormat("#,##0", "en_US");
   final Random random = new Random();
   var scaffoldKey = GlobalKey<ScaffoldState>();
@@ -50,7 +50,6 @@ class _PaymentFinalState extends State<PaymentFinal> {
   var profit = CartController.instance.totalCartPrice.value -
       CartController.instance.totalCartAdminPrice.value;
   String initialCountry = 'UG';
-  PhoneNumber number = PhoneNumber(isoCode: 'UG');
   late String phoneNumber;
   @override
   Widget build(BuildContext context) {
@@ -108,38 +107,34 @@ class _PaymentFinalState extends State<PaymentFinal> {
                               SizedBox(
                                 height: 9,
                               ),
-                              InternationalPhoneNumberInput(
-                                onInputChanged: (PhoneNumber number) {
-                                  print(number.phoneNumber);
-                                  setState(() {
-                                    phoneNumber = number.phoneNumber!;
-                                  });
-                                },
-                                onInputValidated: (bool value) {
-                                  print(value);
-                                },
-                                selectorConfig: SelectorConfig(
-                                  selectorType: PhoneInputSelectorType.DIALOG,
-                                ),
-                                ignoreBlank: false,
-                                autoValidateMode: AutovalidateMode.disabled,
-                                selectorTextStyle: GoogleFonts.poppins(
-                                    color: Colors.black.withOpacity(0.7),
-                                    fontSize: 13),
-                                initialValue: number,
-                                formatInput: true,
-                                textStyle: GoogleFonts.poppins(
-                                    color: Colors.black.withOpacity(0.7),
-                                    fontSize: 13),
-                                hintText: "Phone Number",
-                                keyboardType: TextInputType.numberWithOptions(
-                                    signed: true, decimal: true),
-                                inputBorder: OutlineInputBorder(),
-                                onSaved: (PhoneNumber number) {
-                                  print('On Saved: $number');
-                                },
+                               Container(
+                          decoration: BoxDecoration(
+                            color: bgcolor,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: TextFormField(
+                            controller: phone,
+                            keyboardType: TextInputType.phone,
+                            style: GoogleFonts.poppins(
+                              color: Colors.black87,
+                              fontSize: 12,
+                            ),
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide.none,
                               ),
-                              SizedBox(
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Phone Required';
+                              } else if (value.length < 5) {
+                                return 'Enter a valid phone number';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        SizedBox(
                                 height: 10,
                               ),
                               ElevatedButton(
@@ -154,7 +149,7 @@ class _PaymentFinalState extends State<PaymentFinal> {
 
                                       requestToPay(
                                           context,
-                                          phoneNumber.substring(1),
+                                          phone.text.trim().substring(1),
                                           (CartController.instance
                                                   .totalCartPrice.value +
                                               widget.delivery +

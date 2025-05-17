@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>450652021008-20pja2esg9ch00qnt75c3p5njbb8phga.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.450652021008-20pja2esg9ch00qnt75c3p5njbb8phga</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>450652021008-1hot2lpa689kcosekd93qi9lv6c9tdat.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBdCEEksmLrIFgXuiRtz9u7EK0EbpfaOLE</string>
+	<key>GCM_SENDER_ID</key>
+	<string>450652021008</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>obtek.technologies.bridgeAi</string>
+	<key>PROJECT_ID</key>
+	<string>femihub-7047b</string>
+	<key>STORAGE_BUCKET</key>
+	<string>femihub-7047b.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:450652021008:ios:0fb6909a2a9e6142344595</string>
+</dict>
+</plist>

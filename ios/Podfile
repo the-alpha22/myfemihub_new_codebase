@@ -31,7 +31,7 @@ target 'Runner' do
   pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '11.10.0'
   use_frameworks!
 
-  pod 'PhoneNumberKit', '~> 3.7.6'
+  # pod 'PhoneNumberKit', '~> 3.7.6'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
