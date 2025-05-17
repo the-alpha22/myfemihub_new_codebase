@@ -126,3 +126,4 @@ flutter:
     - assets/.env
     - assets/fonts/Domaine.otf
     - assets/fonts/DomaineDispNar-Black.otf
+    - shorebird.yaml
