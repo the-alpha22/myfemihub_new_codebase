@@ -1,6 +1,5 @@
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/firebase.dart';
-import 'package:bridge_ai/controllers/sms.dart';
 import 'package:bridge_ai/models/user.dart';
 import 'package:bridge_ai/screens/authentication/intro.dart';
 import 'package:bridge_ai/screens/authentication/login.dart';
@@ -16,6 +15,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:crypto/crypto.dart';
 
 class UserController extends GetxController {
   static UserController instance = Get.find();
@@ -308,6 +309,108 @@ class UserController extends GetxController {
           color: Colors.white,
         ),
       )));
+    }
+  }
+
+signInWithApple(BuildContext context) async {
+    try {
+      String sha256ofString(String input) {
+        final bytes = utf8.encode(input); // Convert input string to bytes
+        final digest = sha256.convert(bytes); // Generate SHA-256 hash
+        return digest.toString(); // Convert hash to hexadecimal string
+      }
+
+      final rawNonce = generateNonce();
+      final nonce = sha256ofString(rawNonce);
+      print("\n=========Retrieving Apple Sign in Credentials=============\n");
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+        webAuthenticationOptions: WebAuthenticationOptions(
+          clientId: 'obtek.mymedikoz.app',
+          redirectUri: Uri.parse(
+            'https://mymedikoz-app.firebaseapp.com/__/auth/handler',
+          ),
+        ),
+      );
+      print("\n=========Starting Apple Sign in=============\n");
+
+      if (appleCredential.authorizationCode.isEmpty) {
+        // If the sign-in process was aborted (user canceled the flow)
+        print("Sign-in process was canceled by the user.");
+        return;
+      }
+      print(
+        "\n=========Starting Apple Sign in Credentials OAuth=============\n",
+      );
+
+      final outhCredential = OAuthProvider("apple.com").credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(outhCredential).then((
+        result,
+      ) async {
+        bool oldUser = await checkEmailAvailability(
+          appleCredential.email ?? "",
+        );
+        if (!oldUser) {
+          String _userId = result.user!.uid;
+          name.text =
+              (appleCredential.givenName != null
+                  ? appleCredential.givenName
+                  : result.user!.displayName != null
+                  ? result.user!.displayName!.split(" ").first
+                  : (appleCredential.email ?? "")
+                      .replaceAll("@gmail.com", "")
+                      .replaceAll("@icloud.com", "")) ??
+              "";
+          email.text = appleCredential.email ?? "";
+          phone.text = result.user!.phoneNumber ?? "";
+          _addUserToFirestore(_userId, 'Not Yet Pregnant');
+          _clearControllers();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Account Created Successfully",
+                style: GoogleFonts.quicksand(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Welcome Back",
+                style: GoogleFonts.quicksand(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          );
+        }
+      });
+    } on Exception catch (e) {
+      // TODO
+      print('\n=================exception $e============\n');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "${e.toString()}",
+            style: GoogleFonts.quicksand(fontSize: 12, color: Colors.white),
+          ),
+        ),
+      );
     }
   }
 

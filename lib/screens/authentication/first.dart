@@ -73,7 +73,7 @@ class _FirstState extends State<First> {
                     width: MediaQuery.of(context).size.width * 0.9,
                     child: Center(
                       child: Text(
-                        "Welcome to bridge_ai, your trusted partner for a safe and healthy pregnancy journey.",
+                        "Welcome to FemiHub, your trusted partner for a safe and healthy pregnancy journey.",
                         style: GoogleFonts.poppins(
                             color: Colors.black87.withOpacity(0.4),
                             fontSize: 14),

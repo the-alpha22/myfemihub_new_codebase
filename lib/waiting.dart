@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/controllers/dynamicLink.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class Waiting extends StatefulWidget {
@@ -10,12 +11,11 @@ class Waiting extends StatefulWidget {
 }
 
 class _WaitingState extends State<Waiting> {
-  final DynamicLinkService _dynamicLinkService = DynamicLinkService();
   @override
   void initState() {
     super.initState();
     Timer(Duration(seconds: 3), () {
-      _dynamicLinkService.initUniLinks();
+      Get.offAllNamed("/home");
     });
   }
 
