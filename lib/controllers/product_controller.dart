@@ -61,11 +61,10 @@ class ProducsController extends GetxController {
   }
 
   Future<List<ProductModel>> getProductsByCategory(
-      String category, String usercategory) async {
+      String category,) async {
     try {
       var querySnapshot = await firebaseFirestore
           .collection(collection)
-          .where("usercategory", isEqualTo: usercategory)
           .where("category", isEqualTo: category)
           .get();
 

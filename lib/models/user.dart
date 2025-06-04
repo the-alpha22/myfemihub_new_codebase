@@ -33,7 +33,9 @@ class UserModel {
   late bool medicalcard;
   late String assignednurse;
   late var expirydate;
-  late var perioddate;
+  late DateTime? perioddate;
+  late int periodLength;
+  late int periodCycle;
   late List medications;
   late var info;
   late var appointments;
@@ -54,34 +56,37 @@ class UserModel {
   //     "assignednurse": "",
   //     "medications": []
 
-  UserModel(
-      {required this.id,
-      required this.name,
-      required this.email,
-      required this.paid,
-      required this.phone,
-      required this.admin,
-      required this.assignednurse,
-      required this.medicalcard,
-      required this.medications,
-      required this.pic,
-      required this.perioddate,
-      required this.nurse,
-      required this.info,
-      required this.appointments,
-      required this.expirydate,
-      required this.chatids,
-      required this.facility,
-      required this.about,
-      required this.city,
-      required this.balance,
-      required this.tokens,
-      required this.duedate,
-      required this.speciality,
-      required this.cart,
-      required this.country,
-      required this.searches,
-      required this.stage});
+  UserModel({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.paid,
+    required this.phone,
+    required this.admin,
+    required this.assignednurse,
+    required this.medicalcard,
+    required this.medications,
+    required this.pic,
+    required this.perioddate,
+    required this.periodLength,
+    required this.periodCycle,
+    required this.nurse,
+    required this.info,
+    required this.appointments,
+    required this.expirydate,
+    required this.chatids,
+    required this.facility,
+    required this.about,
+    required this.city,
+    required this.balance,
+    required this.tokens,
+    required this.duedate,
+    required this.speciality,
+    required this.cart,
+    required this.country,
+    required this.searches,
+    required this.stage,
+  });
 
   UserModel.fromSnapshot(DocumentSnapshot snapshot) {
     Map data = (snapshot.data() as Map<dynamic, dynamic>);
@@ -103,7 +108,10 @@ class UserModel {
     chatids = data['chatids'];
     speciality = data['speciality'];
     expirydate = data['expirydate'];
-    perioddate = data['perioddate'];
+    perioddate =
+        data['perioddate'] != null ? data['perioddate'].toDate() : null;
+    periodCycle = data["periodCycle"] ?? 0;
+    periodLength = data["periodLength"] ?? 0;
     appointments = data['appointments'];
     balance = data['balance'];
     tokens = data['tokens'];
@@ -137,7 +145,10 @@ class UserModel {
       medications: data['medications'] ?? [],
       nurse: data['nurse'] ?? false,
       expirydate: data['expirydate'],
-      perioddate: data['perioddate'],
+      perioddate:
+          data['perioddate'] != null ? data['perioddate'].toDate() : null,
+      periodCycle: data["periodCycle"] ?? 0,
+      periodLength: data["periodLength"] ?? 0,
       appointments: data['appointments'] ?? [],
       chatids: data['chatids'],
       speciality: data['speciality'] ?? "",

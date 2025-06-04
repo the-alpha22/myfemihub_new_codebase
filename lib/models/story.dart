@@ -15,6 +15,9 @@ class StoryModel {
   late String userid;
   late bool anonymous;
   late String usercategory;
+  late int bookmarks;
+  late int likes;
+  late int comments;
 
   StoryModel({
     required this.id,
@@ -24,6 +27,9 @@ class StoryModel {
     required this.views,
     required this.anonymous,
     required this.usercategory,
+    required this.bookmarks,
+    required this.likes,
+    required this.comments,
   });
 
   StoryModel.fromMap(Map<String, dynamic> data) {
@@ -34,6 +40,9 @@ class StoryModel {
     userid = data[USERID] ?? "";
     anonymous = data[ANONYMOUS] ?? true;
     usercategory = data["usercategory"] ?? "Not Yet Pregnant";
+    bookmarks = data["bookmarks"] ?? 0;
+    likes = data["likes"] ?? 0;
+    comments = data["comments"] ?? 0;
   }
   static StoryModel fromSnapshot(DocumentSnapshot snapshot) {
     final data = snapshot.data() as Map<String, dynamic>;

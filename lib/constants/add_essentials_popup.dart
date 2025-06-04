@@ -1,6 +1,6 @@
 
 import 'package:bridge_ai/constants/app_constants.dart';
-import 'package:bridge_ai/screens/shop/addproduct.dart';
+import 'package:bridge_ai/pages/shop/addproduct.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';

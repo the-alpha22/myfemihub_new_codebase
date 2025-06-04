@@ -1,8 +1,7 @@
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/firebase.dart';
 import 'package:bridge_ai/models/user.dart';
-import 'package:bridge_ai/screens/authentication/intro.dart';
-import 'package:bridge_ai/screens/authentication/login.dart';
+import 'package:bridge_ai/pages/authentication/login.dart';
 import 'package:bridge_ai/waiting.dart';
 import 'package:bridge_ai/widgets/helpers/showLoading.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -55,14 +54,10 @@ class UserController extends GetxController {
 
     if (auth.currentUser == null) {
       print('Send to signin');
-      Get.offAll(() => Intro(), transition: Transition.rightToLeft);
+      Get.offAllNamed("/onboarding");
     } else {
       isLoggedIn = true;
-      if (currentRoute != "") {
-        Get.toNamed("$currentRoute");
-      } else {
-        Get.offAll(() => Waiting(), routeName: "/");
-      }
+      Get.offAllNamed("/redirect");
     }
   }
 
@@ -105,7 +100,7 @@ class UserController extends GetxController {
         notificationPrompt.showNotification(
             flutterLocalNotificationsPlugin,
             "Hey there 🥰",
-            "Welcome back to bridge_ai",
+            "Welcome back to femihub",
             "login",
             "login",
             1,
@@ -160,14 +155,14 @@ class UserController extends GetxController {
         sendEmail(
             "${name.text.trim().capitalize}",
             email.text.trim(),
-            "Congratulations on creating an account with bridge_ai! We're so excited to have you on board.\n\nbridge_ai is a comprehensive mobile application designed to support and empower women throughout their journey of pregnancy and motherhood. We offer a range of features and resources to ensure a smooth and healthy pregnancy experience, personalized care, and access to expert healthcare professionals.\n\nWe're so glad you're here!",
-            "Welcome to bridge_ai");
+            "Congratulations on creating an account with femihubios! We're so excited to have you on board.\n\nfemihubios is a comprehensive mobile application designed to support and empower women throughout their journey of pregnancy and motherhood. We offer a range of features and resources to ensure a smooth and healthy pregnancy experience, personalized care, and access to expert healthcare professionals.\n\nWe're so glad you're here!",
+            "Welcome to femihubios");
         _clearControllers();
         dismissLoadingWidget();
         notificationPrompt.showNotification(
             flutterLocalNotificationsPlugin,
             "Hey ${name.text.trim().capitalize}",
-            "Welcome to bridge_ai Community🥰",
+            "Welcome to femihubios Community🥰",
             "signup",
             "signup",
             1,
@@ -277,7 +272,7 @@ class UserController extends GetxController {
             SnackBar(
               content: Text(
                 "Account Created Successfully",
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w500),
@@ -289,7 +284,7 @@ class UserController extends GetxController {
             SnackBar(
               content: Text(
                 "Welcome Back",
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w500),
@@ -304,7 +299,7 @@ class UserController extends GetxController {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(
         "${e.toString()}",
-        style: GoogleFonts.poppins(
+        style: GoogleFonts.montserrat(
           fontSize: 12,
           color: Colors.white,
         ),
@@ -457,7 +452,7 @@ signInWithApple(BuildContext context) async {
             actionCodeSettings: ActionCodeSettings(
               url: "https://bridgeai.page.link/",
               handleCodeInApp: true,
-              androidPackageName: "obtek.technologies.bridge_ai",
+              androidPackageName: "obtek.technologies.femihubios",
               androidMinimumVersion: "1",
             ))
         .then((value) {
