@@ -1,4 +1,5 @@
 import 'package:bridge_ai/constants/app_constants.dart';
+import 'package:bridge_ai/controllers/ai_controller.dart';
 import 'package:bridge_ai/pages/home/extra_pages/family_planning_pages/contraceptions.dart';
 import 'package:bridge_ai/pages/home/extra_pages/family_planning_pages/fertility.dart';
 import 'package:bridge_ai/pages/home/extra_pages/family_planning_pages/preconception_health.dart';
@@ -7,10 +8,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
-class FamilyPlanningPage extends StatelessWidget {
+class FamilyPlanningPage extends StatefulWidget {
   const FamilyPlanningPage({super.key});
 
+  @override
+  State<FamilyPlanningPage> createState() => _FamilyPlanningPageState();
+}
+
+class _FamilyPlanningPageState extends State<FamilyPlanningPage> {
+  @override
+  void initState() {
+    super.initState();
+    getInfo();
+  }
+
+  getInfo() async {
+    generalInfo = await suggestFamilyPlanningInfo();
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  bool isLoading = true;
+  String generalInfo = "";
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,53 +52,83 @@ class FamilyPlanningPage extends StatelessWidget {
         elevation: 0,
       ),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            HomeTapWidget(
-              svgLocation: "images/pill-light.svg",
-              title: "Contraceptions",
-              description: "Resources about birth control methods",
-              onTap: () {
-                Get.to(
-                  () => ContraceptionInfoPage(),
-                  transition: Transition.rightToLeft,
-                );
-              },
-              color: primaryColor,
-            ),
-            SizedBox(height: 12),
-            HomeTapWidget(
-              svgLocation: "images/drop-light.svg",
-              title: "Fertility",
-              description: "Resources about fertility",
-              onTap: () {
-                Get.to(
-                  () => FertilityInfoPage(),
-                  transition: Transition.rightToLeft,
-                );
-              },
-              color: const Color.fromARGB(255, 26, 136, 29),
-            ),
-            SizedBox(height: 12),
-            HomeTapWidget(
-              svgLocation: "images/face-mask-light.svg",
-              title: "Preconception Health",
-              description: "Resources about preconception health",
-              onTap: () {
-                Get.to(
-                  () => PreconceptionHealthPage(),
-                  transition: Transition.rightToLeft,
-                );
-              },
-              color: Colors.teal,
-            ),
-            SizedBox(height: 12),
-          ],
-        ),
-      ),
+      body:
+          isLoading
+              ? Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Lottie.asset(
+                    'images/femihub_loading.json',
+                    repeat: true,
+                    frameRate: FrameRate(30),
+                    height: 180,
+                  ),
+                ),
+              )
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HomeTapWidget(
+                      svgLocation: "images/pill-light.svg",
+                      title: "Contraceptions",
+                      description: "Resources about birth control methods",
+                      onTap: () {
+                        Get.to(
+                          () => ContraceptionInfoPage(),
+                          transition: Transition.rightToLeft,
+                        );
+                      },
+                      color: primaryColor,
+                    ),
+                    SizedBox(height: 12),
+                    HomeTapWidget(
+                      svgLocation: "images/drop-light.svg",
+                      title: "Fertility",
+                      description: "Resources about fertility",
+                      onTap: () {
+                        Get.to(
+                          () => FertilityInfoPage(),
+                          transition: Transition.rightToLeft,
+                        );
+                      },
+                      color: const Color.fromARGB(255, 26, 136, 29),
+                    ),
+                    SizedBox(height: 12),
+                    HomeTapWidget(
+                      svgLocation: "images/face-mask-light.svg",
+                      title: "Preconception Health",
+                      description: "Resources about preconception health",
+                      onTap: () {
+                        Get.to(
+                          () => PreconceptionHealthPage(),
+                          transition: Transition.rightToLeft,
+                        );
+                      },
+                      color: Colors.teal,
+                    ),
+                    SizedBox(height: 24),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: bgcolor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Text(
+                          generalInfo,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                  ],
+                ),
+              ),
     );
   }
 }

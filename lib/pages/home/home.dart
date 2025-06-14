@@ -36,7 +36,7 @@ class _HomePageNewState extends State<HomePageNew> {
           "${message.notification!.title}",
           "${message.notification!.body}",
           "firebase",
-          "bridge_ai",
+          "femihub",
           1,
           "${message.data["route"]}",
         );
@@ -85,14 +85,23 @@ class _HomePageNewState extends State<HomePageNew> {
   String mtoken = "";
 
   void getToken() async {
-    await FirebaseMessaging.instance.getToken().then((token) {
-      setState(() {
-        mtoken = token!;
-        userController.updateUserData({"token": mtoken});
+    try {
+      await FirebaseMessaging.instance.getToken().then((token) {
+        setState(() {
+          mtoken = token!;
+          if (userController.userModel.value != null) {
+            userController.updateUserData({"token": mtoken});
+          }
+        });
       });
-    });
+    } catch (e) {
+      print("\n=====Token Error: $e==========\n");
+    }
   }
 
+  void dispose(){
+    super.dispose();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,10 +132,17 @@ class _HomePageNewState extends State<HomePageNew> {
                   title: "Period Tracker",
                   description: "Track your period cycle",
                   onTap: () {
-                    if (userController.userModel.value!.perioddate != null) {
-                      Get.to(()=> PeriodTrackerScreen(), transition: Transition.rightToLeft);
+                    if (userController.userModel.value != null &&
+                        userController.userModel.value!.perioddate != null) {
+                      Get.to(
+                        () => PeriodTrackerScreen(),
+                        transition: Transition.rightToLeft,
+                      );
                     } else {
-                      Get.to(()=> DueDateCalculatorScreen(), transition: Transition.rightToLeft);
+                      Get.to(
+                        () => DueDateCalculatorScreen(),
+                        transition: Transition.rightToLeft,
+                      );
                     }
                   },
                   color: primaryColor,
@@ -137,7 +153,10 @@ class _HomePageNewState extends State<HomePageNew> {
                   title: "Family Planner",
                   description: "Access free family planning resources",
                   onTap: () {
-                    Get.to(()=> FamilyPlanningPage(), transition: Transition.rightToLeft);
+                    Get.to(
+                      () => FamilyPlanningPage(),
+                      transition: Transition.rightToLeft,
+                    );
                   },
                   color: const Color.fromARGB(255, 2, 53, 96),
                 ),
@@ -147,7 +166,10 @@ class _HomePageNewState extends State<HomePageNew> {
                   title: "Chatbot",
                   description: "Get answers to your feminine questions",
                   onTap: () {
-                    Get.to(()=> ChatBotPage(), transition: Transition.rightToLeft);
+                    Get.to(
+                      () => ChatBotPage(),
+                      transition: Transition.rightToLeft,
+                    );
                   },
                   color: const Color.fromARGB(255, 0, 66, 2),
                 ),
@@ -163,13 +185,16 @@ class _HomePageNewState extends State<HomePageNew> {
                 SizedBox(height: 12),
                 Column(
                   children: [
-                    for(Category category in categories)...{
-                      CategoryCard(category: category, onTap: () {
-                        Get.offAllNamed("/shop/${category.title}");
-                      },)
-                    }
+                    for (Category category in categories) ...{
+                      CategoryCard(
+                        category: category,
+                        onTap: () {
+                          Get.offAllNamed("/shop/${category.title}");
+                        },
+                      ),
+                    },
                   ],
-                )
+                ),
               ],
             ),
           ),

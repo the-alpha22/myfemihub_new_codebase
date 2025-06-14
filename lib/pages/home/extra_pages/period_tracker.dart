@@ -1,9 +1,11 @@
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/controllers.dart';
+import 'package:bridge_ai/controllers/ai_controller.dart';
 import 'package:bridge_ai/pages/home/extra_pages/due_date.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class PeriodTrackerScreen extends StatefulWidget {
@@ -12,6 +14,12 @@ class PeriodTrackerScreen extends StatefulWidget {
 }
 
 class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
+  @override
+  void initState() {
+    super.initState();
+    getInfo();
+  }
+
   final DateTime lastPeriodStartDate =
       userController.userModel.value!.perioddate ?? DateTime.now();
   final int periodLength = userController.userModel.value!.periodLength;
@@ -40,6 +48,34 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
     });
   }
 
+  String generalInfo = "";
+
+  getInfo() async {
+    final today = DateTime.now();
+    final currentPeriodStatus = getCycleDayType(
+      today,
+      lastPeriodStartDate,
+      periodLength,
+      cycleLength,
+    );
+    String stage = getPeriodStageText(currentPeriodStatus);
+    generalInfo = await suggestGeneralPeriodInfo(stage);
+    setState(() {
+      isLoading = false;
+    });
+    notificationPrompt.showNotification(
+      flutterLocalNotificationsPlugin,
+      "Hi ${userController.userModel.value!.name.capitalize}",
+      "Learn more about your current period stage",
+      "firebase",
+      "femihub",
+      1,
+      "/home",
+    );
+  }
+
+  bool isLoading = true;
+
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
@@ -67,93 +103,131 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen> {
         elevation: 0,
       ),
       backgroundColor: Colors.white,
-      body: ListView(
-        padding: EdgeInsets.all(16),
-        children: [
-          MonthCalendarView(
-            month: getMonthYearLabel(_displayedMonth),
-            year: _displayedMonth.year,
-            monthNumber: _displayedMonth.month,
-            lastPeriodStartDate: lastPeriodStartDate,
-            periodLength: periodLength,
-            cycleLength: cycleLength,
-            onPrevMonth: _goToPreviousMonth,
-            onNextMonth: _goToNextMonth,
-          ),
-          SizedBox(height: 24),
-          Text(
-            getStatusText(currentStatus),
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.w500,
-              fontSize: 16,
-              color: Colors.teal,
-            ),
-          ),
-          SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              legendDot("Period", Colors.red[200]!),
-              legendDot("Fertile", Colors.green[300]!),
-              legendDot("Ovulation", Colors.orange[300]!),
-              legendDot("Safe", Colors.grey[200]!),
-            ],
-          ),
-          SizedBox(height: 24),
-          Text(
-            "Your Cycle Stats",
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 16),
-          CycleInfoTile(
-            label: "Average Cycle Length",
-            value: "$cycleLength days",
-          ),
-          SizedBox(height: 8),
-          CycleInfoTile(
-            label: "Average Period Length",
-            value: "$periodLength days",
-          ),
-          SizedBox(height: 24),
-          Text(
-            "Log Symptoms",
-            style: GoogleFonts.montserrat(
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-              color: Colors.black87,
-            ),
-          ),
-          SymptomTile(title: "Mood"),
-          SymptomTile(title: "Flow"),
-          SymptomTile(title: "Symptoms"),
-          SymptomTile(title: "Notes"),
-          SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              Get.to(
-                () => DueDateCalculatorScreen(),
-                transition: Transition.rightToLeft,
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              minimumSize: Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      body:
+          isLoading
+              ? Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Lottie.asset(
+                    'images/femihub_loading.json',
+                    repeat: true,
+                    frameRate: FrameRate(30),
+                    height: 180,
+                  ),
+                ),
+              )
+              : ListView(
+                padding: EdgeInsets.all(16),
+                children: [
+                  MonthCalendarView(
+                    month: getMonthYearLabel(_displayedMonth),
+                    year: _displayedMonth.year,
+                    monthNumber: _displayedMonth.month,
+                    lastPeriodStartDate: lastPeriodStartDate,
+                    periodLength: periodLength,
+                    cycleLength: cycleLength,
+                    onPrevMonth: _goToPreviousMonth,
+                    onNextMonth: _goToNextMonth,
+                  ),
+                  SizedBox(height: 24),
+                  Text(
+                    getStatusText(currentStatus),
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                      color: Colors.teal,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      legendDot("Period", Colors.red[200]!),
+                      legendDot("Fertile", Colors.green[300]!),
+                      legendDot("Ovulation", Colors.orange[300]!),
+                      legendDot("Safe", Colors.grey[200]!),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: bgcolor,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Text(
+                        generalInfo,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  Text(
+                    "Your Cycle Stats",
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  CycleInfoTile(
+                    label: "Average Cycle Length",
+                    value: "$cycleLength days",
+                  ),
+                  SizedBox(height: 8),
+                  CycleInfoTile(
+                    label: "Average Period Length",
+                    value: "$periodLength days",
+                  ),
+                  SizedBox(height: 24),
+                  Text(
+                    "Additional Tools",
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SymptomTile(
+                    title: "Get Recommendations",
+                    stage: getPeriodStageText(currentStatus),
+                  ),
+                  SizedBox(height: 12),
+                  SymptomTile(
+                    title: "Learn About Your Symptoms",
+                    stage: getPeriodStageText(currentStatus),
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.to(
+                        () => DueDateCalculatorScreen(),
+                        transition: Transition.rightToLeft,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      minimumSize: Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      "Change Period Data",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                ],
               ),
-            ),
-            child: Text(
-              "Change Period Data",
-              style: GoogleFonts.montserrat(fontSize: 14, color: Colors.white),
-            ),
-          ),
-          SizedBox(height: 24),
-        ],
-      ),
     );
   }
 }
@@ -295,7 +369,7 @@ class MonthCalendarView extends StatelessWidget {
                           child: Text(
                             "$dayNum",
                             style: GoogleFonts.montserrat(
-                              fontSize: 12,
+                              fontSize: 14,
                               color: Colors.black87,
                             ),
                           ),
@@ -349,6 +423,19 @@ String getStatusText(CycleDayType type) {
   }
 }
 
+String getPeriodStageText(CycleDayType type) {
+  switch (type) {
+    case CycleDayType.period:
+      return "period stage";
+    case CycleDayType.ovulation:
+      return "ovulation";
+    case CycleDayType.fertile:
+      return "fertile window.";
+    case CycleDayType.safe:
+      return "safe window";
+  }
+}
+
 Widget legendDot(String label, Color color) {
   return Row(
     children: [
@@ -388,7 +475,7 @@ class CycleInfoTile extends StatelessWidget {
           label,
           style: GoogleFonts.montserrat(
             fontWeight: FontWeight.w500,
-            fontSize: 16,
+            fontSize: 14,
             color: Colors.black87,
           ),
         ),
@@ -401,31 +488,77 @@ class CycleInfoTile extends StatelessWidget {
   }
 }
 
-class SymptomTile extends StatelessWidget {
+class SymptomTile extends StatefulWidget {
   final String title;
+  final String stage;
 
-  const SymptomTile({required this.title});
+  const SymptomTile({required this.title, required this.stage});
 
   @override
+  State<SymptomTile> createState() => _SymptomTileState();
+}
+
+class _SymptomTileState extends State<SymptomTile> {
+  bool generating = false;
+  String info = "";
+  @override
   Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(
-        title,
-        style: GoogleFonts.montserrat(
-          fontWeight: FontWeight.w500,
-          fontSize: 14,
-          color: Colors.black87,
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: bgcolor,
+        borderRadius: BorderRadius.circular(8),
       ),
-      trailing: Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: () {
-        appCommunication(
-          context,
-          title,
-          "This section is not yet available for you",
-          "/home",
-        );
-      },
+      child: ListTile(
+        title: Text(
+          widget.title,
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+        ),
+        trailing: Icon(
+          info.isEmpty ? Icons.arrow_forward_ios : Icons.arrow_drop_down,
+          size: 16,
+        ),
+        onTap: () async {
+          if (info.isEmpty) {
+            if (widget.title == "Get Recommendation") {
+              appCommunication(
+                context,
+                widget.title,
+                "Generating recommendations",
+                "/home",
+              );
+              info = await suggestGeneralPeriodRecommendation(widget.stage);
+              setState(() {});
+            } else {
+              appCommunication(
+                context,
+                widget.title,
+                "Generating symptoms",
+                "/home",
+              );
+              info = await suggestGeneralPeriodSymptoms(widget.stage);
+              setState(() {});
+            }
+          } else {
+            setState(() {
+              info = "";
+            });
+          }
+        },
+        subtitle:
+            info.isEmpty
+                ? null
+                : Text(
+                  info,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    color: Colors.black87,
+                  ),
+                ),
+      ),
     );
   }
 }

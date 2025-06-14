@@ -35,7 +35,6 @@ class _ShopPageNewState extends State<ShopPageNew> {
     );
     contraceptionProducts = await ProducsController.instance
         .getProductsByCategory("contraceptions");
-    setState(() {});
   }
 
   String selection = Get.parameters["section"] ?? "Featured";
@@ -58,7 +57,17 @@ class _ShopPageNewState extends State<ShopPageNew> {
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
-        actions: [IconButton(onPressed: (){Get.to(()=> ShoppingCartWidget(), transition: Transition.rightToLeft);}, icon: Icon(Icons.shopping_bag, color: Colors.black87, size: 18,))],
+        actions: [
+          IconButton(
+            onPressed: () {
+              Get.to(
+                () => ShoppingCartWidget(),
+                transition: Transition.rightToLeft,
+              );
+            },
+            icon: Icon(Icons.shopping_bag, color: Colors.black87, size: 18),
+          ),
+        ],
       ),
       backgroundColor: Colors.white,
       body: Padding(
@@ -185,7 +194,7 @@ class _ShopPageNewState extends State<ShopPageNew> {
                       ),
                     ),
                   ),
-                       SizedBox(width: 12),
+                  SizedBox(width: 12),
                   InkWell(
                     onTap: () {
                       setState(() {
@@ -196,7 +205,9 @@ class _ShopPageNewState extends State<ShopPageNew> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                         color:
-                            selection == "Contraceptions" ? primaryColor : bgcolor,
+                            selection == "Contraceptions"
+                                ? primaryColor
+                                : bgcolor,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),

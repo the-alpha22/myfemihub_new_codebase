@@ -102,7 +102,25 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
                 SizedBox(height: 24),
-                SizedBox(height: 20),
+                SizedBox(height: 24),
+                Text(
+                  'Danger Zone',
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 12),
+                SettingsTapWidget(
+                  svgLocation: "images/question-light.svg",
+                  title: "Delete Account",
+                  description: "Request Account deletion",
+                  onTap: () {
+                    openLink("https://tally.so/r/mJDYVJ");
+                  },
+                ),
+                SizedBox(height: 12),
                 Center(
                   child: InkWell(
                     onTap: () {

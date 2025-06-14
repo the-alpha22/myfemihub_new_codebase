@@ -15,7 +15,7 @@ class DueDateCalculatorScreen extends StatefulWidget {
 
 class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
   final TextEditingController _periodLengthController = TextEditingController(
-    text: '5',
+    text: '3',
   );
   final TextEditingController _cycleLengthController = TextEditingController(
     text: '28',

@@ -1,5 +1,7 @@
 import 'package:bridge_ai/controllers/notifications_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:bridge_ai/models/story.dart';
+import 'package:bridge_ai/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,6 +22,7 @@ addConversationMessage(
   String userId,
   String message,
   DateTime dateCreated,
+  var citation,
 ) async {
   await FirebaseFirestore.instance
       .collection("conversations")
@@ -31,13 +34,13 @@ addConversationMessage(
         "id": id,
         "dateCreated": dateCreated,
         "message": message,
+        "citation": citation,
       });
   print("\n=========Conversation Data Added=============\n");
 }
 
 openLink(String link) async {
-  final Uri launchUri = Uri(scheme: 'https', path: link);
-  await launch(link);
+  await launchUrl(Uri.parse(link));
 }
 
 openMail(String mail) async {
@@ -95,4 +98,66 @@ String timeAgo(DateTime date) {
     final int years = diff.inDays ~/ 365;
     return '$years ${"y"}';
   }
+}
+
+Future<UserModel?> getUserDetails(String userId) async {
+  try {
+    print("\n=========Getting User Details=============\n");
+    UserModel? user;
+    final userSnapshot =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .where("id", isEqualTo: userId)
+            .get();
+    for (var doc in userSnapshot.docs) {
+      user = UserModel.fromMap(doc.data());
+      print("\n=========User Data obtained=============\n");
+    }
+    return user;
+  } catch (e) {
+    return null;
+  }
+}
+
+Future<StoryModel?> getPostDetails(String userId) async {
+  try {
+    print("\n=========Getting Post Details=============\n");
+    StoryModel? post;
+    final postSnapshot =
+        await FirebaseFirestore.instance
+            .collection('stories')
+            .where("id", isEqualTo: userId)
+            .get();
+    for (var doc in postSnapshot.docs) {
+      post = StoryModel.fromMap(doc.data());
+      print("\n=========Post Data obtained=============\n");
+    }
+    return post;
+  } catch (e) {
+    return null;
+  }
+}
+
+updateUserDetails(String userId, Map<String, dynamic> data) async {
+  final userSnapshot =
+      await FirebaseFirestore.instance
+          .collection('users')
+          .where("id", isEqualTo: userId)
+          .get();
+  for (var doc in userSnapshot.docs) {
+    doc.reference.update(data);
+  }
+  print("\n=========User Details Updated=============\n");
+}
+
+updatePostDetails(String postId, Map<String, dynamic> data) async {
+  final postSnapshot =
+      await FirebaseFirestore.instance
+          .collection('stories')
+          .where("id", isEqualTo: postId)
+          .get();
+  for (var doc in postSnapshot.docs) {
+    doc.reference.update(data);
+  }
+  print("\n=========Post Details Updated=============\n");
 }

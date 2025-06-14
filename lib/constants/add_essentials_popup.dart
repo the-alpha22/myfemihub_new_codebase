@@ -106,7 +106,7 @@ class _AddEssentailPopupWidgetState extends State<AddEssentailPopupWidget> {
                                                 horizontal: 18.0, vertical: 12),
                                             child: Text(
                                               'Back',
-                                              style: GoogleFonts.poppins(
+                                              style: GoogleFonts.montserrat(
                                                   color: Colors.white
                                                       .withOpacity(0.9),
                                                   fontWeight: FontWeight.w400,

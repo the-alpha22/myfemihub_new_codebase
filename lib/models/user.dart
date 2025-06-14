@@ -25,36 +25,17 @@ class UserModel {
   late String email;
   late String phone;
   late String pic;
-  late String facility;
-  late String about;
   late bool paid;
   late bool admin;
-  late bool nurse;
-  late bool medicalcard;
-  late String assignednurse;
-  late var expirydate;
   late DateTime? perioddate;
   late int periodLength;
   late int periodCycle;
-  late List medications;
-  late var info;
-  late var appointments;
-  late var chatids;
   late var balance;
   late var tokens;
-  late String speciality;
-  late String city;
-  late var duedate;
   late List<CartItemModel> cart;
-  late List searches;
-  late String country;
   late String stage;
-
-  // "nurse": false,
-  //     "report": false,
-  //     "medicalcard": false,
-  //     "assignednurse": "",
-  //     "medications": []
+  late List flaggedPostIds;
+  late List savedPostIds;
 
   UserModel({
     required this.id,
@@ -63,61 +44,35 @@ class UserModel {
     required this.paid,
     required this.phone,
     required this.admin,
-    required this.assignednurse,
-    required this.medicalcard,
-    required this.medications,
     required this.pic,
     required this.perioddate,
     required this.periodLength,
     required this.periodCycle,
-    required this.nurse,
-    required this.info,
-    required this.appointments,
-    required this.expirydate,
-    required this.chatids,
-    required this.facility,
-    required this.about,
-    required this.city,
     required this.balance,
     required this.tokens,
-    required this.duedate,
-    required this.speciality,
     required this.cart,
-    required this.country,
-    required this.searches,
     required this.stage,
+    required this.flaggedPostIds,
+    required this.savedPostIds,
   });
 
   UserModel.fromSnapshot(DocumentSnapshot snapshot) {
     Map data = (snapshot.data() as Map<dynamic, dynamic>);
-    name = data['name'];
-    email = data['email'];
-    phone = data['phone'];
-    id = data['id'];
-    pic = data['pic'];
-    admin = data['admin'];
-    paid = data['paid'];
-    assignednurse = data['assignednurse'] ?? "";
-    medicalcard = data['medicalcard'];
-    medications = data['medications'];
-    nurse = data['nurse'];
-    info = data['info'];
-    facility = data['facility'];
-    about = data['about'];
-    city = data['city'];
-    chatids = data['chatids'];
-    speciality = data['speciality'];
-    expirydate = data['expirydate'];
+    name = data['name'] ?? "";
+    email = data['email'] ?? "";
+    phone = data['phone'] ?? "";
+    id = data['id'] ?? "";
+    pic = data['pic'] ?? "";
+    admin = data['admin'] ?? false;
+    paid = data['paid'] ?? false;
     perioddate =
         data['perioddate'] != null ? data['perioddate'].toDate() : null;
-    periodCycle = data["periodCycle"] ?? 0;
-    periodLength = data["periodLength"] ?? 0;
-    appointments = data['appointments'];
+    periodCycle = data["periodCycle"] ?? 28;
+    periodLength = data["periodLength"] ?? 3;
     balance = data['balance'];
     tokens = data['tokens'];
-    duedate = data['duedate'];
-    country = data['country'];
-    searches = data['searches'];
+    flaggedPostIds = data["flaggedPostIds"] ?? [];
+    savedPostIds = data["savedPostIds"] ?? [];
     cart = _convertCartItems(data['cart'] ?? []);
   }
 
@@ -133,36 +88,23 @@ class UserModel {
     }
 
     return UserModel(
-      name: data['name'],
-      email: data['email'],
-      phone: data['phone'],
-      id: data['id'],
-      pic: data['pic'],
+      name: data['name'] ?? "",
+      email: data['email'] ?? "",
+      phone: data['phone'] ?? "",
+      id: data['id'] ?? "",
+      pic: data['pic'] ?? "",
       admin: data['admin'] ?? false,
       paid: data['paid'] ?? false,
-      assignednurse: data['assignednurse'] ?? "",
-      medicalcard: data['medicalcard'] ?? false,
-      medications: data['medications'] ?? [],
-      nurse: data['nurse'] ?? false,
-      expirydate: data['expirydate'],
       perioddate:
           data['perioddate'] != null ? data['perioddate'].toDate() : null,
       periodCycle: data["periodCycle"] ?? 0,
       periodLength: data["periodLength"] ?? 0,
-      appointments: data['appointments'] ?? [],
-      chatids: data['chatids'],
-      speciality: data['speciality'] ?? "",
-      facility: data['facility'] ?? "",
-      about: data['about'] ?? "",
-      city: data['city'] ?? "",
       balance: data['balance'] ?? 0,
       tokens: data['tokens'] ?? 0,
-      duedate: data['duedate'],
-      country: data['country'] ?? "",
-      searches: data['searches'] ?? [],
       cart: _convertCartItems(data['cart'] ?? []),
-      info: data['info'] ?? false,
       stage: data['stage'] ?? "Not Yet Pregnant",
+      flaggedPostIds: data["flaggedPostIds"] ?? [],
+      savedPostIds: data["savedPostIds"] ?? [],
     );
   }
 

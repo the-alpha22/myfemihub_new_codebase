@@ -10,18 +10,22 @@ class ChatBotMessageModel {
   late String userId;
   late DateTime dateCreated;
   late String message;
+  late var citation;
 
-  ChatBotMessageModel(
-      {required this.id,
-      required this.userId,
-      required this.dateCreated,
-      required this.message,});
+  ChatBotMessageModel({
+    required this.id,
+    required this.userId,
+    required this.dateCreated,
+    required this.message,
+    required this.citation,
+  });
 
   ChatBotMessageModel.fromMap(Map<String, dynamic> data) {
     id = data[ID];
     userId = data[USERID] ?? "";
     dateCreated = data[DATECREATED].toDate();
     message = data[MESSAGE] ?? "";
+    citation = data["citation"];
   }
 
   static ChatBotMessageModel fromSnapshot(DocumentSnapshot snapshot) {

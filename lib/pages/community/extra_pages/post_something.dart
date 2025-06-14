@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:uuid/uuid.dart';
 
 class AddPostPage extends StatefulWidget {
   const AddPostPage({Key? key}) : super(key: key);
@@ -105,7 +106,7 @@ class _AddPostPage extends State<AddPostPage> {
                       ),
                       SizedBox(height: 10),
                       InkWell(
-                        onTap: () {
+                        onTap: () async {
                           // Validate returns true if the form is valid, or false otherwise.
                           if (_formKey.currentState!.validate()) {
                             // If the form is valid, display a snackbar. In the real world,
@@ -116,10 +117,9 @@ class _AddPostPage extends State<AddPostPage> {
                                 ? status = true
                                 : status = false;
                             final issue = _issue.text;
-                            final idNumb = random.nextInt(100000).toString();
-                            final idnumb = "story-$idNumb$idNumb";
+                            final id = Uuid().v1().toString();
                             Map<String, dynamic> data = {
-                              "id": idnumb,
+                              "id": id,
                               "time": Timestamp.now(),
                               "details": issue,
                               "userId": userController.userModel.value!.id,
@@ -127,11 +127,12 @@ class _AddPostPage extends State<AddPostPage> {
                               "anonymous": status,
                               "category": userController.userModel.value!.stage,
                               "likes": 0,
-                              "comments": 0
+                              "comments": 0,
                             };
-                            FirebaseFirestore.instance
+                            await FirebaseFirestore.instance
                                 .collection("stories")
-                                .add(data);
+                                .doc(id)
+                                .set(data);
                             _submit();
                             Get.snackbar(
                               "Successfully Submitted",

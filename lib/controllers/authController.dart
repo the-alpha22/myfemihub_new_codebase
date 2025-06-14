@@ -155,14 +155,14 @@ class UserController extends GetxController {
         sendEmail(
             "${name.text.trim().capitalize}",
             email.text.trim(),
-            "Congratulations on creating an account with femihubios! We're so excited to have you on board.\n\nfemihubios is a comprehensive mobile application designed to support and empower women throughout their journey of pregnancy and motherhood. We offer a range of features and resources to ensure a smooth and healthy pregnancy experience, personalized care, and access to expert healthcare professionals.\n\nWe're so glad you're here!",
-            "Welcome to femihubios");
+            "Congratulations on creating an account with bridge_ai! We're so excited to have you on board.\n\nbridge_ai is a comprehensive mobile application designed to support and empower women throughout their journey of pregnancy and motherhood. We offer a range of features and resources to ensure a smooth and healthy pregnancy experience, personalized care, and access to expert healthcare professionals.\n\nWe're so glad you're here!",
+            "Welcome to bridge_ai");
         _clearControllers();
         dismissLoadingWidget();
         notificationPrompt.showNotification(
             flutterLocalNotificationsPlugin,
             "Hey ${name.text.trim().capitalize}",
-            "Welcome to femihubios Community🥰",
+            "Welcome to bridge_ai Community🥰",
             "signup",
             "signup",
             1,
@@ -452,7 +452,7 @@ signInWithApple(BuildContext context) async {
             actionCodeSettings: ActionCodeSettings(
               url: "https://bridgeai.page.link/",
               handleCodeInApp: true,
-              androidPackageName: "obtek.technologies.femihubios",
+              androidPackageName: "obtek.technologies.bridge_ai",
               androidMinimumVersion: "1",
             ))
         .then((value) {

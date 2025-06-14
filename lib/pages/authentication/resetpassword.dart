@@ -1,6 +1,6 @@
+import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/controllers.dart';
 import 'package:bridge_ai/pages/authentication/login.dart';
-import 'package:bridge_ai/widgets/helpers/showLoading.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,13 +14,10 @@ class ResetPassword extends StatefulWidget {
 }
 
 class _ResetPassword extends State<ResetPassword> {
-  final _formKey = GlobalKey<FormState>();
+  final formKey = GlobalKey<FormState>();
   TextEditingController emailController = TextEditingController();
 
-  void _submit() {
-    // you can write your
-    // own code according to
-    // whatever you want to submit;
+  void submit() {
     emailController.clear();
   }
 
@@ -28,139 +25,118 @@ class _ResetPassword extends State<ResetPassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        iconTheme: IconThemeData(color: Colors.black),
+        centerTitle: false,
+        backgroundColor: Colors.white,
         leading: IconButton(
-            onPressed: () {
-              Get.back();
-            },
-            icon: Icon(Icons.close)),
+          onPressed: () {
+            Get.back();
+          },
+          icon: Icon(Icons.arrow_back_ios, color: Colors.black87, size: 16),
+        ),
         elevation: 0,
-        centerTitle: true,
       ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: ListView(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.1,
-                ),
-                Text("Reset Passsword",
-                    style: GoogleFonts.montserrat(
-                        color: Colors.black87.withOpacity(0.9),
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold)),
                 Text(
-                    "Please enter your email address to\nrequest a password reset",
-                    style: GoogleFonts.montserrat(
-                        color: Colors.black87.withOpacity(0.6), fontSize: 15)),
-                SizedBox(
-                  height: 20,
+                  "Reset Password",
+                  style: GoogleFonts.montserrat(
+                    color: Colors.black87,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
+                SizedBox(height: 12),
                 Form(
-                  key: _formKey,
+                  key: formKey,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      // Add TextFormFields and ElevatedButton here.
+                      Text(
+                        "Your Email",
+                        style: GoogleFonts.montserrat(
+                          color: Colors.black,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 5),
                       Container(
-                        height: 60,
-                        width: MediaQuery.of(context).size.width * 0.9,
+                        decoration: BoxDecoration(
+                          color: bgcolor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                         child: TextFormField(
                           controller: userController.email,
                           keyboardType: TextInputType.emailAddress,
+                          style: GoogleFonts.montserrat(
+                            color: Colors.black87,
+                            fontSize: 12,
+                          ),
                           decoration: InputDecoration(
-                              labelText: 'Email*',
-                              border: OutlineInputBorder()),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your email';
+                              return 'Email Required';
                             } else if (value.length < 5) {
-                              return 'Please enter a valid email';
+                              return 'Enter a valid email';
                             }
                             return null;
                           },
                         ),
                       ),
-                      SizedBox(
-                        height: 10,
-                      ),
                     ],
                   ),
                 ),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.3,
-                ),
-                Center(
-                  child: Column(
-                    children: [
-                      ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              textStyle: GoogleFonts.montserrat(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(20)))),
-                          onPressed: () {
-                            // Validate returns true if the form is valid, or false otherwise.
-                            if (_formKey.currentState!.validate()) {
-                              // If the form is valid, display a snackbar. In the real world,
-                              // you'd often call a server or save the information in a database.
-                              userController.resetpassword(context);
+                SizedBox(height: 24),
+                InkWell(
+                  onTap: () {
+                    if (formKey.currentState!.validate()) {
+                      // If the form is valid, display a snackbar. In the real world,
+                      // you'd often call a server or save the information in a database.
+                      userController.resetpassword(context);
 
-                              _submit();
-                              Get.back();
-                            } else {
-                              dismissLoadingWidget();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Something went wrong, try again')),
-                              );
-                            }
-                          },
-                          child: Container(
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            margin: EdgeInsets.all(15.0),
-                            padding: EdgeInsets.all(3.0),
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20)),
-                            child: Center(child: Text("Reset Password")),
-                          )),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Center(
-                        child: SizedBox(
-                          height: 60,
-                          width: MediaQuery.of(context).size.width * 0.95,
-                          child: TextButton(
-                            onPressed: () {
-                              Get.back();
-                            },
-                            child: Text("Cancel",
-                                style: GoogleFonts.montserrat(
-                                    color: Colors.black87.withOpacity(0.9),
-                                    fontSize: 15)),
-                            style: ButtonStyle(
-                                shape: MaterialStateProperty.all(
-                                    RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(20)),
-                                        side:
-                                            BorderSide(color: Colors.black)))),
+                      submit();
+                      Get.back();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Something went wrong, try again'),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(color: primaryColor),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          "Send Password Reset Link",
+                          style: GoogleFonts.montserrat(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                )
+                ),
+                SizedBox(height: 24),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -170,28 +146,37 @@ class _ResetPassword extends State<ResetPassword> {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       showDialog<String>(
         context: context,
-        builder: (BuildContext context) => AlertDialog(
-          title: Text('Hooray!',
-              style: GoogleFonts.montserrat(
-                  color: Colors.black.withOpacity(0.9), fontSize: 16)),
-          content: Text('You reset password has been sent to your email',
-              style: GoogleFonts.montserrat(
-                  color: Colors.black87.withOpacity(0.8), fontSize: 13)),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Get.offAll(() => Login());
-              },
-              child: const Text("OKAY"),
+        builder:
+            (BuildContext context) => AlertDialog(
+              title: Text(
+                'Hooray!',
+                style: GoogleFonts.montserrat(
+                  color: Colors.black.withOpacity(0.9),
+                  fontSize: 16,
+                ),
+              ),
+              content: Text(
+                'You reset password has been sent to your email',
+                style: GoogleFonts.montserrat(
+                  color: Colors.black87.withOpacity(0.8),
+                  fontSize: 13,
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Get.offAll(() => Login());
+                  },
+                  child: const Text("OKAY"),
+                ),
+              ],
             ),
-          ],
-        ),
       );
     } on FirebaseAuthException catch (e) {
       print(e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 }
