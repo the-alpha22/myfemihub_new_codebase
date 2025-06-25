@@ -2,7 +2,6 @@ import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/controllers.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationsController {
@@ -86,63 +85,6 @@ class NotificationsController {
         Get.offAllNamed("${response.payload}");
       } else {
         Get.offAllNamed("/home");
-      }
-    }
-  }
-
-  Future<void> scheduleContinuousNotifications() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // Check if the app is launched for the first time
-    final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
-
-    if (isFirstLaunch) {
-      // Schedule initial notification
-      await scheduleNotification();
-      prefs.setBool('isFirstLaunch', false);
-    }
-
-    // Schedule periodic notifications every day
-    AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      "bridge_ai", // Replace with your channel ID
-      "bridge_ai", // Replace with your channel name
-      importance: Importance.max,
-      priority: Priority.high,
-    );
-    NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: DarwinNotificationDetails(
-          presentBadge: true,
-          presentSound: true,
-        ));
-    List<NotificationModel> allNotifications = [];
-    var stage = prefs.getString('userStage') ?? "Not Yet Pregnant";
-    stage == "Not Yet Pregnant"
-        ? allNotifications = womenNotifications
-        : stage == "Pregnant"
-            ? allNotifications = pregnantWomenNotifications
-            : allNotifications = mothersNotifications;
-
-    // Get the list of notifications that have already been shown
-    List<String> shownNotifications =
-        prefs.getStringList('shownNotifications') ?? [];
-
-    // Schedule notifications for each message in the list
-    for (var notification in allNotifications) {
-      if (!shownNotifications.contains(notification.title)) {
-        final NotificationModel Notification = notification;
-
-        showNotification(
-            flutterLocalNotificationsPlugin,
-            Notification.title,
-            Notification.body,
-            "dailyNotification",
-            "bridge_ai",
-            1,
-            Notification.routeName);
-        shownNotifications.add(Notification.title);
-        await prefs.setStringList('shownNotifications', shownNotifications);
       }
     }
   }

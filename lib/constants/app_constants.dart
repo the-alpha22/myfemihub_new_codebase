@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:logger/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
 Logger logger = Logger();
 
@@ -39,12 +40,60 @@ addConversationMessage(
   print("\n=========Conversation Data Added=============\n");
 }
 
+addActivityLog(
+  String details,
+  String userId,
+  String type,
+  String postId,
+  String productId,
+) async {
+  String id = Uuid().v1().toString();
+  await FirebaseFirestore.instance.collection("activity").doc(id).set({
+    "details": details,
+    "id": id,
+    "dateCreated": Timestamp.now(),
+    "userId": userId,
+    "productId": productId,
+    "type": type,
+    "postId": postId,
+  });
+  print("\n=========Activity log Data Added=============\n");
+}
+
+addOrderDetails(
+  double amount,
+  String userId,
+  double longtitude,
+  double latitude,
+  String address,
+  List cart,
+) async {
+  String id = Uuid().v1().toString();
+  await FirebaseFirestore.instance.collection("orders").doc(id).set({
+    "id": id,
+    "dateCreated": Timestamp.now(),
+    "userId": userId,
+    "cart": cart,
+    "amount": amount,
+    "status": "pending",
+    "address": address,
+    "latitude": latitude,
+    "longtitude": longtitude,
+  });
+  print("\n=========Order Data Added=============\n");
+}
+
 openLink(String link) async {
   await launchUrl(Uri.parse(link));
 }
 
 openMail(String mail) async {
   final Uri launchUri = Uri(scheme: 'mailto', path: mail);
+  await launchUrl(launchUri, mode: LaunchMode.externalApplication);
+}
+
+makeCall(String phone_number) async {
+  final Uri launchUri = Uri(scheme: 'tel', path: phone_number);
   await launchUrl(launchUri, mode: LaunchMode.externalApplication);
 }
 

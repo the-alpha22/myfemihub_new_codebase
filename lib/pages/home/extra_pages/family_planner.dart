@@ -45,7 +45,7 @@ class _FamilyPlanningPageState extends State<FamilyPlanningPage> {
         backgroundColor: Colors.white,
         leading: IconButton(
           onPressed: () {
-            Get.back();
+            Get.offAllNamed("/home");
           },
           icon: Icon(Icons.arrow_back_ios, color: Colors.black87, size: 16),
         ),
@@ -129,6 +129,34 @@ class _FamilyPlanningPageState extends State<FamilyPlanningPage> {
                   ],
                 ),
               ),
+      bottomNavigationBar: Container(
+        height: 70,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: InkWell(
+            onTap: () {
+              makeCall("0800220333");
+            },
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(color: primaryColor),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Text(
+                    "For more info, Talk to us",
+                    style: GoogleFonts.montserrat(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

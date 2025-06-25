@@ -24,6 +24,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       name.text = userController.userModel.value!.name.toString();
       email.text = userController.userModel.value!.email.toString();
       phone.text = userController.userModel.value!.phone.toString();
+      stage.text = userController.userModel.value!.stage.toString();
     });
   }
 
@@ -31,8 +32,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   TextEditingController name = TextEditingController();
   TextEditingController email = TextEditingController();
   TextEditingController phone = TextEditingController(text: "+256");
+  TextEditingController stage = TextEditingController();
   bool loading = false;
   var image;
+  List stages = ['Not Yet Pregnant', 'Pregnant', "A Mother"];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -233,6 +236,85 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                       ),
                       SizedBox(height: 12),
+                      Text(
+                        "Current Stage",
+                        style: GoogleFonts.montserrat(
+                          color: Colors.black87.withOpacity(0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Builder(
+                        builder: (context) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: bgcolor,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: TextFormField(
+                              onTap: () async {
+                                final RenderBox box =
+                                    context.findRenderObject() as RenderBox;
+                                final Offset position = box.localToGlobal(
+                                  Offset.zero,
+                                );
+
+                                String? selected = await showMenu<String>(
+                                  context: context,
+                                  color: Colors.white,
+                                  position: RelativeRect.fromLTRB(
+                                    position.dx,
+                                    position.dy + box.size.height,
+                                    position.dx + box.size.width,
+                                    position.dy,
+                                  ),
+                                  items:
+                                      stages
+                                          .map(
+                                            (e) => PopupMenuItem<String>(
+                                              value: e,
+                                              child: Text(
+                                                e,
+                                                style: GoogleFonts.quicksand(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                );
+
+                                if (selected != null) {
+                                  setState(() {
+                                    stage.text = selected;
+                                  });
+                                }
+                              },
+                              controller: stage,
+                              readOnly: true,
+                              keyboardType: TextInputType.text,
+                              style: GoogleFonts.montserrat(
+                                color: Colors.black87,
+                                fontSize: 12,
+                              ),
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Stage Required';
+                                }
+                                return null;
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                      SizedBox(height: 12),
                       InkWell(
                         onTap: () async {
                           // Validate returns true if the form is valid, or false otherwise.
@@ -244,7 +326,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               "name": name.text,
                               "email": email.text,
                               "phone": phone.text,
+                              "stage": stage.text,
                             });
+                            await addActivityLog(
+                              "updated personal details",
+                              userController.userModel.value!.id,
+                              "user activity",
+                              "",
+                              "",
+                            );
                             setState(() {
                               loading = false;
                             });
@@ -292,6 +382,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       Center(
                         child: TextButton(
                           onPressed: () async {
+                            await addActivityLog(
+                              "signed out",
+                              userController.userModel.value!.id,
+                              "user activity",
+                              "",
+                              "",
+                            );
                             userController.signOut();
                           },
                           child: Text(
@@ -318,7 +415,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              "v3.0.0+22",
+              "v6.0.0+18",
               style: GoogleFonts.montserrat(
                 color: Colors.black87,
                 fontSize: 10,

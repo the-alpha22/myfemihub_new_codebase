@@ -36,6 +36,7 @@ class UserModel {
   late String stage;
   late List flaggedPostIds;
   late List savedPostIds;
+  late DateTime? conceptionDate;
 
   UserModel({
     required this.id,
@@ -54,6 +55,7 @@ class UserModel {
     required this.stage,
     required this.flaggedPostIds,
     required this.savedPostIds,
+    required this.conceptionDate,
   });
 
   UserModel.fromSnapshot(DocumentSnapshot snapshot) {
@@ -74,6 +76,8 @@ class UserModel {
     flaggedPostIds = data["flaggedPostIds"] ?? [];
     savedPostIds = data["savedPostIds"] ?? [];
     cart = _convertCartItems(data['cart'] ?? []);
+    conceptionDate =
+        data['conceptionDate'] != null ? data['conceptionDate'].toDate() : null;
   }
 
   factory UserModel.fromMap(Map data) {
@@ -105,6 +109,10 @@ class UserModel {
       stage: data['stage'] ?? "Not Yet Pregnant",
       flaggedPostIds: data["flaggedPostIds"] ?? [],
       savedPostIds: data["savedPostIds"] ?? [],
+      conceptionDate:
+          data['conceptionDate'] != null
+              ? data['conceptionDate'].toDate()
+              : null,
     );
   }
 

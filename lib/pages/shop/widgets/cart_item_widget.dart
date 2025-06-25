@@ -9,7 +9,7 @@ class CartItemWidget extends StatelessWidget {
   final Function press;
 
   const CartItemWidget({Key? key, required this.cartItem, required this.press})
-      : super(key: key);
+    : super(key: key);
   @override
   Widget build(BuildContext context) {
     var oCcy = NumberFormat("#,##0", "en_US");
@@ -35,55 +35,69 @@ class CartItemWidget extends StatelessWidget {
                       width: 80,
                       fit: BoxFit.fill,
                       imageUrl: cartItem.image,
-                      placeholder: (context, url) => Center(
-                          child: new CircularProgressIndicator(
-                              strokeWidth: 0, color: Colors.black)),
-                      errorWidget: (context, url, error) =>
-                          new Icon(Icons.error),
+                      placeholder:
+                          (context, url) => Center(
+                            child: new CircularProgressIndicator(
+                              strokeWidth: 0,
+                              color: Colors.black,
+                            ),
+                          ),
+                      errorWidget:
+                          (context, url, error) => new Icon(Icons.error),
                     ),
                   ),
                 ),
                 Expanded(
-                    child: Wrap(
-                  direction: Axis.vertical,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      child: Container(
-                        width: MediaQuery.of(context).size.width * 0.45,
-                        child: Text(
-                          "${cartItem.name}",
-                          maxLines: 1,
-                          style: GoogleFonts.openSans(
+                  child: Wrap(
+                    direction: Axis.vertical,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width * 0.45,
+                          child: Text(
+                            "${cartItem.name}",
+                            maxLines: 1,
+                            style: GoogleFonts.montserrat(
                               color: Colors.black87.withOpacity(0.9),
-                              fontWeight: FontWeight.w500),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      child: Text(
-                        "from Bridge Mom",
-                        style: GoogleFonts.openSans(
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          "from FemiHub",
+                          style: GoogleFonts.montserrat(
                             fontSize: 12,
-                            color: Colors.black87.withOpacity(0.6)),
+                            color: Colors.black87.withOpacity(0.6),
+                          ),
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      child: Text(
-                        "\shs. ${oCcy.format(cartItem.cost)}",
-                        style: GoogleFonts.openSans(
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        child: Text(
+                          "\shs. ${oCcy.format(cartItem.cost)}",
+                          style: GoogleFonts.montserrat(
                             color: Colors.black87.withOpacity(0.8),
                             fontSize: 12,
-                            fontWeight: FontWeight.w500),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                )),
+                    ],
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -91,19 +105,21 @@ class CartItemWidget extends StatelessWidget {
                     children: [
                       Text(
                         "Quantity",
-                        style: GoogleFonts.openSans(
-                            fontSize: 12,
-                            color: Colors.black87.withOpacity(0.6)),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: Colors.black87.withOpacity(0.6),
+                        ),
                       ),
                       Text(
                         cartItem.quantity.toString(),
-                        style: GoogleFonts.openSans(
-                            fontSize: 11,
-                            color: Colors.black87.withOpacity(0.8)),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          color: Colors.black87.withOpacity(0.8),
+                        ),
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),

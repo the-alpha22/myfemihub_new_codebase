@@ -1,4 +1,5 @@
 import 'package:bridge_ai/constants/app_constants.dart';
+import 'package:bridge_ai/constants/controllers.dart';
 import 'package:bridge_ai/controllers/cart_controller.dart';
 import 'package:bridge_ai/models/product.dart';
 import 'package:bridge_ai/pages/shop/payment/popover.dart';
@@ -23,26 +24,13 @@ class _BodyState extends State<Body> {
   void initState() {
     super.initState();
     checkProduct();
-    checkReviews();
-  }
-
-  checkReviews() async {
-    if (widget.product.reviews == null) {
-      var snaps = await FirebaseFirestore.instance
-          .collection('products')
-          .where('id', isEqualTo: widget.product.id)
-          .get();
-
-      for (var doc in snaps.docs) {
-        doc.reference.update({
-          "reviews": [],
-        });
-      }
-    } else {}
   }
 
   var productSize;
   checkProduct() {
+    setState(() {
+      selectedImage = widget.product.imageUrls.first;
+    });
     setState(() {
       if (widget.product.sizes.length == 0) {
         productSize = false;
@@ -58,33 +46,10 @@ class _BodyState extends State<Body> {
     });
   }
 
+  String selectedImage = "";
+
   @override
   Widget build(BuildContext context) {
-    // It provide us total height and width
-    Future<void> _makePhoneCall(String phoneNumber) async {
-      final Uri launchUri = Uri(
-        scheme: 'tel',
-        path: phoneNumber,
-      );
-      await launchUrl(launchUri);
-    }
-
-    Future<void> _openLink(String link) async {
-      final Uri launchUri = Uri(
-        scheme: 'https',
-        path: link,
-      );
-      await launchUrl(launchUri);
-    }
-
-    Future<void> _sendEmail(String mail) async {
-      final Uri launchUri = Uri(
-        scheme: 'mailto',
-        path: mail,
-      );
-      await launchUrl(launchUri);
-    }
-
     @override
     sizes() {
       if (productSize == true) {
@@ -97,35 +62,40 @@ class _BodyState extends State<Body> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Available Sizes",
-                        style: GoogleFonts.montserrat(
-                            color: Colors.black87.withOpacity(0.9),
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500)),
+                    Text(
+                      "Available Sizes",
+                      style: GoogleFonts.montserrat(
+                        color: Colors.black87.withOpacity(0.9),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     Padding(
                       padding: EdgeInsets.all(3.0),
                       child: Wrap(
-                          children: widget.product.sizes
-                              .map(
-                                (item) => Text("$item, ",
+                        children:
+                            widget.product.sizes
+                                .map(
+                                  (item) => Text(
+                                    "$item, ",
                                     style: GoogleFonts.montserrat(
                                       color: Colors.black87.withOpacity(0.9),
                                       fontSize: 15,
-                                    )),
-                              )
-                              .toList()),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                      ),
                     ),
                   ],
                 ),
-                Container()
+                Container(),
               ],
             ),
           ],
         );
       } else {
-        return SizedBox(
-          height: 0,
-        );
+        return SizedBox(height: 0);
       }
     }
 
@@ -144,245 +114,289 @@ class _BodyState extends State<Body> {
           builder: (context) {
             return Popover(
               child: Container(
-                child: Column(children: [
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Text("Select Desired Size",
+                child: Column(
+                  children: [
+                    SizedBox(height: 10),
+                    Text(
+                      "Select Desired Size",
                       style: GoogleFonts.montserrat(
-                          color: Colors.black87.withOpacity(0.9),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500)),
-                  Divider(),
-                  Container(
-                    width: MediaQuery.of(context).size.width * 0.95,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 24.0,
-                      vertical: 10.0,
+                        color: Colors.black87.withOpacity(0.9),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    child: Wrap(
-                        children: widget.product.sizes
-                            .map(
-                              (item) => GestureDetector(
-                                onTap: () async {
-                                  Get.back();
-                                  selectedSize = "$item";
-                                  setState(() {
-                                    selectedSize = "$item";
-                                  });
-                                  selectedQuantity = 1;
-                                  setState(() {
-                                    selectedQuantity = 1;
-                                  });
-                                  showModalBottomSheet<int>(
-                                    backgroundColor: Colors.transparent,
-                                    context: context,
-                                    builder: (context) {
-                                      return StatefulBuilder(
-                                          builder: (context, setState) {
-                                        return Popover(
-                                          child: Container(
-                                            child: Column(children: [
-                                              SizedBox(
-                                                height: 10,
-                                              ),
-                                              Text("Your Desired Quantity",
-                                                  style: GoogleFonts.montserrat(
-                                                      color: Colors.black87
-                                                          .withOpacity(0.9),
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.w500)),
-                                              Divider(),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    IconButton(
-                                                        icon: Icon(Icons
-                                                            .arrow_back_ios),
-                                                        onPressed: () {
-                                                          if (selectedQuantity !=
-                                                              1) {
-                                                            setState(() {
-                                                              selectedQuantity =
-                                                                  selectedQuantity -
-                                                                      1;
-                                                            });
-                                                          }
-                                                        }),
-                                                    Text("$selectedQuantity",
+                    Divider(),
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.95,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 10.0,
+                      ),
+                      child: Wrap(
+                        children:
+                            widget.product.sizes
+                                .map(
+                                  (item) => GestureDetector(
+                                    onTap: () async {
+                                      Get.back();
+                                      selectedSize = "$item";
+                                      setState(() {
+                                        selectedSize = "$item";
+                                      });
+                                      selectedQuantity = 1;
+                                      setState(() {
+                                        selectedQuantity = 1;
+                                      });
+                                      showModalBottomSheet<int>(
+                                        backgroundColor: Colors.transparent,
+                                        context: context,
+                                        builder: (context) {
+                                          return StatefulBuilder(
+                                            builder: (context, setState) {
+                                              return Popover(
+                                                child: Container(
+                                                  child: Column(
+                                                    children: [
+                                                      SizedBox(height: 10),
+                                                      Text(
+                                                        "Your Desired Quantity",
                                                         style:
                                                             GoogleFonts.montserrat(
+                                                              color: Colors
+                                                                  .black87
+                                                                  .withOpacity(
+                                                                    0.9,
+                                                                  ),
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                            ),
+                                                      ),
+                                                      Divider(),
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                              8.0,
+                                                            ),
+                                                        child: Row(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .spaceBetween,
+                                                          children: [
+                                                            IconButton(
+                                                              icon: Icon(
+                                                                Icons
+                                                                    .arrow_back_ios,
+                                                              ),
+                                                              onPressed: () {
+                                                                if (selectedQuantity !=
+                                                                    1) {
+                                                                  setState(() {
+                                                                    selectedQuantity =
+                                                                        selectedQuantity -
+                                                                        1;
+                                                                  });
+                                                                }
+                                                              },
+                                                            ),
+                                                            Text(
+                                                              "$selectedQuantity",
+                                                              style: GoogleFonts.montserrat(
                                                                 color: Colors
                                                                     .black87
                                                                     .withOpacity(
-                                                                        0.9),
-                                                                fontSize: 15)),
-                                                    IconButton(
-                                                        icon: Icon(Icons
-                                                            .arrow_forward_ios),
-                                                        onPressed: () {
-                                                          setState(() {
-                                                            selectedQuantity =
-                                                                selectedQuantity +
-                                                                    1;
-                                                          });
-                                                        }),
-                                                  ],
-                                                ),
-                                              ),
-                                              ElevatedButton(
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                          textStyle: GoogleFonts
-                                                              .montserrat(
-                                                                  color: Colors
-                                                                      .white,
-                                                                  fontSize: 13),),
-                                                  onPressed: () async {
-                                                    Get.back();
-                                                    CartController.instance
-                                                        .addProductToCart(
-                                                            widget.product,
-                                                            "$selectedSize",
-                                                            selectedQuantity);
-                                                    if (widget.product
-                                                            .purchases !=
-                                                        null) {
-                                                      var collection =
-                                                          FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'products');
-                                                      var snapshot =
-                                                          await collection
-                                                              .where('id',
-                                                                  isEqualTo:
-                                                                      widget
-                                                                          .product
-                                                                          .id)
-                                                              .get();
-                                                      Map<String, dynamic>
-                                                          data = {
-                                                        "purchases": widget
-                                                                .product
-                                                                .purchases +
-                                                            1,
-                                                      };
-                                                      for (var doc
-                                                          in snapshot.docs) {
-                                                        await doc.reference
-                                                            .update(data);
-                                                      }
-                                                    } else {
-                                                      var collection =
-                                                          FirebaseFirestore
-                                                              .instance
-                                                              .collection(
-                                                                  'products');
-                                                      var snapshot =
-                                                          await collection
-                                                              .where('id',
-                                                                  isEqualTo:
-                                                                      widget
-                                                                          .product
-                                                                          .id)
-                                                              .get();
-                                                      Map<String, dynamic>
-                                                          data = {
-                                                        "purchases": 1,
-                                                      };
-                                                      for (var doc
-                                                          in snapshot.docs) {
-                                                        await doc.reference
-                                                            .update(data);
-                                                      }
-                                                    }
-                                                  },
-                                                  child: Center(
-                                                    child: Container(
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.9,
-                                                      margin:
-                                                          EdgeInsets.all(15.0),
-                                                      padding:
-                                                          EdgeInsets.all(3.0),
-                                                      decoration: BoxDecoration(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      10)),
-                                                      child: Center(
-                                                          child: Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: [
-                                                          Text("Proceed"),
-                                                          SizedBox(
-                                                            width: 6,
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                        .symmetric(
-                                                                    horizontal:
-                                                                        8.0),
-                                                            child: Icon(
-                                                              Icons
-                                                                  .shopping_bag,
-                                                              color: Colors
-                                                                  .white
-                                                                  .withOpacity(
-                                                                      0.9),
-                                                              size: 20,
+                                                                      0.9,
+                                                                    ),
+                                                                fontSize: 15,
+                                                              ),
                                                             ),
-                                                          )
-                                                        ],
-                                                      )),
-                                                    ),
-                                                  )),
-                                            ]),
-                                          ),
-                                        );
-                                      });
+                                                            IconButton(
+                                                              icon: Icon(
+                                                                Icons
+                                                                    .arrow_forward_ios,
+                                                              ),
+                                                              onPressed: () {
+                                                                setState(() {
+                                                                  selectedQuantity =
+                                                                      selectedQuantity +
+                                                                      1;
+                                                                });
+                                                              },
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      InkWell(
+                                                        onTap: () async {
+                                                          Get.back();
+                                                          await CartController
+                                                              .instance
+                                                              .addProductToCart(
+                                                                widget.product,
+                                                                "$selectedSize",
+                                                                selectedQuantity,
+                                                              );
+                                                          if (widget
+                                                                  .product
+                                                                  .purchases !=
+                                                              null) {
+                                                            var collection =
+                                                                FirebaseFirestore
+                                                                    .instance
+                                                                    .collection(
+                                                                      'products',
+                                                                    );
+                                                            var snapshot =
+                                                                await collection
+                                                                    .where(
+                                                                      'id',
+                                                                      isEqualTo:
+                                                                          widget
+                                                                              .product
+                                                                              .id,
+                                                                    )
+                                                                    .get();
+                                                            Map<String, dynamic>
+                                                            data = {
+                                                              "purchases":
+                                                                  widget
+                                                                      .product
+                                                                      .purchases +
+                                                                  1,
+                                                            };
+                                                            for (var doc
+                                                                in snapshot
+                                                                    .docs) {
+                                                              await doc
+                                                                  .reference
+                                                                  .update(data);
+                                                            }
+                                                          } else {
+                                                            var collection =
+                                                                FirebaseFirestore
+                                                                    .instance
+                                                                    .collection(
+                                                                      'products',
+                                                                    );
+                                                            var snapshot =
+                                                                await collection
+                                                                    .where(
+                                                                      'id',
+                                                                      isEqualTo:
+                                                                          widget
+                                                                              .product
+                                                                              .id,
+                                                                    )
+                                                                    .get();
+                                                            Map<String, dynamic>
+                                                            data = {
+                                                              "purchases": 1,
+                                                            };
+                                                            for (var doc
+                                                                in snapshot
+                                                                    .docs) {
+                                                              await doc
+                                                                  .reference
+                                                                  .update(data);
+                                                            }
+                                                          }
+                                                          await addActivityLog(
+                                                            "added an item to cart",
+                                                            userController
+                                                                .userModel
+                                                                .value!
+                                                                .id,
+                                                            "user activity",
+                                                            "",
+                                                            "",
+                                                          );
+                                                        },
+                                                        child: Container(
+                                                          width:
+                                                              double.infinity,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                                color:
+                                                                    primaryColor,
+                                                              ),
+                                                          child: Center(
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets.all(
+                                                                    16.0,
+                                                                  ),
+                                                              child: Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
+                                                                children: [
+                                                                  Text(
+                                                                    "Proceed",
+                                                                  ),
+                                                                  SizedBox(
+                                                                    width: 6,
+                                                                  ),
+                                                                  Padding(
+                                                                    padding: const EdgeInsets.symmetric(
+                                                                      horizontal:
+                                                                          8.0,
+                                                                    ),
+                                                                    child: Icon(
+                                                                      Icons
+                                                                          .shopping_bag,
+                                                                      color: Colors
+                                                                          .white
+                                                                          .withOpacity(
+                                                                            0.9,
+                                                                          ),
+                                                                      size: 20,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      );
                                     },
-                                  );
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(5),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(9),
-                                    child: Container(
-                                      color: Colors.black.withOpacity(0.9),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(9),
-                                        child: Text("$item",
-                                            style: GoogleFonts.montserrat(
-                                              color:
-                                                  Colors.white.withOpacity(0.9),
-                                              fontSize: 15,
-                                            )),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(9),
+                                        child: Container(
+                                          color: Colors.black.withOpacity(0.9),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(9),
+                                            child: Text(
+                                              "$item",
+                                              style: GoogleFonts.montserrat(
+                                                color: Colors.white.withOpacity(
+                                                  0.9,
+                                                ),
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            )
-                            .toList()),
-                  ),
-                  SizedBox(
-                    height: 20,
-                  ),
-                ]),
+                                )
+                                .toList(),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                  ],
+                ),
               ),
             );
           },
@@ -397,113 +411,131 @@ class _BodyState extends State<Body> {
           backgroundColor: Colors.transparent,
           context: context,
           builder: (context) {
-            return StatefulBuilder(builder: (context, setState) {
-              return Popover(
-                child: Container(
-                  child: Column(children: [
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Text("Your Desired Quantity",
-                        style: GoogleFonts.montserrat(
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return Popover(
+                  child: Container(
+                    child: Column(
+                      children: [
+                        SizedBox(height: 10),
+                        Text(
+                          "Your Desired Quantity",
+                          style: GoogleFonts.montserrat(
                             color: Colors.black87.withOpacity(0.9),
                             fontSize: 16,
-                            fontWeight: FontWeight.w500)),
-                    Divider(),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          IconButton(
-                              icon: Icon(Icons.arrow_back_ios),
-                              onPressed: () {
-                                if (selectedQuantity != 1) {
-                                  setState(() {
-                                    selectedQuantity = selectedQuantity - 1;
-                                  });
-                                }
-                              }),
-                          Text("$selectedQuantity",
-                              style: GoogleFonts.montserrat(
-                                  color: Colors.black87.withOpacity(0.9),
-                                  fontSize: 15)),
-                          IconButton(
-                              icon: Icon(Icons.arrow_forward_ios),
-                              onPressed: () {
-                                setState(() {
-                                  selectedQuantity = selectedQuantity + 1;
-                                });
-                              }),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            textStyle: GoogleFonts.montserrat(
-                                color: Colors.white, fontSize: 13),),
-                        onPressed: () async {
-                          CartController.instance.addProductToCart(
-                              widget.product, "N/A", selectedQuantity);
-                          if (widget.product.purchases != null) {
-                            var collection = FirebaseFirestore.instance
-                                .collection('products');
-                            var snapshot = await collection
-                                .where('id', isEqualTo: widget.product.id)
-                                .get();
-                            Map<String, dynamic> data = {
-                              "purchases": widget.product.purchases + 1,
-                            };
-                            for (var doc in snapshot.docs) {
-                              await doc.reference.update(data);
-                            }
-                          } else if (widget.product.likes == null) {
-                            var collection = FirebaseFirestore.instance
-                                .collection('products');
-                            var snapshot = await collection
-                                .where('id', isEqualTo: widget.product.id)
-                                .get();
-                            Map<String, dynamic> data = {
-                              "purchases": 1,
-                            };
-                            for (var doc in snapshot.docs) {
-                              await doc.reference.update(data);
-                            }
-                          }
-                          Get.back();
-                        },
-                        child: Center(
-                          child: Container(
-                            width: MediaQuery.of(context).size.width * 0.9,
-                            margin: EdgeInsets.all(15.0),
-                            padding: EdgeInsets.all(3.0),
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Center(
-                                child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text("Proceed"),
-                                SizedBox(
-                                  width: 6,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8.0),
-                                  child: Icon(
-                                    Icons.shopping_bag,
-                                    color: Colors.white.withOpacity(0.9),
-                                    size: 20,
-                                  ),
-                                )
-                              ],
-                            )),
+                            fontWeight: FontWeight.w500,
                           ),
-                        )),
-                  ]),
-                ),
-              );
-            });
+                        ),
+                        Divider(),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.arrow_back_ios),
+                                onPressed: () {
+                                  if (selectedQuantity != 1) {
+                                    setState(() {
+                                      selectedQuantity = selectedQuantity - 1;
+                                    });
+                                  }
+                                },
+                              ),
+                              Text(
+                                "$selectedQuantity",
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.black87.withOpacity(0.9),
+                                  fontSize: 15,
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.arrow_forward_ios),
+                                onPressed: () {
+                                  setState(() {
+                                    selectedQuantity = selectedQuantity + 1;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            textStyle: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
+                          ),
+                          onPressed: () async {
+                            CartController.instance.addProductToCart(
+                              widget.product,
+                              "N/A",
+                              selectedQuantity,
+                            );
+                            if (widget.product.purchases != null) {
+                              var collection = FirebaseFirestore.instance
+                                  .collection('products');
+                              var snapshot =
+                                  await collection
+                                      .where('id', isEqualTo: widget.product.id)
+                                      .get();
+                              Map<String, dynamic> data = {
+                                "purchases": widget.product.purchases + 1,
+                              };
+                              for (var doc in snapshot.docs) {
+                                await doc.reference.update(data);
+                              }
+                            } else if (widget.product.likes == null) {
+                              var collection = FirebaseFirestore.instance
+                                  .collection('products');
+                              var snapshot =
+                                  await collection
+                                      .where('id', isEqualTo: widget.product.id)
+                                      .get();
+                              Map<String, dynamic> data = {"purchases": 1};
+                              for (var doc in snapshot.docs) {
+                                await doc.reference.update(data);
+                              }
+                            }
+                            Get.back();
+                          },
+                          child: Center(
+                            child: Container(
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              margin: EdgeInsets.all(15.0),
+                              padding: EdgeInsets.all(3.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Center(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text("Proceed"),
+                                    SizedBox(width: 6),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0,
+                                      ),
+                                      child: Icon(
+                                        Icons.shopping_bag,
+                                        color: Colors.white.withOpacity(0.9),
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
           },
         );
       }
@@ -511,12 +543,75 @@ class _BodyState extends State<Body> {
 
     Size size = MediaQuery.of(context).size;
     var oCcy = NumberFormat("#,##0", "en_US");
+
     return SingleChildScrollView(
       child: Column(
         children: <Widget>[
           Padding(
-            padding: EdgeInsets.symmetric(vertical: 0, horizontal: 0),
-            child: imagedisplay(product: widget.product),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: CachedNetworkImage(
+                fit: BoxFit.cover,
+                imageUrl: selectedImage,
+                height: MediaQuery.of(context).size.height * .4,
+                width: double.infinity,
+                placeholder: (context, url) => CircularProgressIndicator(),
+                errorWidget:
+                    (context, url, error) => Image.asset("images/icon.png"),
+              ),
+            ),
+          ),
+          SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                for (var image in widget.product.imageUrls) ...{
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        selectedImage = "";
+                      });
+                      setState(() {
+                        selectedImage = image;
+                      });
+                    },
+                    child: Container(
+                      height: 80,
+                      width: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color:
+                              selectedImage == image
+                                  ? primaryColor
+                                  : Colors.white,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: CachedNetworkImage(
+                          fit: BoxFit.cover,
+                          imageUrl: image,
+                          placeholder:
+                              (context, url) => Center(
+                                child: new CircularProgressIndicator(
+                                  strokeWidth: 0,
+                                  color: Colors.black,
+                                ),
+                              ),
+                          errorWidget:
+                              (context, url, error) =>
+                                  Image.asset("images/icon.png"),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                },
+              ],
+            ),
           ),
           SizedBox(
             child: Stack(
@@ -543,18 +638,20 @@ class _BodyState extends State<Body> {
                             child: Text(
                               widget.product.name,
                               style: GoogleFonts.montserrat(
-                                  color: Colors.black.withOpacity(0.9),
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500),
+                                color: Colors.black.withOpacity(0.9),
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                           Container(
                             child: Text(
                               "UGX. ${oCcy.format(widget.product.price)}",
                               style: GoogleFonts.montserrat(
-                                  color: Colors.black.withOpacity(0.9),
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w500),
+                                color: Colors.black.withOpacity(0.9),
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                         ],
@@ -564,230 +661,74 @@ class _BodyState extends State<Body> {
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Description(product: widget.product),
-                                sizes(),
-                                SizedBox(height: 4),
-                              ]),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Description(product: widget.product),
+                              sizes(),
+                              SizedBox(height: 4),
+                            ],
+                          ),
                         ),
                       ),
                       SizedBox(height: 15),
-                      ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            textStyle: GoogleFonts.montserrat(
-                                color: Colors.white, fontSize: 13),
-                          ),
-                          onPressed: () async {
-                            addProductToCart();
-                          },
-                          child: Center(
-                            child: Container(
-                              width: MediaQuery.of(context).size.width * 0.9,
-                              margin: EdgeInsets.all(15.0),
-                              padding: EdgeInsets.all(3.0),
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10)),
-                              child: Center(
-                                  child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text("Add to Cart"),
-                                  SizedBox(
-                                    width: 6,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0),
-                                    child: Icon(
-                                      Icons.shopping_bag,
-                                      color: Colors.white.withOpacity(0.9),
-                                      size: 20,
+                      InkWell(
+                        onTap: () async {
+                          addProductToCart();
+                        },
+                        child: Center(
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(color: primaryColor),
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Add to Cart",
+                                      style: GoogleFonts.montserrat(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
-                                  )
-                                ],
-                              )),
+                                    SizedBox(width: 6),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0,
+                                      ),
+                                      child: Icon(
+                                        Icons.shopping_bag,
+                                        color: Colors.white.withOpacity(0.9),
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          )),
-                      SizedBox(
-                        height: 8,
+                          ),
+                        ),
                       ),
-                      SizedBox(
-                        height: 45,
-                      ),
-                      SizedBox(
-                        height: 20,
-                      )
+                      SizedBox(height: 8),
+                      SizedBox(height: 45),
+                      SizedBox(height: 20),
                     ],
                   ),
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
   }
 }
 
-class imagedisplay extends StatefulWidget {
-  const imagedisplay({
-    Key? key,
-    required this.product,
-  }) : super(key: key);
-
-  final ProductModel product;
-
-  @override
-  State<imagedisplay> createState() => _imagedisplayState();
-}
-
-class _imagedisplayState extends State<imagedisplay> {
-  int _selectedIndex = 0;
-
-  otherImage() {
-    List<Widget> _images = <Widget>[
-      _image1(context: context, widget: widget),
-      _image2(context: context, widget: widget),
-    ];
-    Widget _image = _image1(context: context, widget: widget);
-    return Column(
-      children: [
-        _images.elementAt(_selectedIndex),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              MaterialButton(
-                  padding: EdgeInsets.all(0),
-                  onPressed: () {
-                    setState(() {
-                      _image = _image1(context: context, widget: widget);
-                      _selectedIndex = 0;
-                    });
-                  },
-                  child: Container(
-                    height: 80,
-                    width: 80,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.0),
-                      child: CachedNetworkImage(
-                        fit: BoxFit.cover,
-                        imageUrl: widget.product.image,
-                        placeholder: (context, url) => Center(
-                            child: CircularProgressIndicator(
-                          strokeWidth: 0,
-                        )),
-                        errorWidget: (context, url, error) => Icon(Icons.error),
-                      ),
-                    ),
-                  )),
-              MaterialButton(
-                  padding: EdgeInsets.all(0),
-                  onPressed: () {
-                    setState(() {
-                      _image = _image1(context: context, widget: widget);
-                      _selectedIndex = 1;
-                    });
-                  },
-                  child: Container(
-                    height: 80,
-                    width: 80,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.0),
-                      child: CachedNetworkImage(
-                        fit: BoxFit.cover,
-                        imageUrl: widget.product.image2,
-                        placeholder: (context, url) => Center(
-                            child: CircularProgressIndicator(
-                          strokeWidth: 0,
-                        )),
-                        errorWidget: (context, url, error) => Icon(Icons.error),
-                      ),
-                    ),
-                  )),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return otherImage();
-  }
-}
-
-class _image1 extends StatelessWidget {
-  const _image1({
-    Key? key,
-    required this.context,
-    required this.widget,
-  }) : super(key: key);
-
-  final BuildContext context;
-  final imagedisplay widget;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: MediaQuery.of(context).size.height * 0.45,
-      child: ClipRRect(
-        child: CachedNetworkImage(
-          fit: BoxFit.cover,
-          imageUrl: widget.product.image,
-          placeholder: (context, url) => Center(
-              child: CircularProgressIndicator(
-            strokeWidth: 0,
-            color: Colors.black,
-          )),
-          errorWidget: (context, url, error) => Icon(Icons.error),
-        ),
-      ),
-    );
-  }
-}
-
-class _image2 extends StatelessWidget {
-  const _image2({
-    Key? key,
-    required this.context,
-    required this.widget,
-  }) : super(key: key);
-
-  final BuildContext context;
-  final imagedisplay widget;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: MediaQuery.of(context).size.height * 0.45,
-      child: ClipRRect(
-        child: CachedNetworkImage(
-          fit: BoxFit.cover,
-          imageUrl: widget.product.image2,
-          placeholder: (context, url) => Center(
-              child: CircularProgressIndicator(
-            strokeWidth: 0,
-            color: Colors.black,
-          )),
-          errorWidget: (context, url, error) => Icon(Icons.error),
-        ),
-      ),
-    );
-  }
-}
-
 class Description extends StatelessWidget {
-  const Description({
-    Key? key,
-    required this.product,
-  }) : super(key: key);
+  const Description({Key? key, required this.product}) : super(key: key);
 
   final ProductModel product;
 
@@ -802,11 +743,11 @@ class Description extends StatelessWidget {
           Text(
             product.description,
             style: GoogleFonts.montserrat(
-                color: Colors.black87.withOpacity(0.7), fontSize: 13),
+              color: Colors.black87.withOpacity(0.7),
+              fontSize: 13,
+            ),
           ),
-          SizedBox(
-            height: 4,
-          ),
+          SizedBox(height: 4),
         ],
       ),
     );

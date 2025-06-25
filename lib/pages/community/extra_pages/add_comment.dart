@@ -100,6 +100,13 @@ class _AddCommentPageState extends State<AddCommentPage> {
                             });
                             dismissLoadingWidget();
                             Get.back();
+                            await addActivityLog(
+                              "added a comment to a post",
+                              userController.userModel.value!.id,
+                              "community activity",
+                              widget.post.id,
+                              "",
+                            );
                           }
                         },
                         child: Container(

@@ -378,6 +378,13 @@ class _PostCardState extends State<PostCard> {
                                         widget.post.id,
                                       ]),
                                     });
+                                    await addActivityLog(
+                                      "saved a post",
+                                      userController.userModel.value!.id,
+                                      "community activity",
+                                      widget.post.id,
+                                      "",
+                                    );
                                   },
                                   child: Text(
                                     "Save Post",
@@ -401,6 +408,13 @@ class _PostCardState extends State<PostCard> {
                                       ]),
                                     });
                                     Get.offAllNamed("/community");
+                                    await addActivityLog(
+                                      "flagged a post",
+                                      userController.userModel.value!.id,
+                                      "community activity",
+                                      widget.post.id,
+                                      "",
+                                    );
                                   },
                                   child: Text(
                                     "Flag Content",
@@ -527,6 +541,13 @@ class _PostCardState extends State<PostCard> {
                             ]),
                             "likes": widget.post.likes + 1,
                           });
+                          await addActivityLog(
+                            "liked a post",
+                            userController.userModel.value!.id,
+                            "community activity",
+                            widget.post.id,
+                            "",
+                          );
                         }
                       },
                       child: Row(
@@ -615,6 +636,13 @@ class _PostCardState extends State<PostCard> {
                           await updatePostDetails(widget.post.id, {
                             "bookmarks": widget.post.bookmarks + 1,
                           });
+                          await addActivityLog(
+                            "saved a post",
+                            userController.userModel.value!.id,
+                            "community activity",
+                            widget.post.id,
+                            "",
+                          );
                         }
                       },
                       child: Row(

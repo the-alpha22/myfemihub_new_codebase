@@ -143,6 +143,13 @@ class _AddPostPage extends State<AddPostPage> {
                                 content: Text('Successfully Submitted'),
                               ),
                             );
+                            await addActivityLog(
+                              "added a post",
+                              userController.userModel.value!.id,
+                              "community activity",
+                              id,
+                              "",
+                            );
                             dismissLoadingWidget();
                             Get.offAllNamed("/community");
                           }

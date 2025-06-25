@@ -1,12 +1,9 @@
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/firebase.dart';
 import 'package:bridge_ai/models/user.dart';
-import 'package:bridge_ai/pages/authentication/login.dart';
-import 'package:bridge_ai/waiting.dart';
 import 'package:bridge_ai/widgets/helpers/showLoading.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -53,7 +50,7 @@ class UserController extends GetxController {
     }
 
     if (auth.currentUser == null) {
-      print('Send to signin');
+      print('\n======Send to signin===========');
       Get.offAllNamed("/onboarding");
     } else {
       isLoggedIn = true;
@@ -85,7 +82,8 @@ class UserController extends GetxController {
         .doc(firebaseUser.value!.uid)
         .get()
         .then(
-            (documentSnapshot) => UserModel.fromMap(documentSnapshot.data()!));
+          (documentSnapshot) => UserModel.fromMap(documentSnapshot.data()!),
+        );
   }
 
   void signIn(BuildContext context) async {
@@ -93,52 +91,58 @@ class UserController extends GetxController {
     try {
       await auth
           .signInWithEmailAndPassword(
-              email: email.text.trim(), password: password.text.trim())
+            email: email.text.trim(),
+            password: password.text.trim(),
+          )
           .then((result) {
-        _clearControllers();
-        dismissLoadingWidget();
-        notificationPrompt.showNotification(
-            flutterLocalNotificationsPlugin,
-            "Hey there 🥰",
-            "Welcome back to femihub",
-            "login",
-            "login",
-            1,
-            "/home");
-        isLoggedIn = true;
-      });
+            _clearControllers();
+            dismissLoadingWidget();
+            // notificationPrompt.showNotification(
+            //   flutterLocalNotificationsPlugin,
+            //   "Hey there 🥰",
+            //   "Welcome back to femihub",
+            //   "login",
+            //   "login",
+            //   1,
+            //   "/home",
+            // );
+            isLoggedIn = true;
+          });
     } catch (e) {
       debugPrint(e.toString());
       dismissLoadingWidget();
       if (e.toString() ==
           "[firebase_auth/wrong-password] The password is invalid or the user does not have a password.") {
         Fluttertoast.showToast(
-            msg: "Looks like you entered a wrong password",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.TOP,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.black.withOpacity(0.7),
-            textColor: Colors.white,
-            fontSize: 16.0);
+          msg: "Looks like you entered a wrong password",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.black.withOpacity(0.7),
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
       } else if (e.toString() ==
           "[firebase_auth/user-not-found] There is no user record corresponding to this identifier. The user may have been deleted.") {
         Fluttertoast.showToast(
-            msg: "It seems you don't have an account",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.TOP,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.black.withOpacity(0.7),
-            textColor: Colors.white,
-            fontSize: 16.0);
+          msg: "It seems you don't have an account",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.black.withOpacity(0.7),
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
       } else {
         Fluttertoast.showToast(
-            msg: "Looks like you are offline",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.TOP,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.black.withOpacity(0.7),
-            textColor: Colors.white,
-            fontSize: 16.0);
+          msg: "Looks like you are offline",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.black.withOpacity(0.7),
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
       }
     }
   }
@@ -148,62 +152,70 @@ class UserController extends GetxController {
     try {
       await auth
           .createUserWithEmailAndPassword(
-              email: email.text.trim(), password: password.text.trim())
+            email: email.text.trim(),
+            password: password.text.trim(),
+          )
           .then((result) {
-        String _userId = result.user!.uid;
-        _addUserToFirestore(_userId, stage);
-        sendEmail(
-            "${name.text.trim().capitalize}",
-            email.text.trim(),
-            "Congratulations on creating an account with bridge_ai! We're so excited to have you on board.\n\nbridge_ai is a comprehensive mobile application designed to support and empower women throughout their journey of pregnancy and motherhood. We offer a range of features and resources to ensure a smooth and healthy pregnancy experience, personalized care, and access to expert healthcare professionals.\n\nWe're so glad you're here!",
-            "Welcome to bridge_ai");
-        _clearControllers();
-        dismissLoadingWidget();
-        notificationPrompt.showNotification(
-            flutterLocalNotificationsPlugin,
-            "Hey ${name.text.trim().capitalize}",
-            "Welcome to bridge_ai Community🥰",
-            "signup",
-            "signup",
-            1,
-            "/home");
-        isLoggedIn = true;
-      });
+            String _userId = result.user!.uid;
+            _addUserToFirestore(_userId, stage);
+            sendEmail(
+              "${name.text.trim().capitalize}",
+              email.text.trim(),
+              "Congratulations on creating an account with bridge_ai! We're so excited to have you on board.\n\nbridge_ai is a comprehensive mobile application designed to support and empower women throughout their journey of pregnancy and motherhood. We offer a range of features and resources to ensure a smooth and healthy pregnancy experience, personalized care, and access to expert healthcare professionals.\n\nWe're so glad you're here!",
+              "Welcome to bridge_ai",
+            );
+            _clearControllers();
+            dismissLoadingWidget();
+            notificationPrompt.showNotification(
+              flutterLocalNotificationsPlugin,
+              "Hey ${name.text.trim().capitalize}",
+              "Welcome to bridge_ai Community🥰",
+              "signup",
+              "signup",
+              1,
+              "/home",
+            );
+            isLoggedIn = true;
+          });
     } catch (e) {
       debugPrint(e.toString());
       dismissLoadingWidget();
       if (e.toString() ==
           "[firebase_auth/email-already-in-use] The email address is already in use by another account.") {
         Fluttertoast.showToast(
-            msg: "The email address already has an account with us",
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.black.withOpacity(0.7),
-            textColor: Colors.white,
-            fontSize: 16.0);
+          msg: "The email address already has an account with us",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.black.withOpacity(0.7),
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
       } else {
         Fluttertoast.showToast(
-            msg: "Seems you are offline",
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.black.withOpacity(0.7),
-            textColor: Colors.white,
-            fontSize: 16.0);
+          msg: "Seems you are offline",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.black.withOpacity(0.7),
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
       }
     }
   }
+
   /////////////////////////////////////////////
   ///with google
   ///
   ///
   checkEmailAvailability(String emailAddress) async {
     try {
-      final userSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where("email", isEqualTo: emailAddress)
-          .get();
+      final userSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .where("email", isEqualTo: emailAddress)
+              .get();
       if (userSnapshot.docs.isNotEmpty) {
         return true;
       } else {
@@ -217,10 +229,11 @@ class UserController extends GetxController {
 
   checkAccountVerification(String? emailAddress, String? phoneNumber) async {
     try {
-      final userSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where("email", isEqualTo: emailAddress)
-          .get();
+      final userSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .where("email", isEqualTo: emailAddress)
+              .get();
       if (userSnapshot.docs.isNotEmpty) {
         return true;
       } else {
@@ -255,15 +268,17 @@ class UserController extends GetxController {
       print("\n=========Credential: ${credential}=============\n");
       print("\n=========${googleUser.email}=============\n");
 
-      await FirebaseAuth.instance
-          .signInWithCredential(credential)
-          .then((result) async {
+      await FirebaseAuth.instance.signInWithCredential(credential).then((
+        result,
+      ) async {
         bool oldUser = await checkEmailAvailability(googleUser.email);
         if (!oldUser) {
           String _userId = result.user!.uid;
-          name.text = (googleUser.displayName != null
-              ? googleUser.displayName
-                  : googleUser.email.replaceAll("@gmail.com", "")) ?? "";
+          name.text =
+              (googleUser.displayName != null
+                  ? googleUser.displayName
+                  : googleUser.email.replaceAll("@gmail.com", "")) ??
+              "";
           email.text = googleUser.email;
           phone.text = result.user!.phoneNumber ?? "";
           _addUserToFirestore(_userId, 'Not Yet Pregnant');
@@ -273,9 +288,10 @@ class UserController extends GetxController {
               content: Text(
                 "Account Created Successfully",
                 style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500),
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           );
@@ -285,9 +301,10 @@ class UserController extends GetxController {
               content: Text(
                 "Welcome Back",
                 style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500),
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           );
@@ -296,18 +313,18 @@ class UserController extends GetxController {
     } on Exception catch (e) {
       // TODO
       print('\n=================exception $e============\n');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           content: Text(
-        "${e.toString()}",
-        style: GoogleFonts.montserrat(
-          fontSize: 12,
-          color: Colors.white,
+            "${e.toString()}",
+            style: GoogleFonts.montserrat(fontSize: 12, color: Colors.white),
+          ),
         ),
-      )));
+      );
     }
   }
 
-signInWithApple(BuildContext context) async {
+  signInWithApple(BuildContext context) async {
     try {
       String sha256ofString(String input) {
         final bytes = utf8.encode(input); // Convert input string to bytes
@@ -325,7 +342,7 @@ signInWithApple(BuildContext context) async {
         ],
         nonce: nonce,
         webAuthenticationOptions: WebAuthenticationOptions(
-          clientId: 'obtek.mymedikoz.app',
+          clientId: 'obtek.bridge_ai.app',
           redirectUri: Uri.parse(
             'https://mymedikoz-app.firebaseapp.com/__/auth/handler',
           ),
@@ -409,35 +426,31 @@ signInWithApple(BuildContext context) async {
     }
   }
 
-
-  void resetpassword(BuildContext context) async {
+  resetpassword(BuildContext context) async {
     showLoading(context);
     try {
-      await auth
-          .sendPasswordResetEmail(email: email.text.trim())
-          .then((result) {
+      await auth.sendPasswordResetEmail(email: email.text.trim()).then((
+        result,
+      ) {
         dismissLoadingWidget();
-        Fluttertoast.showToast(
-            msg: "Reset link has been sent to your email",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.TOP,
-            timeInSecForIosWeb: 3,
-            backgroundColor: Colors.black.withOpacity(0.7),
-            textColor: Colors.white,
-            fontSize: 16.0);
-        Get.offAll(() => Login());
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Reset link has been sent to your email address'),
+          ),
+        );
       });
     } catch (e) {
       debugPrint(e.toString());
       dismissLoadingWidget();
       Fluttertoast.showToast(
-          msg: "Something went wrong",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.TOP,
-          timeInSecForIosWeb: 3,
-          backgroundColor: Colors.black.withOpacity(0.7),
-          textColor: Colors.white,
-          fontSize: 16.0);
+        msg: "Something went wrong",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.TOP,
+        timeInSecForIosWeb: 3,
+        backgroundColor: Colors.black.withOpacity(0.7),
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     }
   }
 
@@ -448,41 +461,27 @@ signInWithApple(BuildContext context) async {
   void signInWithEmailandLink() async {
     await auth
         .sendSignInLinkToEmail(
-            email: email.text.trim(),
-            actionCodeSettings: ActionCodeSettings(
-              url: "https://bridgeai.page.link/",
-              handleCodeInApp: true,
-              androidPackageName: "obtek.technologies.bridge_ai",
-              androidMinimumVersion: "1",
-            ))
+          email: email.text.trim(),
+          actionCodeSettings: ActionCodeSettings(
+            url: "https://bridgeai.page.link/",
+            handleCodeInApp: true,
+            androidPackageName: "obtek.technologies.bridge_ai",
+            androidMinimumVersion: "1",
+          ),
+        )
         .then((value) {
-      print("email sent");
-    });
-  }
-
-  didChangeAppLifecycleState(AppLifecycleState state) async {
-    try {
-      final PendingDynamicLinkData? data =
-          await FirebaseDynamicLinks.instance.getInitialLink();
-      final Uri? deepLink = data!.link;
-
-      if (deepLink != null) {
-        handleLink(deepLink);
-        print(deepLink.userInfo);
-      }
-    } catch (e) {
-      print(e);
-    }
+          print("email sent");
+        });
   }
 
   void handleLink(Uri? link) async {
     if (link != null) {
       print(email.text.trim());
-      final UserCredential? user =
-          await FirebaseAuth.instance.signInWithEmailLink(
-        email: email.text.trim(),
-        emailLink: link.toString(),
-      );
+      final UserCredential? user = await FirebaseAuth.instance
+          .signInWithEmailLink(
+            email: email.text.trim(),
+            emailLink: link.toString(),
+          );
       if (user != null) {
         print(user.credential);
       }
@@ -492,22 +491,28 @@ signInWithApple(BuildContext context) async {
   }
 
   void sendEmail(
-      String name, String email, String content, String subject) async {
+    String name,
+    String email,
+    String content,
+    String subject,
+  ) async {
     final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
-    final response = await http.post(url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'service_id': "service_hhthruv",
-          'template_id': "template_7qe3535",
-          'user_id': "XUOcEJp3cEew5NNai",
-          'accessToken': "LyMrwY7O8bovubs4_ztTU",
-          'template_params': {
-            'subject': subject,
-            'to_name': name,
-            'to_email': email,
-            'message': content
-          }
-        }));
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'service_id': "service_hhthruv",
+        'template_id': "template_7qe3535",
+        'user_id': "XUOcEJp3cEew5NNai",
+        'accessToken': "LyMrwY7O8bovubs4_ztTU",
+        'template_params': {
+          'subject': subject,
+          'to_name': name,
+          'to_email': email,
+          'message': content,
+        },
+      }),
+    );
     return print("${response.statusCode}");
   }
 
@@ -532,13 +537,14 @@ signInWithApple(BuildContext context) async {
       "chatids": [],
     });
     Fluttertoast.showToast(
-        msg: "Account created successfully",
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.TOP,
-        timeInSecForIosWeb: 5,
-        backgroundColor: Colors.black.withOpacity(0.7),
-        textColor: Colors.white,
-        fontSize: 16.0);
+      msg: "Account created successfully",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.TOP,
+      timeInSecForIosWeb: 5,
+      backgroundColor: Colors.black.withOpacity(0.7),
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
 
   _clearControllers() {

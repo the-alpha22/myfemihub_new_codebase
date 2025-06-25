@@ -44,35 +44,36 @@ class _PaymentFinalState extends State<PaymentFinal> {
   final Random random = new Random();
   var scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
-
-  var profit = CartController.instance.totalCartPrice.value -
-      CartController.instance.totalCartAdminPrice.value;
   String initialCountry = 'UG';
   late String phoneNumber;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: primaryColor,
-          iconTheme: IconThemeData(color: Colors.black),
-          title: Text("Payment",
-              style: GoogleFonts.montserrat(
-                  color: Colors.white.withOpacity(0.8), fontSize: 15)),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios),
-            onPressed: () {
-              Get.back();
-            },
+      appBar: AppBar(
+        backgroundColor: primaryColor,
+        iconTheme: IconThemeData(color: Colors.black),
+        title: Text(
+          "Payment",
+          style: GoogleFonts.montserrat(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 15,
           ),
-          elevation: 0,
         ),
-        backgroundColor: Colors.white,
-        body: SafeArea(
-            child: Center(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios),
+          onPressed: () {
+            Get.back();
+          },
+        ),
+        elevation: 0,
+      ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
-              child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Column(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Column(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -81,143 +82,214 @@ class _PaymentFinalState extends State<PaymentFinal> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        Center(
-                          child: Image.asset(
-                            icon,
-                            width: 70,
-                          ),
-                        ),
-                        SizedBox(
-                          height: 20,
-                        ),
+                        Center(child: Image.asset(icon, width: 70)),
+                        SizedBox(height: 20),
                         Form(
                           key: _formKey,
                           child: Column(
                             children: <Widget>[
                               // Add TextFormFields and ElevatedButton here.
                               Text(
-                                  "Type the contact you would like to pay with",
+                                "Type the contact you would like to pay with(+256750322256)",
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  color: Colors.black.withOpacity(0.7),
+                                  height: 1.5,
+                                ),
+                              ),
+                              SizedBox(height: 9),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: bgcolor,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: TextFormField(
+                                  controller: phone,
+                                  keyboardType: TextInputType.phone,
                                   style: GoogleFonts.montserrat(
-                                    fontSize: 13,
-                                    color: Colors.black.withOpacity(0.7),
-                                    height: 1.5,
-                                  )),
-                              SizedBox(
-                                height: 9,
-                              ),
-                               Container(
-                          decoration: BoxDecoration(
-                            color: bgcolor,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: TextFormField(
-                            controller: phone,
-                            keyboardType: TextInputType.phone,
-                            style: GoogleFonts.montserrat(
-                              color: Colors.black87,
-                              fontSize: 12,
-                            ),
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Phone Required';
-                              } else if (value.length < 5) {
-                                return 'Enter a valid phone number';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                                height: 10,
-                              ),
-                              ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      textStyle: GoogleFonts.montserrat(
-                                          color: Colors.white, fontSize: 13),),
-                                  onPressed: () {
-                                    // Validate returns true if the form is valid, or false otherwise.
-                                    if (_formKey.currentState!.validate()) {
-                                      // If the form is valid, display a snackbar. In the real world,
-                                      // you'd often call a server or save the information in a database.
-
-                                      requestToPay(
-                                          context,
-                                          phone.text.trim().substring(1),
-                                          (CartController.instance
-                                                  .totalCartPrice.value +
-                                              widget.delivery +
-                                              widget.tax),
-                                          6);
+                                    color: Colors.black87,
+                                    fontSize: 12,
+                                  ),
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Phone Required';
+                                    } else if (value.length < 5) {
+                                      return 'Enter a valid phone number';
                                     }
+                                    return null;
                                   },
-                                  child: Container(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.95,
-                                    margin: EdgeInsets.all(15.0),
-                                    padding: EdgeInsets.all(3.0),
-                                    decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
-                                    child: Center(
-                                        child: Text(
-                                      "Amount to Pay: UGX. ${oCcy.format(CartController.instance.totalCartPrice.value + widget.delivery + widget.tax)}",
-                                      style: GoogleFonts.montserrat(
-                                          color: Colors.white, fontSize: 15),
-                                    )),
-                                  )),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              InkWell(
+                                onTap: () async {
+                                  // Validate returns true if the form is valid, or false otherwise.
+                                  if (_formKey.currentState!.validate()) {
+                                    showModalBottomSheet<int>(
+                                      backgroundColor: Colors.transparent,
+                                      context: context,
+                                      builder: (context) {
+                                        return Popover(
+                                          child: Container(
+                                            height: 200,
+                                            child: Center(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(
+                                                  8.0,
+                                                ),
+                                                child: Wrap(
+                                                  children: [
+                                                    Container(
+                                                      child: Text(
+                                                        "Initiating Transaction of \UGX ${oCcy.format(CartController.instance.totalCartPrice.value + widget.delivery + widget.tax)}",
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style:
+                                                            GoogleFonts.montserrat(
+                                                              color: Colors
+                                                                  .black87
+                                                                  .withOpacity(
+                                                                    0.8,
+                                                                  ),
+                                                              fontSize: 15,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    Container(
+                                                      child: Center(
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                              strokeWidth: 0,
+                                                              color:
+                                                                  Colors.black,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                    bool success = await depositFunds(
+                                      phone.text.trim().substring(1),
+                                      (CartController
+                                              .instance
+                                              .totalCartPrice
+                                              .value +
+                                          widget.delivery +
+                                          widget.tax),
+                                      ref,
+                                    );
+                                    if (success) {
+                                      await addOrderDetails(
+                                        (CartController
+                                                .instance
+                                                .totalCartPrice
+                                                .value +
+                                            widget.delivery +
+                                            widget.tax),
+                                        userController.userModel.value!.id,
+                                        widget.long,
+                                        widget.lat,
+                                        widget.city,
+                                        userController.userModel.value!
+                                            .cartItemsToJson(),
+                                      );
+                                      Get.back();
+                                      Get.offAllNamed("/home");
+                                    } else {
+                                      Get.back();
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            "Transaction not successful",
+                                            style: GoogleFonts.montserrat(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: primaryColor,
+                                  ),
+                                  child: Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Text(
+                                        "Amount to Pay: UGX. ${oCcy.format(CartController.instance.totalCartPrice.value + widget.delivery + widget.tax)}",
+                                        style: GoogleFonts.montserrat(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        SizedBox(
-                          height: 20,
-                        ),
+                        SizedBox(height: 20),
                         Center(
                           child: Text(
-                              "The incuring charges are not shown above and please input pin when prompted to (ZENGAPAY)",
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13,
-                                color: Colors.black.withOpacity(0.7),
-                                height: 1.5,
-                              )),
+                            "The incuring charges are not shown above and please input pin when prompted to (ZENGAPAY)",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              color: Colors.black.withOpacity(0.7),
+                              height: 1.5,
+                            ),
+                          ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
+                        SizedBox(height: 10),
                         Center(
                           child: Text(
-                              "The only available payment option is Mobile Money(Airtel or Mtn)",
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13,
-                                color: Colors.black.withOpacity(0.7),
-                                height: 1.5,
-                              )),
+                            "The only available payment option is Mobile Money(Airtel or Mtn)",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              color: Colors.black.withOpacity(0.7),
+                              height: 1.5,
+                            ),
+                          ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
+                        SizedBox(height: 10),
                         Center(
                           child: Text(
-                              "Always cross check your checkout before placing your order please",
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13,
-                                color: Colors.black.withOpacity(0.7),
-                                height: 1.5,
-                              )),
+                            "Always cross check your checkout before placing your order please",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              color: Colors.black.withOpacity(0.7),
+                              height: 1.5,
+                            ),
+                          ),
                         ),
-                        SizedBox(
-                          height: 15,
-                        ),
+                        SizedBox(height: 15),
                       ],
                     ),
                   ),
-                ]),
-          )),
-        )));
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void requestToPay(
@@ -243,18 +315,22 @@ class _PaymentFinalState extends State<PaymentFinal> {
                   children: [
                     Container(
                       child: Text(
-                          "Initiating Transaction of \UGX ${oCcy.format(amount)}",
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.montserrat(
-                              color: Colors.black87.withOpacity(0.8),
-                              fontSize: 15)),
+                        "Initiating Transaction of \UGX ${oCcy.format(amount)}",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.montserrat(
+                          color: Colors.black87.withOpacity(0.8),
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
                     Container(
                       child: Center(
                         child: CircularProgressIndicator(
-                            strokeWidth: 0, color: Colors.black),
+                          strokeWidth: 0,
+                          color: Colors.black,
+                        ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -283,13 +359,14 @@ class _PaymentFinalState extends State<PaymentFinal> {
             "charge_customer": true,
           });
           var response = await http.post(
-              Uri.parse('https://api.zengapay.com/v1/collections'),
-              headers: {
-                "Authorization":
-                    "Bearer ZPYPUBK-40790ea5614786a175bffbdbb70e6de864bb0f786867b556f204a37f75e45eef",
-                'Content-Type': 'application/json'
-              },
-              body: body);
+            Uri.parse('https://api.zengapay.com/v1/collections'),
+            headers: {
+              "Authorization":
+                  "Bearer ZPYPUBK-40790ea5614786a175bffbdbb70e6de864bb0f786867b556f204a37f75e45eef",
+              'Content-Type': 'application/json',
+            },
+            body: body,
+          );
           print("Collecting funds...");
           print(response.statusCode);
           var transactionReference =
@@ -313,18 +390,22 @@ class _PaymentFinalState extends State<PaymentFinal> {
                             children: [
                               Container(
                                 child: Text(
-                                    "Please input your mobile pin when prompted to in order to complete order",
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.montserrat(
-                                        color: Colors.black87.withOpacity(0.8),
-                                        fontSize: 15)),
+                                  "Please input your mobile pin when prompted to in order to complete order",
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.black87.withOpacity(0.8),
+                                    fontSize: 15,
+                                  ),
+                                ),
                               ),
                               Container(
                                 child: Center(
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 0, color: Colors.black),
+                                    strokeWidth: 0,
+                                    color: Colors.black,
+                                  ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         ),
@@ -338,7 +419,8 @@ class _PaymentFinalState extends State<PaymentFinal> {
                 print("Transaction Accepted");
                 var response = await http.get(
                   Uri.parse(
-                      'https://api.zengapay.com/v1/collections/$transactionReference'),
+                    'https://api.zengapay.com/v1/collections/$transactionReference',
+                  ),
                   headers: {
                     "Authorization":
                         "Bearer ZPYPUBK-40790ea5614786a175bffbdbb70e6de864bb0f786867b556f204a37f75e45eef",
@@ -368,19 +450,19 @@ class _PaymentFinalState extends State<PaymentFinal> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            "Hooray, your payment for $idnumb was recieved successfully. Order successfully placed",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.black87
-                                                    .withOpacity(0.8),
-                                                fontSize: 15)),
+                                          "Hooray, your payment for $idnumb was recieved successfully. Order successfully placed",
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.black87.withOpacity(
+                                              0.8,
+                                            ),
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
                                       Center(
-                                        child: Image.asset(
-                                          icon,
-                                          width: 70,
-                                        ),
-                                      )
+                                        child: Image.asset(icon, width: 70),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -391,9 +473,16 @@ class _PaymentFinalState extends State<PaymentFinal> {
                       );
                       DateTime now = DateTime.now();
                       final currentTime = new DateTime(
-                          now.year, now.month, now.day, now.hour, now.minute);
-                      SendSms().sendSms("256700734139",
-                          "${userController.userModel.value!.name.toString().capitalize}+made+an+order.+Contact:+${userController.userModel.value!.phone}.+bridge_ai");
+                        now.year,
+                        now.month,
+                        now.day,
+                        now.hour,
+                        now.minute,
+                      );
+                      SendSms().sendSms(
+                        "256700734139",
+                        "${userController.userModel.value!.name.toString().capitalize}+made+an+order.+Contact:+${userController.userModel.value!.phone}.+bridge_ai",
+                      );
                       Map<String, dynamic> data = {
                         "address": widget.city,
                         "streetAddress": widget.street,
@@ -416,15 +505,16 @@ class _PaymentFinalState extends State<PaymentFinal> {
                         "ondelivery": 'not',
                       };
                       sendEmail(
-                          "${userController.userModel.value!.name.capitalize}",
-                          userController.userModel.value!.email,
-                          "${widget.city.capitalize}",
-                          "UGX ${oCcy.format(amount)}",
-                          idnumb);
+                        "${userController.userModel.value!.name.capitalize}",
+                        userController.userModel.value!.email,
+                        "${widget.city.capitalize}",
+                        "UGX ${oCcy.format(amount)}",
+                        idnumb,
+                      );
                       userController.sendEmail(
-                          "bridge_ai Team",
-                          "patricksseremba787@gmail.com, joviakisaakye@gmail.com",
-                          '''Hello Team,
+                        "bridge_ai Team",
+                        "patricksseremba787@gmail.com, joviakisaakye@gmail.com",
+                        '''Hello Team,
                              
                              This is an order email placed by ${userController.userModel.value!.name.capitalize} and below are the order details.
 
@@ -438,26 +528,26 @@ class _PaymentFinalState extends State<PaymentFinal> {
                              Street Address: ${widget.street},
                              User Location Coordinates: ${widget.lat}, ${widget.long},
                           ''',
-                          "Order Placed By ${userController.userModel.value!.name.capitalize}");
+                        "Order Placed By ${userController.userModel.value!.name.capitalize}",
+                      );
                       FirebaseFirestore.instance.collection("orders").add(data);
                       FirebaseFirestore.instance.collection("logs").add({
                         'name': userController.userModel.value!.name.capitalize,
                         'id': userController.userModel.value!.id,
                         'message': 'Has placed an order',
-                        'time': Timestamp.now()
+                        'time': Timestamp.now(),
                       });
-                      userController.updateUserData({
-                        "cart": [],
-                      });
+                      userController.updateUserData({"cart": []});
 
                       Fluttertoast.showToast(
-                          msg: "Order successfully placed",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.TOP,
-                          timeInSecForIosWeb: 3,
-                          backgroundColor: Colors.black.withOpacity(0.7),
-                          textColor: Colors.white,
-                          fontSize: 16.0);
+                        msg: "Order successfully placed",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.TOP,
+                        timeInSecForIosWeb: 3,
+                        backgroundColor: Colors.black.withOpacity(0.7),
+                        textColor: Colors.white,
+                        fontSize: 16.0,
+                      );
                       userController.updateUserData({"cart": []});
                     } else if (transactionStatus == "FAILED") {
                       timer.cancel();
@@ -477,19 +567,19 @@ class _PaymentFinalState extends State<PaymentFinal> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            "Unfortunately, the transaction was not successful. Therefore order was not placed. You can try using a different network",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.black87
-                                                    .withOpacity(0.8),
-                                                fontSize: 15)),
+                                          "Unfortunately, the transaction was not successful. Therefore order was not placed. You can try using a different network",
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.black87.withOpacity(
+                                              0.8,
+                                            ),
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
                                       Center(
-                                        child: Image.asset(
-                                          icon,
-                                          width: 70,
-                                        ),
-                                      )
+                                        child: Image.asset(icon, width: 70),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -525,19 +615,19 @@ class _PaymentFinalState extends State<PaymentFinal> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            "Hooray, your payment for $idnumb was recieved successfully. Order successfully placed",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.black87
-                                                    .withOpacity(0.8),
-                                                fontSize: 15)),
+                                          "Hooray, your payment for $idnumb was recieved successfully. Order successfully placed",
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.black87.withOpacity(
+                                              0.8,
+                                            ),
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
                                       Center(
-                                        child: Image.asset(
-                                          icon,
-                                          width: 70,
-                                        ),
-                                      )
+                                        child: Image.asset(icon, width: 70),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -546,11 +636,18 @@ class _PaymentFinalState extends State<PaymentFinal> {
                           );
                         },
                       );
-                      SendSms().sendSms("256700734139",
-                          "${userController.userModel.value!.name.toString().capitalize}+made+an+order.+Contact:+${userController.userModel.value!.phone}.+bridge_ai");
+                      SendSms().sendSms(
+                        "256700734139",
+                        "${userController.userModel.value!.name.toString().capitalize}+made+an+order.+Contact:+${userController.userModel.value!.phone}.+bridge_ai",
+                      );
                       DateTime now = DateTime.now();
                       final currentTime = new DateTime(
-                          now.year, now.month, now.day, now.hour, now.minute);
+                        now.year,
+                        now.month,
+                        now.day,
+                        now.hour,
+                        now.minute,
+                      );
                       Map<String, dynamic> data = {
                         "address": widget.city,
                         "streetAddress": widget.street,
@@ -575,15 +672,16 @@ class _PaymentFinalState extends State<PaymentFinal> {
                         "ondelivery": 'not',
                       };
                       sendEmail(
-                          "${userController.userModel.value!.name.capitalize}",
-                          userController.userModel.value!.email,
-                          "${widget.city.capitalize}",
-                          "UGX ${oCcy.format(amount)}",
-                          idnumb);
+                        "${userController.userModel.value!.name.capitalize}",
+                        userController.userModel.value!.email,
+                        "${widget.city.capitalize}",
+                        "UGX ${oCcy.format(amount)}",
+                        idnumb,
+                      );
                       userController.sendEmail(
-                          "bridge_ai Team",
-                          "patricksseremba787@gmail.com, joviakisaakye@gmail.com",
-                          '''Hello Team,
+                        "bridge_ai Team",
+                        "patricksseremba787@gmail.com, joviakisaakye@gmail.com",
+                        '''Hello Team,
                              
                              This is an order email placed by ${userController.userModel.value!.name.capitalize} and below are the order details.
 
@@ -597,34 +695,35 @@ class _PaymentFinalState extends State<PaymentFinal> {
                              Street Address: ${widget.street},
                              User Location Coordinates: ${widget.lat}, ${widget.long},
                           ''',
-                          "Order Placed By ${userController.userModel.value!.name.capitalize}");
+                        "Order Placed By ${userController.userModel.value!.name.capitalize}",
+                      );
                       FirebaseFirestore.instance.collection("orders").add(data);
                       FirebaseFirestore.instance.collection("logs").add({
                         'name': userController.userModel.value!.name.capitalize,
                         'id': userController.userModel.value!.id,
                         'message': 'Has placed an order',
-                        'time': Timestamp.now()
+                        'time': Timestamp.now(),
                       });
                       Fluttertoast.showToast(
-                          msg: "Order successfully placed",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.TOP,
-                          timeInSecForIosWeb: 3,
-                          backgroundColor: Colors.black.withOpacity(0.7),
-                          textColor: Colors.white,
-                          fontSize: 16.0);
-                      userController.updateUserData({
-                        "cart": [],
-                      });
+                        msg: "Order successfully placed",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.TOP,
+                        timeInSecForIosWeb: 3,
+                        backgroundColor: Colors.black.withOpacity(0.7),
+                        textColor: Colors.white,
+                        fontSize: 16.0,
+                      );
+                      userController.updateUserData({"cart": []});
 
                       Fluttertoast.showToast(
-                          msg: "Order successfully placed",
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.TOP,
-                          timeInSecForIosWeb: 4,
-                          backgroundColor: Colors.black.withOpacity(0.7),
-                          textColor: Colors.white,
-                          fontSize: 16.0);
+                        msg: "Order successfully placed",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.TOP,
+                        timeInSecForIosWeb: 4,
+                        backgroundColor: Colors.black.withOpacity(0.7),
+                        textColor: Colors.white,
+                        fontSize: 16.0,
+                      );
                     } else if (transactionStatus == "FAILED") {
                       timer.cancel();
                       print("Transaction Unsuccessful");
@@ -643,19 +742,19 @@ class _PaymentFinalState extends State<PaymentFinal> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            "Unfortunately, the transaction was not successful. Therefore order was not placed. You can try using a different network",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.black87
-                                                    .withOpacity(0.8),
-                                                fontSize: 15)),
+                                          "Unfortunately, the transaction was not successful. Therefore order was not placed. You can try using a different network",
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.black87.withOpacity(
+                                              0.8,
+                                            ),
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
                                       Center(
-                                        child: Image.asset(
-                                          icon,
-                                          width: 70,
-                                        ),
-                                      )
+                                        child: Image.asset(icon, width: 70),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -687,18 +786,16 @@ class _PaymentFinalState extends State<PaymentFinal> {
                           child: Wrap(
                             children: [
                               Container(
-                                child: Text("Something went wrong",
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.montserrat(
-                                        color: Colors.black87.withOpacity(0.8),
-                                        fontSize: 15)),
-                              ),
-                              Center(
-                                child: Image.asset(
-                                  icon,
-                                  width: 70,
+                                child: Text(
+                                  "Something went wrong",
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.black87.withOpacity(0.8),
+                                    fontSize: 15,
+                                  ),
                                 ),
-                              )
+                              ),
+                              Center(child: Image.asset(icon, width: 70)),
                             ],
                           ),
                         ),
@@ -720,13 +817,14 @@ class _PaymentFinalState extends State<PaymentFinal> {
       if (e.toString() ==
           "SocketException: Failed host lookup: 'api.zengapay.com' (OS Error: No address associated with hostname, errno = 7)") {
         Fluttertoast.showToast(
-            msg: "It seems you are having network trouble",
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            timeInSecForIosWeb: 5,
-            backgroundColor: Colors.black.withOpacity(0.7),
-            textColor: Colors.white,
-            fontSize: 16.0);
+          msg: "It seems you are having network trouble",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 5,
+          backgroundColor: Colors.black.withOpacity(0.7),
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
         Get.back();
         showModalBottomSheet<int>(
           backgroundColor: Colors.transparent,
@@ -742,18 +840,15 @@ class _PaymentFinalState extends State<PaymentFinal> {
                       children: [
                         Container(
                           child: Text(
-                              "It seems like you do not have a stable internet connection",
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.montserrat(
-                                  color: Colors.black87.withOpacity(0.8),
-                                  fontSize: 15)),
-                        ),
-                        Center(
-                          child: Image.asset(
-                            icon,
-                            width: 70,
+                            "It seems like you do not have a stable internet connection",
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.montserrat(
+                              color: Colors.black87.withOpacity(0.8),
+                              fontSize: 15,
+                            ),
                           ),
-                        )
+                        ),
+                        Center(child: Image.asset(icon, width: 70)),
                       ],
                     ),
                   ),
@@ -766,24 +861,31 @@ class _PaymentFinalState extends State<PaymentFinal> {
     }
   }
 
-  void sendEmail(String name, String email, String address, String amount,
-      String ordernumber) async {
+  void sendEmail(
+    String name,
+    String email,
+    String address,
+    String amount,
+    String ordernumber,
+  ) async {
     final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
-    final response = await http.post(url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'service_id': "service_hhthruv",
-          'template_id': "template_7qe3535",
-          'user_id': "XUOcEJp3cEew5NNai",
-          'accessToken': "LyMrwY7O8bovubs4_ztTU",
-          'template_params': {
-            'to_name': name,
-            'to_email': email,
-            'reply_to': "NO REPLY",
-            'message':
-                "Thank you for shopping with Bridge Mom App. We are pleased to confirm that we have received your order and it is currently being processed with great attention to detail.\n\nOrder Details:\nOrder Number: $ordernumber \nOrder Date: ${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}\nShipping Address: $address \n\nTotal Amount: $amount \n\nWe would like to assure you that we are committed to delivering high-quality products and excellent service. Our team is working diligently to prepare your order for shipment.\n\nEstimated Delivery Date: ${DateFormat.yMd().format(DateTime.now())}\n\nShould you have any questions or require further assistance, please do not hesitate to contact our customer service team"
-          }
-        }));
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'service_id': "service_hhthruv",
+        'template_id': "template_7qe3535",
+        'user_id': "XUOcEJp3cEew5NNai",
+        'accessToken': "LyMrwY7O8bovubs4_ztTU",
+        'template_params': {
+          'to_name': name,
+          'to_email': email,
+          'reply_to': "NO REPLY",
+          'message':
+              "Thank you for shopping with Bridge Mom App. We are pleased to confirm that we have received your order and it is currently being processed with great attention to detail.\n\nOrder Details:\nOrder Number: $ordernumber \nOrder Date: ${DateTime.now().day}-${DateTime.now().month}-${DateTime.now().year}\nShipping Address: $address \n\nTotal Amount: $amount \n\nWe would like to assure you that we are committed to delivering high-quality products and excellent service. Our team is working diligently to prepare your order for shipment.\n\nEstimated Delivery Date: ${DateFormat.yMd().format(DateTime.now())}\n\nShould you have any questions or require further assistance, please do not hesitate to contact our customer service team",
+        },
+      }),
+    );
     return print("${response.statusCode}");
   }
 }

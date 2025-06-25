@@ -80,7 +80,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: "Help & Support",
                   description: "Access help & support resources",
                   onTap: () {
-                    openLink("https://femihub.com");
+                    openLink("https://bulamubridgeai.com/.com");
                   },
                 ),
                 SizedBox(height: 12),
@@ -89,7 +89,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: "Contact Us",
                   description: "Get in touch with our team",
                   onTap: () {
-                    openLink("https://femihub.com");
+                    openLink("https://wa.me/256772797091");
                   },
                 ),
                 SizedBox(height: 12),
@@ -98,7 +98,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: "About",
                   description: "Learn more about Femihub",
                   onTap: () {
-                    openLink("https://femihub.com");
+                    openLink("https://bulamubridgeai.com/.com");
                   },
                 ),
                 SizedBox(height: 24),

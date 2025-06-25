@@ -284,3 +284,108 @@ Return only the information, with no additional text or formatting
 
   return aiResponse;
 }
+
+suggestFamilyPlanningSpecificInfo(String plan) async {
+  String aiResponse = "";
+  final content = [
+    Content.multi([
+      TextPart('''
+As a helpful and informative assistant for the FemiHub app, generate a comprehensive guide to family planning method/term called ${plan} for our users. This guide should be empowering, easy to understand, and cover a range of considerations relevant to women.
+
+Please include the following sections:
+
+Definition
+
+A clear and concise definition.
+Highlight its role in empowering women and couples to make informed choices.
+
+Merits and demerits
+
+Where to Find More Information & Support:
+
+Encourage users to speak to their doctor, gynecologist, or a local family planning clinic.
+Suggest reliable online resources (without listing specific URLs, just categories like 'reputable health organizations').
+Maintain a supportive, non-judgmental, and evidence-based tone. Use clear, accessible language, avoiding overly technical jargon. The information should empower users to make informed decisions about their reproductive health.
+Return only the information, with no additional text or formatting
+'''),
+    ]),
+  ];
+  final response = await model.generateContentStream(content);
+  await for (final chunk in response) {
+    if (chunk.text != null) {
+      aiResponse = aiResponse + chunk.text!;
+    }
+  }
+
+  return aiResponse;
+}
+
+suggestPregnancyTip(String trimester) async {
+  String aiResponse = "";
+  final content = [
+    Content.multi([
+      TextPart('''
+As a supportive and informative assistant for the FemiHub app, generate a comprehensive set of tips and guidance for a user based on their current Pregnancy Trimester. This information should be reassuring, practical, and address the unique experiences of each stage of pregnancy.
+
+Please provide distinct sections for the following trimesters. For each trimester, include:
+
+For the $trimester:
+
+What to Expect (General Overview):
+
+Briefly describe the key developmental milestones for the baby during this trimester.
+
+Highlight major physical changes the pregnant person might experience.
+
+Common Symptoms & How to Manage Them:
+
+List typical symptoms for this specific trimester (e.g., morning sickness, fatigue, increased energy, heartburn, back pain, swelling).
+
+Offer practical and gentle tips for managing these symptoms (e.g., dietary adjustments, rest, light exercise, comfort measures).
+
+Nutrition & Hydration Tips:
+
+Specific dietary recommendations or important nutrients for this trimester.
+
+Advice on hydration.
+
+Any foods or drinks to avoid.
+
+Well-being & Self-Care:
+
+Emotional support tips (e.g., coping with mood swings, managing anxiety, bonding with the baby).
+
+Importance of rest and light activity.
+
+Partner involvement suggestions.
+
+Things to Do / Prepare For:
+
+Key appointments or screenings to consider during this trimester.
+
+Practical preparations (e.g., announcing pregnancy, nursery planning, birth plan discussions, packing a hospital bag).
+
+Educational resources or classes to explore.
+
+Things to Avoid / Be Mindful Of:
+
+Any specific activities, medications, or situations that should be avoided or approached with caution during this trimester.
+
+When to Contact Your Doctor/Midwife:
+
+A brief, non-alarming note on any specific red-flag symptoms that warrant immediate medical attention for this trimester.
+
+Maintain a warm, empathetic, and encouraging tone throughout. Use clear, accessible language, avoiding overly complex medical jargon. The information should empower expectant parents and help them navigate their pregnancy journey with confidence.
+Return only the information, with no additional text or formatting
+'''),
+    ]),
+  ];
+  final response = await model.generateContentStream(content);
+  await for (final chunk in response) {
+    if (chunk.text != null) {
+      aiResponse = aiResponse + chunk.text!;
+    }
+  }
+
+  return aiResponse;
+}

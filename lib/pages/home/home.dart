@@ -1,11 +1,15 @@
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/bottom_nav_bar.dart';
 import 'package:bridge_ai/constants/controllers.dart';
+import 'package:bridge_ai/controllers/product_controller.dart';
+import 'package:bridge_ai/models/product.dart';
 import 'package:bridge_ai/pages/home/extra_pages/chatbot.dart';
 import 'package:bridge_ai/pages/home/extra_pages/due_date.dart';
 import 'package:bridge_ai/pages/home/extra_pages/family_planner.dart';
 import 'package:bridge_ai/pages/home/extra_pages/period_tracker.dart';
+import 'package:bridge_ai/pages/home/extra_pages/pregnancy_tracker.dart';
 import 'package:bridge_ai/pages/shop/shop.dart';
+import 'package:bridge_ai/pages/shop/widgets/single_product.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -97,11 +101,17 @@ class _HomePageNewState extends State<HomePageNew> {
     } catch (e) {
       print("\n=====Token Error: $e==========\n");
     }
+    recommendedProducts =
+        await ProducsController.instance.getMostPurchasedProducts();
+    setState(() {});
   }
 
-  void dispose(){
+  void dispose() {
     super.dispose();
   }
+
+  List<ProductModel> recommendedProducts = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,20 +139,39 @@ class _HomePageNewState extends State<HomePageNew> {
                 SizedBox(height: 12),
                 HomeTapWidget(
                   svgLocation: "images/drop-light.svg",
-                  title: "Period Tracker",
-                  description: "Track your period cycle",
+                  title:
+                      userController.userModel.value != null &&
+                              userController.userModel.value!.stage ==
+                                  "Pregnant"
+                          ? "Pregancy Tracker"
+                          : "Period Tracker",
+                  description:
+                      userController.userModel.value != null &&
+                              userController.userModel.value!.stage ==
+                                  "Pregnant"
+                          ? "Track your baby's progress"
+                          : "Track your period cycle",
                   onTap: () {
-                    if (userController.userModel.value != null &&
-                        userController.userModel.value!.perioddate != null) {
-                      Get.to(
-                        () => PeriodTrackerScreen(),
-                        transition: Transition.rightToLeft,
-                      );
-                    } else {
-                      Get.to(
-                        () => DueDateCalculatorScreen(),
-                        transition: Transition.rightToLeft,
-                      );
+                    if (userController.userModel.value != null) {
+                      if (userController.userModel.value!.stage == "Pregnant") {
+                        Get.to(
+                          () => PregnancyTrackerPage(),
+                          transition: Transition.rightToLeft,
+                        );
+                      } else {
+                        if (userController.userModel.value!.perioddate !=
+                            null) {
+                          Get.to(
+                            () => PeriodTrackerScreen(),
+                            transition: Transition.rightToLeft,
+                          );
+                        } else {
+                          Get.to(
+                            () => DueDateCalculatorScreen(),
+                            transition: Transition.rightToLeft,
+                          );
+                        }
+                      }
                     }
                   },
                   color: primaryColor,
@@ -175,7 +204,35 @@ class _HomePageNewState extends State<HomePageNew> {
                 ),
                 SizedBox(height: 24),
                 Text(
-                  'Shop',
+                  'Recommended Products',
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 12),
+                GridView.builder(
+                  shrinkWrap:
+                      true, // Allow the GridView to scroll within a limited space
+                  physics:
+                      NeverScrollableScrollPhysics(), // Disable scrolling of the GridView itself
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2, // Number of columns in the grid
+                    crossAxisSpacing: 8.0, // Spacing between columns
+                    mainAxisSpacing: 8.0, // Spacing between rows
+                    childAspectRatio: 0.7,
+                  ),
+                  itemCount: recommendedProducts.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return SingleProductWidget2(
+                      product: recommendedProducts[index],
+                    );
+                  },
+                ),
+                SizedBox(height: 24),
+                Text(
+                  'Shop Categories',
                   style: GoogleFonts.montserrat(
                     fontWeight: FontWeight.w600,
                     fontSize: 18,

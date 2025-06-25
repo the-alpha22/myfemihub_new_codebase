@@ -4,7 +4,8 @@ import 'package:bridge_ai/pages/authentication/resetpassword.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -196,7 +197,7 @@ class _Login extends State<Login> {
                   ),
                 ),
                 SizedBox(height: 24),
-                if (!Platform.isIOS) ...{
+                if (defaultTargetPlatform != TargetPlatform.iOS) ...{
                   Center(
                     child: Text(
                       "Or Sign In With",
@@ -236,7 +237,7 @@ class _Login extends State<Login> {
                       ),
                     ),
                   ),
-                  if (Platform.isIOS) ...{
+                  if (defaultTargetPlatform == TargetPlatform.iOS) ...{
                     SizedBox(height: 10),
                     InkWell(
                       onTap: () async {

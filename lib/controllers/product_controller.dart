@@ -14,21 +14,31 @@ class ProducsController extends GetxController {
     products.bindStream(getAllProducts());
   }
 
-  Stream<List<ProductModel>> getAllProducts() =>
-      firebaseFirestore.collection(collection).snapshots().map((query) =>
-          query.docs.map((item) => ProductModel.fromMap(item.data())).toList());
+  Stream<List<ProductModel>> getAllProducts() => firebaseFirestore
+      .collection(collection)
+      .snapshots()
+      .map(
+        (query) =>
+            query.docs
+                .map((item) => ProductModel.fromMap(item.data()))
+                .toList(),
+      );
   Future<List<ProductModel>> getRecommendedProducts(String usercategory) async {
     try {
-      var querySnapshot = await firebaseFirestore
-          .collection(collection)
-          .where("usercategory", isEqualTo: usercategory)
-          .orderBy("purchases", descending: true)
-          .get();
+      var querySnapshot =
+          await firebaseFirestore
+              .collection(collection)
+              .where("usercategory", isEqualTo: usercategory)
+              .orderBy("purchases", descending: true)
+              .get();
 
-      List<ProductModel> products = querySnapshot.docs
-          .map((documentSnapshot) =>
-              ProductModel.fromMap(documentSnapshot.data()))
-          .toList();
+      List<ProductModel> products =
+          querySnapshot.docs
+              .map(
+                (documentSnapshot) =>
+                    ProductModel.fromMap(documentSnapshot.data()),
+              )
+              .toList();
 
       return products;
     } catch (e) {
@@ -38,19 +48,22 @@ class ProducsController extends GetxController {
     }
   }
 
-  Future<List<ProductModel>> getMostPurchasedProducts(
-      String usercategory) async {
+  Future<List<ProductModel>> getMostPurchasedProducts() async {
     try {
-      var querySnapshot = await firebaseFirestore
-          .collection(collection)
-          .where("usercategory", isEqualTo: usercategory)
-          .orderBy("purchases", descending: true)
-          .get();
+      var querySnapshot =
+          await firebaseFirestore
+              .collection(collection)
+              .orderBy("purchases", descending: true)
+              .limit(4)
+              .get();
 
-      List<ProductModel> products = querySnapshot.docs
-          .map((documentSnapshot) =>
-              ProductModel.fromMap(documentSnapshot.data()))
-          .toList();
+      List<ProductModel> products =
+          querySnapshot.docs
+              .map(
+                (documentSnapshot) =>
+                    ProductModel.fromMap(documentSnapshot.data()),
+              )
+              .toList();
 
       return products;
     } catch (e) {
@@ -60,18 +73,21 @@ class ProducsController extends GetxController {
     }
   }
 
-  Future<List<ProductModel>> getProductsByCategory(
-      String category,) async {
+  Future<List<ProductModel>> getProductsByCategory(String category) async {
     try {
-      var querySnapshot = await firebaseFirestore
-          .collection(collection)
-          .where("category", isEqualTo: category)
-          .get();
+      var querySnapshot =
+          await firebaseFirestore
+              .collection(collection)
+              .where("category", isEqualTo: category)
+              .get();
 
-      List<ProductModel> products = querySnapshot.docs
-          .map((documentSnapshot) =>
-              ProductModel.fromMap(documentSnapshot.data()))
-          .toList();
+      List<ProductModel> products =
+          querySnapshot.docs
+              .map(
+                (documentSnapshot) =>
+                    ProductModel.fromMap(documentSnapshot.data()),
+              )
+              .toList();
 
       return products;
     } catch (e) {

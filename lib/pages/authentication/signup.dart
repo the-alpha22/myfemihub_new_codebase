@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 
 class Registration extends StatefulWidget {
   @override
@@ -229,7 +230,8 @@ class _RegistrationState extends State<Registration> {
                               ),
                             ),
                             SizedBox(height: 12),
-                            if (!Platform.isIOS) ...{
+                            if (defaultTargetPlatform !=
+                                TargetPlatform.iOS) ...{
                               Center(
                                 child: Text(
                                   "Or Sign Up With",
@@ -274,7 +276,8 @@ class _RegistrationState extends State<Registration> {
                                   ),
                                 ),
                               ),
-                              if (Platform.isIOS) ...{
+                              if (defaultTargetPlatform ==
+                                  TargetPlatform.iOS) ...{
                                 SizedBox(height: 10),
                                 InkWell(
                                   onTap: () async {

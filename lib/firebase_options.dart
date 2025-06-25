@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCW3jsfNpuybXqMOocB9wOth4kdMAUP0Zg',
-    appId: '1:450652021008:android:e7a3063d13bf850d344595',
+    appId: '1:450652021008:android:be288890b609a56d344595',
     messagingSenderId: '450652021008',
     projectId: 'femihub-7047b',
     storageBucket: 'femihub-7047b.appspot.com',
@@ -60,34 +60,34 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBdCEEksmLrIFgXuiRtz9u7EK0EbpfaOLE',
-    appId: '1:450652021008:ios:0fb6909a2a9e6142344595',
+    appId: '1:450652021008:ios:65f07605b9f47e9e344595',
     messagingSenderId: '450652021008',
     projectId: 'femihub-7047b',
     storageBucket: 'femihub-7047b.appspot.com',
     androidClientId: '450652021008-1hot2lpa689kcosekd93qi9lv6c9tdat.apps.googleusercontent.com',
-    iosClientId: '450652021008-20pja2esg9ch00qnt75c3p5njbb8phga.apps.googleusercontent.com',
-    iosBundleId: 'obtek.technologies.bridgeAi',
+    iosClientId: '450652021008-kgdvc3qojiaclpvutlb090nqpiqndlje.apps.googleusercontent.com',
+    iosBundleId: 'technologies.obtek.bridge_ai',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBdCEEksmLrIFgXuiRtz9u7EK0EbpfaOLE',
-    appId: '1:450652021008:ios:0fb6909a2a9e6142344595',
+    appId: '1:450652021008:ios:65f07605b9f47e9e344595',
     messagingSenderId: '450652021008',
     projectId: 'femihub-7047b',
     storageBucket: 'femihub-7047b.appspot.com',
     androidClientId: '450652021008-1hot2lpa689kcosekd93qi9lv6c9tdat.apps.googleusercontent.com',
-    iosClientId: '450652021008-20pja2esg9ch00qnt75c3p5njbb8phga.apps.googleusercontent.com',
-    iosBundleId: 'obtek.technologies.bridgeAi',
+    iosClientId: '450652021008-kgdvc3qojiaclpvutlb090nqpiqndlje.apps.googleusercontent.com',
+    iosBundleId: 'technologies.obtek.bridge_ai',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyB76fAmHqdZZ3_K-689t5rLDflApu8gh_w',
-    appId: '1:450652021008:web:d8d26d2108f1d9c6344595',
+    appId: '1:450652021008:web:c7a6632b00626b5c344595',
     messagingSenderId: '450652021008',
     projectId: 'femihub-7047b',
     authDomain: 'femihub-7047b.firebaseapp.com',
     storageBucket: 'femihub-7047b.appspot.com',
-    measurementId: 'G-W3Q0KSM47D',
+    measurementId: 'G-QKWJXM1VQ1',
   );
 
 }

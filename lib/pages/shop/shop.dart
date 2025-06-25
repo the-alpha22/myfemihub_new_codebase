@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 class ShopPageNew extends StatefulWidget {
   const ShopPageNew({super.key});
@@ -24,6 +25,9 @@ class _ShopPageNewState extends State<ShopPageNew> {
   }
 
   getProducts() async {
+    setState(() {
+      isLoading = true;
+    });
     babyProducts = await ProducsController.instance.getProductsByCategory(
       "baby",
     );
@@ -35,6 +39,9 @@ class _ShopPageNewState extends State<ShopPageNew> {
     );
     contraceptionProducts = await ProducsController.instance
         .getProductsByCategory("contraceptions");
+    setState(() {
+      isLoading = false;
+    });
   }
 
   String selection = Get.parameters["section"] ?? "Featured";
@@ -42,6 +49,7 @@ class _ShopPageNewState extends State<ShopPageNew> {
   List<ProductModel> maternityProducts = [];
   List<ProductModel> essentialProducts = [];
   List<ProductModel> contraceptionProducts = [];
+  bool isLoading = true;
 
   @override
   Widget build(BuildContext context) {
@@ -70,223 +78,287 @@ class _ShopPageNewState extends State<ShopPageNew> {
         ],
       ),
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SearchBar(),
-            SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        selection = "Featured";
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: selection == "Featured" ? primaryColor : bgcolor,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Featured',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SearchBar(),
+                SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            selection = "Featured";
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
                             color:
                                 selection == "Featured"
-                                    ? Colors.white
-                                    : Colors.black87,
+                                    ? primaryColor
+                                    : bgcolor,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Featured',
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                                color:
+                                    selection == "Featured"
+                                        ? Colors.white
+                                        : Colors.black87,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        selection = "Maternity";
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color:
-                            selection == "Maternity" ? primaryColor : bgcolor,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Maternity',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
+                      SizedBox(width: 12),
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            selection = "Maternity";
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
                             color:
                                 selection == "Maternity"
-                                    ? Colors.white
-                                    : Colors.black87,
+                                    ? primaryColor
+                                    : bgcolor,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Maternity',
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                                color:
+                                    selection == "Maternity"
+                                        ? Colors.white
+                                        : Colors.black87,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        selection = "Baby";
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: selection == "Baby" ? primaryColor : bgcolor,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Baby',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                            color:
-                                selection == "Baby"
-                                    ? Colors.white
-                                    : Colors.black87,
+                      SizedBox(width: 12),
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            selection = "Baby";
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: selection == "Baby" ? primaryColor : bgcolor,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Baby',
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                                color:
+                                    selection == "Baby"
+                                        ? Colors.white
+                                        : Colors.black87,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        selection = "Essentials";
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color:
-                            selection == "Essentials" ? primaryColor : bgcolor,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Essentials',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
+                      SizedBox(width: 12),
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            selection = "Essentials";
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
                             color:
                                 selection == "Essentials"
-                                    ? Colors.white
-                                    : Colors.black87,
+                                    ? primaryColor
+                                    : bgcolor,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Essentials',
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                                color:
+                                    selection == "Essentials"
+                                        ? Colors.white
+                                        : Colors.black87,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        selection = "Contraceptions";
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color:
-                            selection == "Contraceptions"
-                                ? primaryColor
-                                : bgcolor,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          'Contraceptions',
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
+                      SizedBox(width: 12),
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            selection = "Contraceptions";
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
                             color:
                                 selection == "Contraceptions"
-                                    ? Colors.white
-                                    : Colors.black87,
+                                    ? primaryColor
+                                    : bgcolor,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Contraceptions',
+                              style: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                                color:
+                                    selection == "Contraceptions"
+                                        ? Colors.white
+                                        : Colors.black87,
+                              ),
+                            ),
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 12),
+                if (isLoading == true) ...{
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Lottie.asset(
+                        'images/femihub_loading.json',
+                        repeat: true,
+                        frameRate: FrameRate(30),
+                        height: 180,
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            SizedBox(height: 12),
-            if (selection == "Featured") ...{
-              Expanded(
-                child: ListView.builder(
-                  itemCount: categories.length,
-                  itemBuilder:
-                      (context, index) => CategoryCard(
-                        category: categories[index],
-                        onTap: () {
-                          Get.offAllNamed("/shop/${categories[index].title}");
+                },
+                if (isLoading == false) ...{
+                  if (selection == "Featured") ...{
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var category in categories) ...{
+                          CategoryCard(
+                            category: category,
+                            onTap: () {
+                              Get.offAllNamed("/shop/${category.title}");
+                            },
+                          ),
                         },
+                      ],
+                    ),
+                  },
+                  if (selection == "Maternity") ...{
+                    GridView.builder(
+                      shrinkWrap:
+                          true, // Allow the GridView to scroll within a limited space
+                      physics:
+                          NeverScrollableScrollPhysics(), // Disable scrolling of the GridView itself
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // Number of columns in the grid
+                        crossAxisSpacing: 8.0, // Spacing between columns
+                        mainAxisSpacing: 8.0, // Spacing between rows
+                        childAspectRatio: 0.7,
                       ),
-                ),
-              ),
-            },
-            if (selection == "Maternity") ...{
-              Expanded(
-                child: ListView.builder(
-                  itemCount: maternityProducts.length,
-                  itemBuilder:
-                      (context, index) => SingleProductWidget2(
-                        product: maternityProducts[index],
+                      itemCount: maternityProducts.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return SingleProductWidget2(
+                          product: maternityProducts[index],
+                        );
+                      },
+                    ),
+                  },
+                  if (selection == "Baby") ...{
+                    GridView.builder(
+                      shrinkWrap:
+                          true, // Allow the GridView to scroll within a limited space
+                      physics:
+                          NeverScrollableScrollPhysics(), // Disable scrolling of the GridView itself
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // Number of columns in the grid
+                        crossAxisSpacing: 8.0, // Spacing between columns
+                        mainAxisSpacing: 8.0, // Spacing between rows
+                        childAspectRatio: 0.7,
                       ),
-                ),
-              ),
-            },
-            if (selection == "Baby") ...{
-              Expanded(
-                child: ListView.builder(
-                  itemCount: babyProducts.length,
-                  itemBuilder:
-                      (context, index) =>
-                          SingleProductWidget2(product: babyProducts[index]),
-                ),
-              ),
-            },
-            if (selection == "Essentials") ...{
-              Expanded(
-                child: ListView.builder(
-                  itemCount: essentialProducts.length,
-                  itemBuilder:
-                      (context, index) => SingleProductWidget2(
-                        product: essentialProducts[index],
+                      itemCount: babyProducts.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return SingleProductWidget2(
+                          product: babyProducts[index],
+                        );
+                      },
+                    ),
+                  },
+                  if (selection == "Essentials") ...{
+                    GridView.builder(
+                      shrinkWrap:
+                          true, // Allow the GridView to scroll within a limited space
+                      physics:
+                          NeverScrollableScrollPhysics(), // Disable scrolling of the GridView itself
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // Number of columns in the grid
+                        crossAxisSpacing: 8.0, // Spacing between columns
+                        mainAxisSpacing: 8.0, // Spacing between rows
+                        childAspectRatio: 0.7,
                       ),
-                ),
-              ),
-            },
-            if (selection == "Contraceptions") ...{
-              Expanded(
-                child: ListView.builder(
-                  itemCount: contraceptionProducts.length,
-                  itemBuilder:
-                      (context, index) => SingleProductWidget2(
-                        product: contraceptionProducts[index],
+                      itemCount: essentialProducts.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return SingleProductWidget2(
+                          product: essentialProducts[index],
+                        );
+                      },
+                    ),
+                  },
+                  if (selection == "Contraceptions") ...{
+                    GridView.builder(
+                      shrinkWrap:
+                          true, // Allow the GridView to scroll within a limited space
+                      physics:
+                          NeverScrollableScrollPhysics(), // Disable scrolling of the GridView itself
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // Number of columns in the grid
+                        crossAxisSpacing: 8.0, // Spacing between columns
+                        mainAxisSpacing: 8.0, // Spacing between rows
+                        childAspectRatio: 0.7,
                       ),
-                ),
-              ),
-            },
-          ],
+                      itemCount: contraceptionProducts.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return SingleProductWidget2(
+                          product: contraceptionProducts[index],
+                        );
+                      },
+                    ),
+                  },
+                },
+              ],
+            ),
+          ),
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(),
@@ -302,6 +374,11 @@ class SearchBar extends StatelessWidget {
     return TextField(
       decoration: InputDecoration(
         hintText: "Search",
+        hintStyle: GoogleFonts.montserrat(
+          color: Colors.black87,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
         prefixIcon: const Icon(Icons.search),
         filled: true,
         fillColor: const Color(0xFFF2F6F4),

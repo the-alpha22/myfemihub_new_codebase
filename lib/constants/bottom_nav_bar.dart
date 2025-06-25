@@ -13,13 +13,13 @@ class CustomBottomNavBar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 20),
       child: Container(
-        height: 60,
+        height: 70,
         decoration: BoxDecoration(
           color: primaryColor,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -27,36 +27,31 @@ class CustomBottomNavBar extends StatelessWidget {
                 onTap: () {
                   Get.offAllNamed("/home");
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        currentRoute == "/home"
-                            ? Color.fromARGB(255, 190, 15, 73)
-                            : primaryColor,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset(
-                          "images/house-line-light.svg",
-                          height: 32.0,
-                          color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Column(
+                    children: [
+                      SvgPicture.asset(
+                        "images/house-line-light.svg",
+                        height: 32.0,
+                        color:
+                            currentRoute == "/home"
+                                ? Colors.white
+                                : Colors.white54,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Home',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10,
+                          color:
+                              currentRoute == "/home"
+                                  ? Colors.white
+                                  : Colors.white54,
                         ),
-                        if (currentRoute == "/home") ...{
-                          SizedBox(width: 8),
-                          Text(
-                            'Home',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        },
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -64,36 +59,31 @@ class CustomBottomNavBar extends StatelessWidget {
                 onTap: () {
                   Get.offAllNamed("/shop");
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        currentRoute.contains("shop")
-                            ? Color.fromARGB(255, 190, 15, 73)
-                            : primaryColor,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset(
-                          "images/shopping-bag-open-light.svg",
-                          height: 32.0,
-                          color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Column(
+                    children: [
+                      SvgPicture.asset(
+                        "images/shopping-bag-open-light.svg",
+                        height: 32.0,
+                        color:
+                            currentRoute.contains("shop")
+                                ? Colors.white
+                                : Colors.white54,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Shop',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10,
+                          color:
+                              currentRoute.contains("shop")
+                                  ? Colors.white
+                                  : Colors.white54,
                         ),
-                        if (currentRoute.contains("shop")) ...{
-                          SizedBox(width: 8),
-                          Text(
-                            'Shop',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        },
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -101,36 +91,31 @@ class CustomBottomNavBar extends StatelessWidget {
                 onTap: () {
                   Get.offAllNamed("/community");
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        currentRoute == "/community"
-                            ? Color.fromARGB(255, 190, 15, 73)
-                            : primaryColor,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset(
-                          "images/users-light.svg",
-                          height: 32,
-                          color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Column(
+                    children: [
+                      SvgPicture.asset(
+                        "images/users-light.svg",
+                        height: 32,
+                        color:
+                            currentRoute == "/community"
+                                ? Colors.white
+                                : Colors.white54,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Community',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10,
+                          color:
+                              currentRoute == "/community"
+                                  ? Colors.white
+                                  : Colors.white54,
                         ),
-                        if (currentRoute == "/community") ...{
-                          SizedBox(width: 8),
-                          Text(
-                            'Community',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        },
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -138,36 +123,31 @@ class CustomBottomNavBar extends StatelessWidget {
                 onTap: () {
                   Get.offAllNamed("/settings");
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        currentRoute == "/settings"
-                            ? Color.fromARGB(255, 190, 15, 73)
-                            : primaryColor,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset(
-                          "images/gear-light.svg",
-                          height: 32,
-                          color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Column(
+                    children: [
+                      SvgPicture.asset(
+                        "images/gear-light.svg",
+                        height: 32,
+                        color:
+                            currentRoute == "/settings"
+                                ? Colors.white
+                                : Colors.white54,
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Settings',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10,
+                          color:
+                              currentRoute == "/settings"
+                                  ? Colors.white
+                                  : Colors.white54,
                         ),
-                        if (currentRoute == "/settings") ...{
-                          SizedBox(width: 8),
-                          Text(
-                            'Settings',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        },
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

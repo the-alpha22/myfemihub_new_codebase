@@ -14,6 +14,7 @@ import 'package:bridge_ai/controllers/specialists.dart';
 import 'package:bridge_ai/controllers/storiesController.dart';
 import 'package:bridge_ai/firebase_options.dart';
 import 'package:bridge_ai/pages/community/community.dart';
+import 'package:bridge_ai/pages/community/extra_pages/post_details.dart';
 import 'package:bridge_ai/pages/home/home.dart';
 import 'package:bridge_ai/pages/settings/settings.dart';
 import 'package:bridge_ai/pages/shop/shop.dart';
@@ -53,6 +54,7 @@ void main() async {
   ).then((value) {
     Get.put(AppController());
     Get.put(UserController());
+    Get.put(CartController());
     Get.lazyPut(() => MessagingController());
     Get.lazyPut(() => UserMessageController());
     Get.lazyPut(() => LogsController());
@@ -62,7 +64,7 @@ void main() async {
     Get.lazyPut(() => SpecialistController());
     Get.lazyPut(() => StoriesController());
     Get.lazyPut(() => ProducsController());
-    Get.lazyPut(() => CartController());
+
     Get.lazyPut(() => ChatBotConversationsController());
   });
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
@@ -93,13 +95,10 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     print("Obtek Technologies");
-    final currentRoute = Get.currentRoute;
-
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'My FemiHub',
       theme: ThemeData(primaryColor: Color.fromARGB(255, 70, 140, 209)),
-      initialRoute: currentRoute,
       getPages: [
         GetPage(
           name: '/',
@@ -124,6 +123,11 @@ class _MyAppState extends State<MyApp> {
         GetPage(
           name: '/community',
           page: () => CommunityPageNew(),
+          transition: Transition.fadeIn,
+        ),
+        GetPage(
+          name: '/community/posts/:id',
+          page: () => PostDetailsPage(),
           transition: Transition.fadeIn,
         ),
         GetPage(
