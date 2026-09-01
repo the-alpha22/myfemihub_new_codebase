@@ -1,17 +1,13 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/controllers/cart_controller.dart';
 import 'package:bridge_ai/pages/shop/widgets/cart_item_widget.dart';
 import 'package:bridge_ai/pages/shop/widgets/payment_method.dart';
-import 'package:bridge_ai/widgets/helpers/showLoading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bridge_ai/constants/controllers.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:geocoding/geocoding.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:lottie/lottie.dart';
 
 class ShoppingCartWidget extends StatefulWidget {
@@ -20,94 +16,128 @@ class ShoppingCartWidget extends StatefulWidget {
 }
 
 class _ShoppingCartWidgetState extends State<ShoppingCartWidget> {
-  String location = 'Null, Press Button';
-  String Address = 'search';
-  double distanceInMeter = 0.0;
+  String location = 'Enter your city';
+  String Address = '';
+  TextEditingController cityController = TextEditingController();
+  TextEditingController streetController = TextEditingController();
 
-  getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Location services are not enabled don't continue
-      // accessing the position and request users of the
-      // App to enable the location services.
-      await Geolocator.openLocationSettings();
-      return Future.error('Location services are disabled.');
-    }
+  // Predefined delivery rates by city (you can customize these)
+  final Map<String, double> cityDeliveryRates = {
+    'kampala': 5000,
+    'entebbe': 8000,
+    'jinja': 12000,
+    'fort portal': 15000,
+    'mbarara': 14000,
+    'kabale': 16000,
+    'masaka': 9000,
+    'mbale': 13000,
+    'soroti': 14000,
+    'gulu': 18000,
+  };
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        Get.snackbar(
-          "Unfortunately",
-          "You have denied us location permissions",
-        );
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately.
-      return Future.error(
-        'Location permissions are permanently denied, we cannot request permissions.',
-      );
-    }
-
-    // Get the user's current position
-    // Position position = await Geolocator.getCurrentPosition(
-    //   forceAndroidLocationManager: true,
-    //   desiredAccuracy: LocationAccuracy.best,
-    //   timeLimit: Duration(seconds: 6),
-    // ).timeout(Duration(seconds: 5),
-    //     onTimeout: () =>
-    //         Geolocator.getLastKnownPosition(forceAndroidLocationManager: true));
-    Position? position;
-    try {
-      position = await Geolocator.getCurrentPosition(
-        forceAndroidLocationManager: true,
-        desiredAccuracy: LocationAccuracy.best,
-        timeLimit: Duration(seconds: 6),
-      ).catchError((error) async {
-        print("using last known location");
-        Position? position2 = await Geolocator.getLastKnownPosition(
-          forceAndroidLocationManager: true,
-        );
-        return Position(
-          latitude: position2!.latitude,
-          longitude: position2.longitude,
-          accuracy: position2.accuracy,
-          speed: position2.speed,
-          speedAccuracy: position2.speedAccuracy,
-          heading: position2.heading,
-          altitude: position2.altitude,
-          timestamp: position2.timestamp,
-          altitudeAccuracy: position2.altitudeAccuracy,
-          headingAccuracy: position2.headingAccuracy,
-        );
-      });
-    } catch (e) {
-      print('Error: $e');
-    }
-
-    if (position != null) {
-      print(position);
-    } else {
-      print('No position found');
-    }
-    // Print the latitude and longitude
-    print('Latitude: ${position!.latitude}');
-    print('Longitude: ${position.longitude}');
-
-    return position;
-  }
-
-  Random random = new Random();
   int numberTo100s(double number) {
     final hundredsDigit = number ~/ 100;
     return hundredsDigit * 100;
+  }
+
+  // Show address entry dialog
+  void showAddressDialog() {
+    cityController.clear();
+    streetController.clear();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Enter Delivery Address',
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.w600),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: cityController,
+                  decoration: InputDecoration(
+                    labelText: 'City *',
+                    hintText: 'e.g., Kampala',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 15),
+                TextField(
+                  controller: streetController,
+                  decoration: InputDecoration(
+                    labelText: 'Street Address',
+                    hintText: 'e.g., Kampala Road',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Supported cities: Kampala, Entebbe, Jinja, Fort Portal, Mbarara, Kabale, Masaka, Mbale, Soroti, Gulu',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
+              onPressed: () {
+                if (cityController.text.isEmpty) {
+                  Fluttertoast.showToast(
+                    msg: 'Please enter a city',
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.TOP,
+                    backgroundColor: Colors.red.withOpacity(0.7),
+                    textColor: Colors.white,
+                  );
+                  return;
+                }
+
+                String city = cityController.text.toLowerCase().trim();
+
+                // Check if city is supported
+                if (!cityDeliveryRates.containsKey(city)) {
+                  Fluttertoast.showToast(
+                    msg: 'Sorry, we don\'t deliver to $city yet',
+                    toastLength: Toast.LENGTH_LONG,
+                    gravity: ToastGravity.TOP,
+                    backgroundColor: Colors.red.withOpacity(0.7),
+                    textColor: Colors.white,
+                  );
+                  return;
+                }
+
+                setState(() {
+                  location = '${city[0].toUpperCase()}${city.substring(1)}';
+                  Address =
+                      '${streetController.text.isNotEmpty ? streetController.text + ', ' : ''}${location}';
+                });
+
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Confirm',
+                style: GoogleFonts.montserrat(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -236,62 +266,39 @@ class _ShoppingCartWidgetState extends State<ShoppingCartWidget> {
                                   .value!
                                   .cart
                                   .isNotEmpty) {
-                                showLoading(context);
-                                print("location acquiring");
+                                // Show address entry dialog
+                                showAddressDialog();
 
-                                Position position = await getCurrentLocation();
-                                print("location acquired");
-                                location =
-                                    'Lat: ${position.latitude} , Long: ${position.longitude}';
-                                final Geocoding geocoding = Geocoding();
+                                // Wait for user to enter address
+                                await Future.delayed(
+                                  Duration(milliseconds: 500),
+                                );
 
-                                List<Placemark> placemarks = await geocoding
-                                    .placemarkFromCoordinates(
-                                      position.latitude,
-                                      position.longitude,
-                                    );
-                                print(placemarks);
-                                Placemark place = placemarks[0];
-                                Address =
-                                    '${place.street}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.thoroughfare}, ${place.country}';
-                                if (place.country!.toLowerCase() != "uganda") {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Sorry, but we are currently operating in Uganda only',
-                                        style: GoogleFonts.montserrat(
-                                          color: Colors.white.withOpacity(0.6),
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                  dismissLoadingWidget();
-                                } else {
-                                  distanceInMeter =
-                                      await Geolocator.distanceBetween(
-                                        position.latitude,
-                                        position.longitude,
-                                        0.313062890385,
-                                        32.5774123962,
-                                      );
-                                  var distance =
-                                      distanceInMeter.round().toInt();
-                                  var delivery_fee = ((distance / 1000) * 1100);
-                                  var tax = ((distance / 1000) * 38);
-                                  dismissLoadingWidget();
-                                  Get.to(
-                                    () => PaymentMethod(
-                                      city: "${place.locality}",
-                                      street: "${place.street}",
-                                      delivery:
-                                          numberTo100s(delivery_fee).toDouble(),
-                                      tax: numberTo100s(tax).toDouble(),
-                                      lat: position.latitude,
-                                      long: position.longitude,
-                                    ),
-                                  );
+                                if (Address.isEmpty) {
+                                  return;
                                 }
+
+                                String city = location.toLowerCase();
+                                double baseDeliveryFee =
+                                    cityDeliveryRates[city] ?? 5000;
+                                double tax = baseDeliveryFee * 0.15; // 15% tax
+
+                                Get.to(
+                                  () => PaymentMethod(
+                                    city: location,
+                                    street:
+                                        streetController.text.isEmpty
+                                            ? location
+                                            : streetController.text,
+                                    delivery:
+                                        numberTo100s(
+                                          baseDeliveryFee,
+                                        ).toDouble(),
+                                    tax: numberTo100s(tax).toDouble(),
+                                    lat: 0.0, // Not using GPS coordinates
+                                    long: 0.0,
+                                  ),
+                                );
                               } else {
                                 Fluttertoast.showToast(
                                   msg: "Your Cart is empty",
