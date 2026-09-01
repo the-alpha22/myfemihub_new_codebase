@@ -35,6 +35,9 @@ class UserController extends GetxController {
 
     firebaseUser.bindStream(user);
 
+    // Initialize GoogleSignIn once at startup
+    await GoogleSignIn.instance.initialize();
+
     super.onReady();
   }
 
@@ -248,26 +251,36 @@ class UserController extends GetxController {
   signInWithGoogle(BuildContext context) async {
     try {
       print("\n=========Starting Google Sign in Process=============\n");
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      print("\n=========Starting Google Sign in Google Auth=============\n");
+
+      // Step 1: Authenticate (get identity)
+      final GoogleSignInAccount? googleUser =
+          await GoogleSignIn.instance.authenticate();
 
       if (googleUser == null) {
-        // If the sign-in process was aborted (user canceled the flow)
         print("Sign-in process was canceled by the user.");
         return;
       }
 
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser.authentication;
+      print("\n=========Starting Authorization=============\n");
+
+      // Step 2: Authorize (get tokens)
+      final List<String> scopes = ['email', 'profile'];
+      final clientAuth = await googleUser.authorizationClient.authorizeScopes(
+        scopes,
+      );
+
       print("\n=========Starting Google Sign in Credentials=============\n");
 
+      // Step 3: Create Firebase credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+        accessToken: clientAuth.accessToken,
+        idToken: googleUser.authentication.idToken,
       );
+
       print("\n=========Credential: ${credential}=============\n");
       print("\n=========${googleUser.email}=============\n");
 
+      // Step 4: Sign in to Firebase
       await FirebaseAuth.instance.signInWithCredential(credential).then((
         result,
       ) async {
@@ -311,7 +324,6 @@ class UserController extends GetxController {
         }
       });
     } on Exception catch (e) {
-      // TODO
       print('\n=================exception $e============\n');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -15,11 +15,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class PaymentFinal extends StatefulWidget {
-  PaymentFinal({
-    Key? key,
-    required this.price,
-    required this.subscription,
-  }) : super(key: key);
+  PaymentFinal({Key? key, required this.price, required this.subscription})
+    : super(key: key);
   final double price;
   final String subscription;
 
@@ -37,25 +34,25 @@ class _PaymentFinalState extends State<PaymentFinal> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: primaryColor,
-          iconTheme: IconThemeData(color: Colors.white),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios),
-            onPressed: () {
-              Get.back();
-            },
-          ),
-          elevation: 0,
-          centerTitle: true,
+      appBar: AppBar(
+        backgroundColor: primaryColor,
+        iconTheme: IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios),
+          onPressed: () {
+            Get.back();
+          },
         ),
-        backgroundColor: Colors.white,
-        body: SafeArea(
-            child: Center(
+        elevation: 0,
+        centerTitle: true,
+      ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
-              child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Column(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Column(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -64,39 +61,33 @@ class _PaymentFinalState extends State<PaymentFinal> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        Center(
-                          child: Image.asset(
-                            logo,
-                            width: 70,
-                          ),
-                        ),
-                        SizedBox(
-                          height: 20,
-                        ),
+                        Center(child: Image.asset(logo, width: 70)),
+                        SizedBox(height: 20),
                         Form(
                           key: _formKey,
                           child: Column(
                             children: <Widget>[
                               // Add TextFormFields and ElevatedButton here.
                               Text(
-                                  "Type the contact you would like to pay with (256*********)",
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 13,
-                                    color: Colors.black.withOpacity(0.7),
-                                    height: 1.5,
-                                  )),
-                              SizedBox(
-                                height: 9,
+                                "Type the contact you would like to pay with (256*********)",
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  color: Colors.black.withOpacity(0.7),
+                                  height: 1.5,
+                                ),
                               ),
+                              SizedBox(height: 9),
                               TextFormField(
                                 controller: paymentnumber,
                                 keyboardType: TextInputType.phone,
                                 decoration: InputDecoration(
-                                    labelText: 'Payment Number',
-                                    labelStyle: GoogleFonts.montserrat(
-                                        color: Colors.black.withOpacity(0.5),
-                                        fontSize: 13),
-                                    border: OutlineInputBorder()),
+                                  labelText: 'Payment Number',
+                                  labelStyle: GoogleFonts.montserrat(
+                                    color: Colors.black.withOpacity(0.5),
+                                    fontSize: 13,
+                                  ),
+                                  border: OutlineInputBorder(),
+                                ),
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'Contact Required';
@@ -106,87 +97,95 @@ class _PaymentFinalState extends State<PaymentFinal> {
                                   return null;
                                 },
                               ),
-                              SizedBox(
-                                height: 10,
-                              ),
+                              SizedBox(height: 10),
                               ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                      textStyle: GoogleFonts.montserrat(
-                                          color: Colors.white, fontSize: 13),),
-                                  onPressed: () {
-                                    // Validate returns true if the form is valid, or false otherwise.
-                                    if (_formKey.currentState!.validate()) {
-                                      // If the form is valid, display a snackbar. In the real world,
-                                      // you'd often call a server or save the information in a database.
+                                style: ElevatedButton.styleFrom(
+                                  textStyle: GoogleFonts.montserrat(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  // Validate returns true if the form is valid, or false otherwise.
+                                  if (_formKey.currentState!.validate()) {
+                                    // If the form is valid, display a snackbar. In the real world,
+                                    // you'd often call a server or save the information in a database.
 
-                                      final contact = paymentnumber.text.trim();
-                                      requestToPay(
-                                          context, contact, widget.price, 6);
-                                    }
-                                  },
-                                  child: Container(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.95,
-                                    margin: EdgeInsets.all(15.0),
-                                    padding: EdgeInsets.all(3.0),
-                                    decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
-                                    child: Center(
-                                        child: Text(
+                                    final contact = paymentnumber.text.trim();
+                                    requestToPay(
+                                      context,
+                                      contact,
+                                      widget.price,
+                                      6,
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.95,
+                                  margin: EdgeInsets.all(15.0),
+                                  padding: EdgeInsets.all(3.0),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Center(
+                                    child: Text(
                                       "Amount to Pay: UGX. ${oCcy.format(widget.price)}",
                                       style: GoogleFonts.montserrat(
-                                          color: Colors.white, fontSize: 15),
-                                    )),
-                                  )),
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
-                        SizedBox(
-                          height: 20,
-                        ),
+                        SizedBox(height: 20),
                         Center(
                           child: Text(
-                              "The incuring charges are not shown above and please input pin when prompted to (ZENGAPAY)",
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13,
-                                color: Colors.black.withOpacity(0.7),
-                                height: 1.5,
-                              )),
+                            "The incuring charges are not shown above and please input pin when prompted to (ZENGAPAY)",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              color: Colors.black.withOpacity(0.7),
+                              height: 1.5,
+                            ),
+                          ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
+                        SizedBox(height: 10),
                         Center(
                           child: Text(
-                              "The only available payment option is Mobile Money(Airtel or Mtn)",
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13,
-                                color: Colors.black.withOpacity(0.7),
-                                height: 1.5,
-                              )),
+                            "The only available payment option is Mobile Money(Airtel or Mtn)",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              color: Colors.black.withOpacity(0.7),
+                              height: 1.5,
+                            ),
+                          ),
                         ),
-                        SizedBox(
-                          height: 10,
-                        ),
+                        SizedBox(height: 10),
                         Center(
                           child: Text(
-                              "Always cross check your checkout before placing your order please",
-                              style: GoogleFonts.montserrat(
-                                fontSize: 13,
-                                color: Colors.black.withOpacity(0.7),
-                                height: 1.5,
-                              )),
+                            "Always cross check your checkout before placing your order please",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              color: Colors.black.withOpacity(0.7),
+                              height: 1.5,
+                            ),
+                          ),
                         ),
-                        SizedBox(
-                          height: 15,
-                        ),
+                        SizedBox(height: 15),
                       ],
                     ),
                   ),
-                ]),
-          )),
-        )));
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void requestToPay(
@@ -211,18 +210,22 @@ class _PaymentFinalState extends State<PaymentFinal> {
                   children: [
                     Container(
                       child: Text(
-                          "Initiating Transaction of \UGX ${oCcy.format(amount)}",
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.montserrat(
-                              color: Colors.black87.withOpacity(0.8),
-                              fontSize: 15)),
+                        "Initiating Transaction of \UGX ${oCcy.format(amount)}",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.montserrat(
+                          color: Colors.black87.withOpacity(0.8),
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
                     Container(
                       child: Center(
                         child: CircularProgressIndicator(
-                            strokeWidth: 0, color: Colors.black),
+                          strokeWidth: 0,
+                          color: Colors.black,
+                        ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -251,13 +254,14 @@ class _PaymentFinalState extends State<PaymentFinal> {
             "charge_customer": true,
           });
           var response = await http.post(
-              Uri.parse('https://api.zengapay.com/v1/collections'),
-              headers: {
-                "Authorization":
-                    "Bearer ZPYPUBK-40790ea5614786a175bffbdbb70e6de864bb0f786867b556f204a37f75e45eef",
-                'Content-Type': 'application/json'
-              },
-              body: body);
+            Uri.parse('https://api.zengapay.com/v1/collections'),
+            headers: {
+              "Authorization":
+                  "Bearer ZPYPUBK-40790ea5614786a175bffbdbb70e6de864bb0f786867b556f204a37f75e45eef",
+              'Content-Type': 'application/json',
+            },
+            body: body,
+          );
           print("Collecting funds...");
           print(response.statusCode);
           var transactionReference =
@@ -281,18 +285,22 @@ class _PaymentFinalState extends State<PaymentFinal> {
                             children: [
                               Container(
                                 child: Text(
-                                    "Please input your mobile pin when prompted to in order to complete order",
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.montserrat(
-                                        color: Colors.black87.withOpacity(0.8),
-                                        fontSize: 15)),
+                                  "Please input your mobile pin when prompted to in order to complete order",
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.black87.withOpacity(0.8),
+                                    fontSize: 15,
+                                  ),
+                                ),
                               ),
                               Container(
                                 child: Center(
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 0, color: Colors.black),
+                                    strokeWidth: 0,
+                                    color: Colors.black,
+                                  ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         ),
@@ -306,7 +314,8 @@ class _PaymentFinalState extends State<PaymentFinal> {
                 print("Transaction Accepted");
                 var response = await http.get(
                   Uri.parse(
-                      'https://api.zengapay.com/v1/collections/$transactionReference'),
+                    'https://api.zengapay.com/v1/collections/$transactionReference',
+                  ),
                   headers: {
                     "Authorization":
                         "Bearer ZPYPUBK-40790ea5614786a175bffbdbb70e6de864bb0f786867b556f204a37f75e45eef",
@@ -325,11 +334,12 @@ class _PaymentFinalState extends State<PaymentFinal> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                              'Your payment has been processed successfully',
-                              style: GoogleFonts.montserrat(
-                                color: Colors.white.withOpacity(0.6),
-                                fontSize: 12,
-                              )),
+                            'Your payment has been processed successfully',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       );
                       showModalBottomSheet<int>(
@@ -346,19 +356,19 @@ class _PaymentFinalState extends State<PaymentFinal> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            "Hooray, your subscription has been renewed successfully",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.black87
-                                                    .withOpacity(0.8),
-                                                fontSize: 15)),
+                                          "Hooray, your subscription has been renewed successfully",
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.black87.withOpacity(
+                                              0.8,
+                                            ),
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
                                       Center(
-                                        child: Image.asset(
-                                          logo,
-                                          width: 70,
-                                        ),
-                                      )
+                                        child: Image.asset(logo, width: 70),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -375,7 +385,7 @@ class _PaymentFinalState extends State<PaymentFinal> {
                         'email': userController.userModel.value!.email,
                         'message':
                             "You successfully renewed your subscription.",
-                        'time': Timestamp.now()
+                        'time': Timestamp.now(),
                       });
                       var endDate = DateTime.now().add(Duration(days: 304));
                       userController.updateUserData({
@@ -383,24 +393,27 @@ class _PaymentFinalState extends State<PaymentFinal> {
                         "balance": amount.toInt(),
                         "tokens": amount.toInt() == 350000 ? 3 : 6,
                         "subscription": widget.subscription,
-                        "expirydate": endDate
+                        "expirydate": endDate,
                       });
                       userController.sendEmail(
-                          "${userController.userModel.value!.name.capitalize}",
-                          userController.userModel.value!.email,
-                          "We would love to let you know that your subscription has been renewed successfully of UGX. $amount",
-                          "Payment Successful");
+                        "${userController.userModel.value!.name.capitalize}",
+                        userController.userModel.value!.email,
+                        "We would love to let you know that your subscription has been renewed successfully of UGX. $amount",
+                        "Payment Successful",
+                      );
                     } else if (transactionStatus == "FAILED") {
                       timer.cancel();
                       print("Transaction Unsuccessful");
                       Get.back();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('The transaction was not successful',
-                              style: GoogleFonts.montserrat(
-                                color: Colors.white.withOpacity(0.6),
-                                fontSize: 12,
-                              )),
+                          content: Text(
+                            'The transaction was not successful',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       );
                       showModalBottomSheet<int>(
@@ -417,19 +430,19 @@ class _PaymentFinalState extends State<PaymentFinal> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            "Unfortunately, the transaction was not successful. Therefore order was not placed. You can try using a different network",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.black87
-                                                    .withOpacity(0.8),
-                                                fontSize: 15)),
+                                          "Unfortunately, the transaction was not successful. Therefore order was not placed. You can try using a different network",
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.black87.withOpacity(
+                                              0.8,
+                                            ),
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
                                       Center(
-                                        child: Image.asset(
-                                          logo,
-                                          width: 70,
-                                        ),
-                                      )
+                                        child: Image.asset(logo, width: 70),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -453,11 +466,12 @@ class _PaymentFinalState extends State<PaymentFinal> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                              'Your payment has been processed successfully',
-                              style: GoogleFonts.montserrat(
-                                color: Colors.white.withOpacity(0.6),
-                                fontSize: 12,
-                              )),
+                            'Your payment has been processed successfully',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       );
                       showModalBottomSheet<int>(
@@ -474,19 +488,19 @@ class _PaymentFinalState extends State<PaymentFinal> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            "Hooray, your subscription has been renewed successfully",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.black87
-                                                    .withOpacity(0.8),
-                                                fontSize: 15)),
+                                          "Hooray, your subscription has been renewed successfully",
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.black87.withOpacity(
+                                              0.8,
+                                            ),
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
                                       Center(
-                                        child: Image.asset(
-                                          logo,
-                                          width: 70,
-                                        ),
-                                      )
+                                        child: Image.asset(logo, width: 70),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -503,7 +517,7 @@ class _PaymentFinalState extends State<PaymentFinal> {
                         'email': userController.userModel.value!.email,
                         'message':
                             "You successfully renewed your subscription.",
-                        'time': Timestamp.now()
+                        'time': Timestamp.now(),
                       });
                       var endDate = DateTime.now().add(Duration(days: 304));
                       userController.updateUserData({
@@ -511,29 +525,30 @@ class _PaymentFinalState extends State<PaymentFinal> {
                         "balance": amount.toInt(),
                         "tokens": amount.toInt() == 350000 ? 3 : 6,
                         "subscription": widget.subscription,
-                        "expirydate": endDate
+                        "expirydate": endDate,
                       });
                       userController.sendEmail(
-                          "${userController.userModel.value!.name.capitalize}",
-                          userController.userModel.value!.email,
-                          "We would love to let you know that your subscription has been renewed successfully of UGX. $amount",
-                          "Payment Successful");
+                        "${userController.userModel.value!.name.capitalize}",
+                        userController.userModel.value!.email,
+                        "We would love to let you know that your subscription has been renewed successfully of UGX. $amount",
+                        "Payment Successful",
+                      );
 
                       const NotificationDetails notificationDetails =
                           NotificationDetails(
-                        android: AndroidNotificationDetails(
-                          // "obtek.technologies.bridge_ai",
-                          "payment",
-                          "payment",
-                          importance: Importance.max,
-                          priority: Priority.high,
-                        ),
-                      );
+                            android: AndroidNotificationDetails(
+                              // "obtek.technologies.bridge_ai",
+                              "payment",
+                              "payment",
+                              importance: Importance.max,
+                              priority: Priority.high,
+                            ),
+                          );
                       FlutterLocalNotificationsPlugin().show(
-                        0,
-                        "Success",
-                        "Payment successful",
-                        notificationDetails,
+                        id: 1,
+                        title: "Success",
+                        body: "Payment successful",
+                        notificationDetails: notificationDetails,
 
                         //////// In case of DemoScreen //////////////////////////////////////
                         // this "id" key and "id" key of passing firebase's data must same
@@ -546,11 +561,13 @@ class _PaymentFinalState extends State<PaymentFinal> {
                       Get.back();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('transaction was not successful',
-                              style: GoogleFonts.montserrat(
-                                color: Colors.white.withOpacity(0.6),
-                                fontSize: 12,
-                              )),
+                          content: Text(
+                            'transaction was not successful',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white.withOpacity(0.6),
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       );
                       showModalBottomSheet<int>(
@@ -567,19 +584,19 @@ class _PaymentFinalState extends State<PaymentFinal> {
                                     children: [
                                       Container(
                                         child: Text(
-                                            "Unfortunately, the transaction was not successful. Therefore subscription not renewed. You can try using a different network",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.montserrat(
-                                                color: Colors.black87
-                                                    .withOpacity(0.8),
-                                                fontSize: 15)),
+                                          "Unfortunately, the transaction was not successful. Therefore subscription not renewed. You can try using a different network",
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.black87.withOpacity(
+                                              0.8,
+                                            ),
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                       ),
                                       Center(
-                                        child: Image.asset(
-                                          logo,
-                                          width: 70,
-                                        ),
-                                      )
+                                        child: Image.asset(logo, width: 70),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -611,18 +628,16 @@ class _PaymentFinalState extends State<PaymentFinal> {
                           child: Wrap(
                             children: [
                               Container(
-                                child: Text("Something went wrong",
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.montserrat(
-                                        color: Colors.black87.withOpacity(0.8),
-                                        fontSize: 15)),
-                              ),
-                              Center(
-                                child: Image.asset(
-                                  icon,
-                                  width: 70,
+                                child: Text(
+                                  "Something went wrong",
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.black87.withOpacity(0.8),
+                                    fontSize: 15,
+                                  ),
                                 ),
-                              )
+                              ),
+                              Center(child: Image.asset(icon, width: 70)),
                             ],
                           ),
                         ),
@@ -644,13 +659,14 @@ class _PaymentFinalState extends State<PaymentFinal> {
       if (e.toString() ==
           "SocketException: Failed host lookup: 'api.zengapay.com' (OS Error: No address associated with hostname, errno = 7)") {
         Fluttertoast.showToast(
-            msg: "It seems you are having network trouble",
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.TOP,
-            timeInSecForIosWeb: 5,
-            backgroundColor: Colors.black.withOpacity(0.7),
-            textColor: Colors.white,
-            fontSize: 16.0);
+          msg: "It seems you are having network trouble",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 5,
+          backgroundColor: Colors.black.withOpacity(0.7),
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
         Get.back();
         showModalBottomSheet<int>(
           backgroundColor: Colors.transparent,
@@ -666,18 +682,15 @@ class _PaymentFinalState extends State<PaymentFinal> {
                       children: [
                         Container(
                           child: Text(
-                              "It seems like you do not have a stable internet connection",
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.montserrat(
-                                  color: Colors.black87.withOpacity(0.8),
-                                  fontSize: 15)),
-                        ),
-                        Center(
-                          child: Image.asset(
-                            logo,
-                            width: 70,
+                            "It seems like you do not have a stable internet connection",
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.montserrat(
+                              color: Colors.black87.withOpacity(0.8),
+                              fontSize: 15,
+                            ),
                           ),
-                        )
+                        ),
+                        Center(child: Image.asset(logo, width: 70)),
                       ],
                     ),
                   ),

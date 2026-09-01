@@ -2,10 +2,11 @@ import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/controllers.dart';
 import 'package:bridge_ai/pages/authentication/resetpassword.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/foundation.dart'
-    show kIsWeb, defaultTargetPlatform, TargetPlatform;
+    show defaultTargetPlatform, TargetPlatform;
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -14,305 +15,340 @@ class Login extends StatefulWidget {
 }
 
 class _Login extends State<Login> {
-  var scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
   bool obscureText = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: false,
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black87, size: 16),
-        ),
-        elevation: 0,
-      ),
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Get.back(),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.black87,
+            size: 18,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  "Welcome back! Glad to see you again",
-                  style: GoogleFonts.montserrat(
-                    color: Colors.black87,
-                    fontSize: 30,
-                    fontWeight: FontWeight.w700,
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              Text(
+                    'Welcome\nback.',
+                    style: GoogleFonts.montserrat(
+                      color: Colors.black87,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w700,
+                      height: 1.15,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 500.ms, curve: Curves.easeOut)
+                  .slideY(
+                    begin: 0.12,
+                    end: 0,
+                    duration: 500.ms,
+                    curve: Curves.easeOut,
                   ),
+              const SizedBox(height: 8),
+              Text(
+                'Sign in to continue',
+                style: GoogleFonts.montserrat(
+                  color: Colors.black38,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
                 ),
-                SizedBox(height: 12),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        "Email",
-                        style: GoogleFonts.montserrat(
-                          color: Colors.black,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: bgcolor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: TextFormField(
+              ).animate().fadeIn(delay: 80.ms, duration: 400.ms),
+              const SizedBox(height: 40),
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLabel('Email'),
+                    const SizedBox(height: 8),
+                    _buildTextField(
                           controller: userController.email,
                           keyboardType: TextInputType.emailAddress,
-                          style: GoogleFonts.montserrat(
-                            color: Colors.black87,
-                            fontSize: 12,
-                          ),
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
+                          hint: 'you@example.com',
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Email Required';
-                            } else if (value.length < 5) {
-                              return 'Enter a valid email';
-                            }
+                            if (value == null || value.isEmpty)
+                              return 'Email required';
+                            if (value.length < 5) return 'Enter a valid email';
                             return null;
                           },
+                        )
+                        .animate()
+                        .fadeIn(delay: 120.ms, duration: 400.ms)
+                        .slideY(
+                          begin: 0.08,
+                          end: 0,
+                          delay: 120.ms,
+                          duration: 400.ms,
+                          curve: Curves.easeOut,
                         ),
-                      ),
-                      SizedBox(height: 24),
-                      Text(
-                        "Password",
-                        style: GoogleFonts.montserrat(
-                          color: Colors.black,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: 5),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: bgcolor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: TextFormField(
+                    const SizedBox(height: 20),
+                    _buildLabel('Password'),
+                    const SizedBox(height: 8),
+                    _buildTextField(
                           controller: userController.password,
-                          keyboardType: TextInputType.text,
-                          obscureText: obscureText,
-                          style: GoogleFonts.montserrat(
-                            color: Colors.black87,
-                            fontSize: 12,
-                          ),
-                          decoration: InputDecoration(
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                Icons.visibility_off,
-                                color:
-                                    obscureText == true
-                                        ? Colors.black45
-                                        : primaryColor,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  obscureText = !obscureText;
-                                });
-                              },
+                          obscure: obscureText,
+                          hint: '••••••••',
+                          suffix: IconButton(
+                            icon: Icon(
+                              obscureText
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color:
+                                  obscureText ? Colors.black26 : primaryColor,
+                              size: 20,
                             ),
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                            ),
+                            onPressed:
+                                () =>
+                                    setState(() => obscureText = !obscureText),
                           ),
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your password';
-                            } else if (value.length < 3) {
-                              return 'Please enter a valid password';
-                            }
+                            if (value == null || value.isEmpty)
+                              return 'Password required';
+                            if (value.length < 3)
+                              return 'Enter a valid password';
                             return null;
                           },
+                        )
+                        .animate()
+                        .fadeIn(delay: 160.ms, duration: 400.ms)
+                        .slideY(
+                          begin: 0.08,
+                          end: 0,
+                          delay: 160.ms,
+                          duration: 400.ms,
+                          curve: Curves.easeOut,
                         ),
-                      ),
-                      SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(),
-                          TextButton(
-                            onPressed: () {
-                              Get.to(
-                                () => ResetPassword(),
-                                transition: Transition.rightToLeft,
-                              );
-                            },
-                            child: Text(
-                              "Forgot Password?",
-                              style: GoogleFonts.montserrat(
-                                color: primaryColor,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed:
+                            () => Get.to(
+                              () => ResetPassword(),
+                              transition: Transition.rightToLeft,
                             ),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 12),
-                      InkWell(
-                        onTap: () {
-                          // Validate returns true if the form is valid, or false otherwise.
-                          if (_formKey.currentState!.validate()) {
-                            userController.signIn(context);
-                          }
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(color: primaryColor),
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text(
-                                "Login",
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 24),
-                if (defaultTargetPlatform != TargetPlatform.iOS) ...{
-                  Center(
-                    child: Text(
-                      "Or Sign In With",
-                      style: GoogleFonts.montserrat(
-                        color: Colors.black87,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  InkWell(
-                    onTap: () async {
-                      await userController.signInWithGoogle(context);
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(color: bgcolor),
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Image.asset("images/google_logo.png", height: 16),
-                              SizedBox(width: 10),
-                              Text(
-                                "Google",
-                                style: GoogleFonts.montserrat(
-                                  color: Colors.black87,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                        child: Text(
+                          'Forgot password?',
+                          style: GoogleFonts.montserrat(
+                            color: primaryColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  if (defaultTargetPlatform == TargetPlatform.iOS) ...{
-                    SizedBox(height: 10),
-                    InkWell(
-                      onTap: () async {
-                        await userController.signInWithApple(context);
+                    const SizedBox(height: 8),
+                    _buildPrimaryButton(
+                      label: 'Log In',
+                      onTap: () {
+                        if (_formKey.currentState!.validate()) {
+                          userController.signIn(context);
+                        }
                       },
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: bgcolor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Image.asset("images/apple.png", height: 16),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Apple",
-                                  style: GoogleFonts.montserrat(
-                                    color: Colors.black87,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                    ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
+                  ],
+                ),
+              ),
+              if (defaultTargetPlatform != TargetPlatform.iOS) ...[
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(color: Colors.black12, thickness: 1),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'or continue with',
+                        style: GoogleFonts.montserrat(
+                          color: Colors.black38,
+                          fontSize: 12,
                         ),
                       ),
                     ),
-                  },
-                  SizedBox(height: 24),
-                },
+                    Expanded(
+                      child: Divider(color: Colors.black12, thickness: 1),
+                    ),
+                  ],
+                ).animate().fadeIn(delay: 240.ms, duration: 400.ms),
+                const SizedBox(height: 16),
+                _buildSocialButton(
+                  label: 'Google',
+                  logo: 'images/google_logo.png',
+                  onTap:
+                      () async =>
+                          await userController.signInWithGoogle(context),
+                ).animate().fadeIn(delay: 280.ms, duration: 400.ms),
               ],
-            ),
+            ],
           ),
         ),
       ),
       bottomNavigationBar: Container(
-        height: 80,
-        width: MediaQuery.of(context).size.width,
-        decoration: BoxDecoration(color: Colors.white),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+        color: Colors.white,
+        padding: const EdgeInsets.only(bottom: 24, top: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Don't have an account? ",
+              style: GoogleFonts.montserrat(
+                color: Colors.black54,
+                fontSize: 13,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => Get.toNamed("/signup"),
+              child: Text(
+                'Sign up',
+                style: GoogleFonts.montserrat(
+                  color: primaryColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.montserrat(
+        color: Colors.black87,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+    bool obscure = false,
+    String? hint,
+    Widget? suffix,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscure,
+      style: GoogleFonts.montserrat(color: Colors.black87, fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.montserrat(color: Colors.black26, fontSize: 14),
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: const Color(0xFFF5F5F5),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: primaryColor, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.red.shade300, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.red.shade300, width: 1.5),
+        ),
+      ),
+      validator: validator,
+    );
+  }
+
+  Widget _buildPrimaryButton({
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: primaryColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: Text(
+                label,
+                style: GoogleFonts.montserrat(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required String label,
+    required String logo,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextButton(
-                  onPressed: () {
-                    Get.toNamed("/signup");
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: GoogleFonts.montserrat(
-                          color: Colors.black.withOpacity(0.9),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        "Create One",
-                        style: GoogleFonts.montserrat(
-                          color: primaryColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                Image.asset(logo, height: 18),
+                const SizedBox(width: 10),
+                Text(
+                  label,
+                  style: GoogleFonts.montserrat(
+                    color: Colors.black87,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],

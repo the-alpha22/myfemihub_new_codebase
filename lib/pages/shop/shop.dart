@@ -5,6 +5,7 @@ import 'package:bridge_ai/models/product.dart';
 import 'package:bridge_ai/pages/shop/widgets/shopping_cart.dart';
 import 'package:bridge_ai/pages/shop/widgets/single_product.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,16 +19,30 @@ class ShopPageNew extends StatefulWidget {
 }
 
 class _ShopPageNewState extends State<ShopPageNew> {
+  final List<String> _categoryNames = [
+    "Maternity",
+    "Baby",
+    "Essentials",
+    "Contraceptions",
+  ];
+
+  String selection = "Maternity";
+  List<ProductModel> babyProducts = [];
+  List<ProductModel> maternityProducts = [];
+  List<ProductModel> essentialProducts = [];
+  List<ProductModel> contraceptionProducts = [];
+  bool isLoading = true;
+  String _searchQuery = "";
+
   @override
   void initState() {
     super.initState();
     getProducts();
   }
 
-  getProducts() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<void> getProducts() async {
+    setState(() => isLoading = true);
+
     babyProducts = await ProducsController.instance.getProductsByCategory(
       "baby",
     );
@@ -39,446 +54,224 @@ class _ShopPageNewState extends State<ShopPageNew> {
     );
     contraceptionProducts = await ProducsController.instance
         .getProductsByCategory("contraceptions");
-    setState(() {
-      isLoading = false;
-    });
+
+    setState(() => isLoading = false);
   }
 
-  String selection = Get.parameters["section"] ?? "Featured";
-  List<ProductModel> babyProducts = [];
-  List<ProductModel> maternityProducts = [];
-  List<ProductModel> essentialProducts = [];
-  List<ProductModel> contraceptionProducts = [];
-  bool isLoading = true;
+  List<ProductModel> get _currentProducts {
+    List<ProductModel> base = switch (selection) {
+      "Maternity" => maternityProducts,
+      "Baby" => babyProducts,
+      "Essentials" => essentialProducts,
+      "Contraceptions" => contraceptionProducts,
+      _ => maternityProducts,
+    };
+    if (_searchQuery.isEmpty) return base;
+    return base
+        .where((p) => p.name.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        toolbarHeight: 64,
+        centerTitle: true,
         title: Text(
           'Shop',
           style: GoogleFonts.montserrat(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
             color: Colors.black87,
           ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
         actions: [
-          IconButton(
-            onPressed: () {
-              Get.to(
-                () => ShoppingCartWidget(),
-                transition: Transition.rightToLeft,
-              );
-            },
-            icon: Icon(Icons.shopping_bag, color: Colors.black87, size: 18),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              onPressed:
+                  () => Get.to(
+                    () => ShoppingCartWidget(),
+                    transition: Transition.rightToLeft,
+                  ),
+              icon: const Icon(
+                Icons.shopping_bag_outlined,
+                color: Colors.black87,
+                size: 22,
+              ),
+            ),
           ),
         ],
       ),
-      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SearchBar(),
-                SizedBox(height: 12),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            selection = "Featured";
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color:
-                                selection == "Featured"
-                                    ? primaryColor
-                                    : bgcolor,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Featured',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                                color:
-                                    selection == "Featured"
-                                        ? Colors.white
-                                        : Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            selection = "Maternity";
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color:
-                                selection == "Maternity"
-                                    ? primaryColor
-                                    : bgcolor,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Maternity',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                                color:
-                                    selection == "Maternity"
-                                        ? Colors.white
-                                        : Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            selection = "Baby";
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: selection == "Baby" ? primaryColor : bgcolor,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Baby',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                                color:
-                                    selection == "Baby"
-                                        ? Colors.white
-                                        : Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            selection = "Essentials";
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color:
-                                selection == "Essentials"
-                                    ? primaryColor
-                                    : bgcolor,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Essentials',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                                color:
-                                    selection == "Essentials"
-                                        ? Colors.white
-                                        : Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            selection = "Contraceptions";
-                          });
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color:
-                                selection == "Contraceptions"
-                                    ? primaryColor
-                                    : bgcolor,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Contraceptions',
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                                color:
-                                    selection == "Contraceptions"
-                                        ? Colors.white
-                                        : Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 12),
-                if (isLoading == true) ...{
-                  Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Lottie.asset(
-                        'images/femihub_loading.json',
-                        repeat: true,
-                        frameRate: FrameRate(30),
-                        height: 180,
-                      ),
-                    ),
-                  ),
-                },
-                if (isLoading == false) ...{
-                  if (selection == "Featured") ...{
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (var category in categories) ...{
-                          CategoryCard(
-                            category: category,
-                            onTap: () {
-                              Get.offAllNamed("/shop/${category.title}");
-                            },
-                          ),
-                        },
-                      ],
-                    ),
-                  },
-                  if (selection == "Maternity") ...{
-                    GridView.builder(
-                      shrinkWrap:
-                          true, // Allow the GridView to scroll within a limited space
-                      physics:
-                          NeverScrollableScrollPhysics(), // Disable scrolling of the GridView itself
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Number of columns in the grid
-                        crossAxisSpacing: 8.0, // Spacing between columns
-                        mainAxisSpacing: 8.0, // Spacing between rows
-                        childAspectRatio: 0.7,
-                      ),
-                      itemCount: maternityProducts.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return SingleProductWidget2(
-                          product: maternityProducts[index],
-                        );
-                      },
-                    ),
-                  },
-                  if (selection == "Baby") ...{
-                    GridView.builder(
-                      shrinkWrap:
-                          true, // Allow the GridView to scroll within a limited space
-                      physics:
-                          NeverScrollableScrollPhysics(), // Disable scrolling of the GridView itself
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Number of columns in the grid
-                        crossAxisSpacing: 8.0, // Spacing between columns
-                        mainAxisSpacing: 8.0, // Spacing between rows
-                        childAspectRatio: 0.7,
-                      ),
-                      itemCount: babyProducts.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return SingleProductWidget2(
-                          product: babyProducts[index],
-                        );
-                      },
-                    ),
-                  },
-                  if (selection == "Essentials") ...{
-                    GridView.builder(
-                      shrinkWrap:
-                          true, // Allow the GridView to scroll within a limited space
-                      physics:
-                          NeverScrollableScrollPhysics(), // Disable scrolling of the GridView itself
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Number of columns in the grid
-                        crossAxisSpacing: 8.0, // Spacing between columns
-                        mainAxisSpacing: 8.0, // Spacing between rows
-                        childAspectRatio: 0.7,
-                      ),
-                      itemCount: essentialProducts.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return SingleProductWidget2(
-                          product: essentialProducts[index],
-                        );
-                      },
-                    ),
-                  },
-                  if (selection == "Contraceptions") ...{
-                    GridView.builder(
-                      shrinkWrap:
-                          true, // Allow the GridView to scroll within a limited space
-                      physics:
-                          NeverScrollableScrollPhysics(), // Disable scrolling of the GridView itself
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Number of columns in the grid
-                        crossAxisSpacing: 8.0, // Spacing between columns
-                        mainAxisSpacing: 8.0, // Spacing between rows
-                        childAspectRatio: 0.7,
-                      ),
-                      itemCount: contraceptionProducts.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return SingleProductWidget2(
-                          product: contraceptionProducts[index],
-                        );
-                      },
-                    ),
-                  },
-                },
-              ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Column(
+                children: [
+                  _buildSearchBar(),
+                  const SizedBox(height: 16),
+                  _buildCategoryTabs(),
+                ],
+              ),
             ),
-          ),
+            const SizedBox(height: 20),
+            Expanded(child: _buildContent()),
+          ],
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(),
     );
   }
-}
 
-class SearchBar extends StatelessWidget {
-  const SearchBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildSearchBar() {
     return TextField(
+      onChanged: (val) => setState(() => _searchQuery = val),
+      style: GoogleFonts.montserrat(fontSize: 14, color: Colors.black87),
       decoration: InputDecoration(
-        hintText: "Search",
+        hintText: "Search products",
         hintStyle: GoogleFonts.montserrat(
-          color: Colors.black87,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+          color: Colors.black38,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
         ),
-        prefixIcon: const Icon(Icons.search),
+        prefixIcon: const Icon(Icons.search, color: Colors.black38, size: 20),
         filled: true,
-        fillColor: const Color(0xFFF2F6F4),
-        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+        fillColor: const Color(0xFFF5F5F5),
+        contentPadding: const EdgeInsets.symmetric(vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: primaryColor, width: 1.5),
+        ),
       ),
+    );
+  }
+
+  Widget _buildCategoryTabs() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List.generate(_categoryNames.length, (i) {
+          final name = _categoryNames[i];
+          final isSelected = selection == name;
+          return Padding(
+            padding: EdgeInsets.only(
+              right: i == _categoryNames.length - 1 ? 0 : 8,
+            ),
+            child: _TabChip(
+              label: name,
+              isSelected: isSelected,
+              onTap: () => setState(() => selection = name),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (isLoading) {
+      return Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Lottie.asset(
+            'images/femihub_loading.json',
+            repeat: true,
+            frameRate: FrameRate(30),
+            height: 160,
+          ),
+        ),
+      );
+    }
+
+    final products = _currentProducts;
+
+    if (products.isEmpty) {
+      return Center(
+        child: Text(
+          _searchQuery.isNotEmpty
+              ? 'No results for "$_searchQuery"'
+              : 'No products available',
+          style: GoogleFonts.montserrat(fontSize: 14, color: Colors.black38),
+        ),
+      );
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.65,
+      ),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        return SingleProductWidget2(product: products[index])
+            .animate()
+            .fadeIn(
+              delay: (50 * index).ms,
+              duration: 380.ms,
+              curve: Curves.easeOut,
+            )
+            .slideY(
+              begin: 0.1,
+              end: 0,
+              delay: (50 * index).ms,
+              duration: 380.ms,
+              curve: Curves.easeOut,
+            );
+      },
     );
   }
 }
 
-class Category {
-  final String title;
-  final String subtitle;
-  final String items;
-  final String image;
+class _TabChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  Category({
-    required this.title,
-    required this.subtitle,
-    required this.items,
-    required this.image,
+  const _TabChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
   });
-}
-
-class CategoryCard extends StatelessWidget {
-  final Category category;
-  final Function() onTap;
-
-  const CategoryCard({required this.category, super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Image.asset(category.image),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              category.title,
-              style: GoogleFonts.montserrat(
-                color: Colors.black87,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            Text(
-              category.subtitle,
-              style: GoogleFonts.montserrat(
-                color: primaryColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            Text(
-              category.items,
-              style: GoogleFonts.montserrat(
-                color: Colors.black87,
-                fontSize: 14,
-              ),
-            ),
-          ],
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryColor : const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: isSelected ? Colors.white : Colors.black54,
+          ),
         ),
       ),
     );
   }
 }
-
-final List<Category> categories = [
-  Category(
-    title: "Maternity",
-    subtitle: "Shop maternity clothes",
-    items: "100+ items",
-    image: "images/pregnant_lady.jfif",
-  ),
-  Category(
-    title: "Baby",
-    subtitle: "Shop baby clothes",
-    items: "100+ items",
-    image: "images/baby.png",
-  ),
-  Category(
-    title: "Essentials",
-    subtitle: "Shop essentials",
-    items: "100+ items",
-    image: "images/essentials.jfif",
-  ),
-  Category(
-    title: "Contraceptions",
-    subtitle: "Shop contraceptions",
-    items: "100+ items",
-    image: "images/Contraceptions.jfif",
-  ),
-];

@@ -243,8 +243,10 @@ class _ShoppingCartWidgetState extends State<ShoppingCartWidget> {
                                 print("location acquired");
                                 location =
                                     'Lat: ${position.latitude} , Long: ${position.longitude}';
-                                List<Placemark> placemarks =
-                                    await placemarkFromCoordinates(
+                                final Geocoding geocoding = Geocoding();
+
+                                List<Placemark> placemarks = await geocoding
+                                    .placemarkFromCoordinates(
                                       position.latitude,
                                       position.longitude,
                                     );

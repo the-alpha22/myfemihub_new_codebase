@@ -33,10 +33,10 @@ class LocalNotificationService {
 
       /// pop up show
       await _notificationsPlugin.show(
-        id,
-        message.notification!.title,
-        message.notification!.body,
-        notificationDetails,
+        id: id,
+        title: message.notification!.title,
+        body: message.notification!.body,
+        notificationDetails: notificationDetails,
         payload: message.data["route"],
 
         //////// In case of DemoScreen //////////////////////////////////////

@@ -8,7 +8,7 @@ import 'package:bridge_ai/models/product.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 class SingleProductWidget extends StatefulWidget {
   final ProductModel product;
@@ -304,11 +304,7 @@ class _SingleProductWidget2State extends State<SingleProductWidget2> {
             ),
             Row(
               children: [
-                Icon(
-                  PhosphorIcons.star(PhosphorIconsStyle.fill),
-                  color: Colors.amber,
-                  size: 12,
-                ),
+                Icon(PhosphorIcons.star, color: Colors.amber, size: 12),
                 SizedBox(width: 5),
                 Text(
                   "${widget.product.rating == 0 ? 4.9 : widget.product.rating.toStringAsFixed(1)}",

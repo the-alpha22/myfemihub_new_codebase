@@ -27,8 +27,10 @@ class MessagingController extends GetxController {
       .doc(id)
       .collection(id)
       .snapshots()
-      .map((query) =>
-          query.docs.map((item) => MessageChat.fromMap(item.data())).toList());
+      .map(
+        (query) =>
+            query.docs.map((item) => MessageChat.fromMap(item.data())).toList(),
+      );
 
   UploadTask uploadFile(File image, String fileName) {
     Reference reference = FirebaseStorage.instance.ref().child(fileName);
@@ -36,8 +38,11 @@ class MessagingController extends GetxController {
     return uploadTask;
   }
 
-  Future<void> updateDataFirestore(String collectionPath, String docPath,
-      Map<String, dynamic> dataNeedUpdate) {
+  Future<void> updateDataFirestore(
+    String collectionPath,
+    String docPath,
+    Map<String, dynamic> dataNeedUpdate,
+  ) {
     return firebaseFirestore
         .collection(collectionPath)
         .doc(docPath)
@@ -54,8 +59,12 @@ class MessagingController extends GetxController {
         .snapshots();
   }
 
-  void sendMessage(String content, String groupChatId, String currentUserId,
-      String idto) async {
+  void sendMessage(
+    String content,
+    String groupChatId,
+    String currentUserId,
+    String idto,
+  ) async {
     DocumentReference documentReference = firebaseFirestore
         .collection(FirestoreConstants.pathMessageCollection)
         .doc(groupChatId)
@@ -69,12 +78,13 @@ class MessagingController extends GetxController {
       content: content,
     );
     userController.updateUserData({
-      "chatids": FieldValue.arrayUnion([idto])
+      "chatids": FieldValue.arrayUnion([idto]),
     });
-    var snaps = await FirebaseFirestore.instance
-        .collection('users')
-        .where('id', isEqualTo: idto)
-        .get();
+    var snaps =
+        await FirebaseFirestore.instance
+            .collection('users')
+            .where('id', isEqualTo: idto)
+            .get();
 
     for (var doc in snaps.docs) {
       await doc.reference.update({
@@ -83,36 +93,30 @@ class MessagingController extends GetxController {
     }
 
     FirebaseFirestore.instance.runTransaction((transaction) async {
-      transaction.set(
-        documentReference,
-        messageChat.toJson(),
-      );
+      transaction.set(documentReference, messageChat.toJson());
     });
   }
 
   void sendNotification(String body, String title, String token) async {
     try {
-      await http.post(Uri.parse('https://fcm.googleapis.com/fcm/send'),
-          headers: <String, String>{
-            'Content-Type': 'application/json',
-            'Authorization':
-                'key=AAAAbmfuhTc:APA91bEaaHwSNdBDPwf5kpKIROwDrWQbBs_s45pSnjzjRtD93LNwDVjuMiiIEy5LXAxW61nMn3lricolA_gHc_OvvpiCT0MrdcdHxPkkJP6FbKQrzs0dX0NZM331pWimjAUxjp-B5si7'
+      await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'Authorization':
+              'key=AAAAbmfuhTc:APA91bEaaHwSNdBDPwf5kpKIROwDrWQbBs_s45pSnjzjRtD93LNwDVjuMiiIEy5LXAxW61nMn3lricolA_gHc_OvvpiCT0MrdcdHxPkkJP6FbKQrzs0dX0NZM331pWimjAUxjp-B5si7',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'notification': <String, dynamic>{'body': body, 'title': title},
+          'priority': 'high',
+          'data': <String, dynamic>{
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'id': '1',
+            'status': 'done',
           },
-          body: jsonEncode(
-            <String, dynamic>{
-              'notification': <String, dynamic>{
-                'body': body,
-                'title': title,
-              },
-              'priority': 'high',
-              'data': <String, dynamic>{
-                'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-                'id': '1',
-                'status': 'done'
-              },
-              "to": token
-            },
-          ));
+          "to": token,
+        }),
+      );
       const NotificationDetails notificationDetails = NotificationDetails(
         android: AndroidNotificationDetails(
           // "obtek.technologies.bridge_ai",
@@ -123,10 +127,10 @@ class MessagingController extends GetxController {
         ),
       );
       FlutterLocalNotificationsPlugin().show(
-        0,
-        "Hello ${userController.userModel.value!.name.capitalize}",
-        "Your message was sent",
-        notificationDetails,
+        id: 0,
+        title: "Hello ${userController.userModel.value!.name.capitalize}",
+        body: "Your message was sent",
+        notificationDetails: notificationDetails,
 
         //////// In case of DemoScreen //////////////////////////////////////
         // this "id" key and "id" key of passing firebase's data must same

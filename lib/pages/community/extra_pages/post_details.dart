@@ -10,7 +10,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 class PostDetailsPage extends StatefulWidget {
   const PostDetailsPage({super.key});
@@ -186,7 +186,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                   );
                 },
                 icon: Icon(
-                  PhosphorIcons.dotsThree(PhosphorIconsStyle.bold),
+                  PhosphorIcons.dotsThree,
                   color: Colors.black87,
                   size: 20,
                 ),
@@ -318,9 +318,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                                         children: [
                                           isLiked
                                               ? Icon(
-                                                PhosphorIcons.heart(
-                                                  PhosphorIconsStyle.fill,
-                                                ),
+                                                PhosphorIcons.heart,
                                                 size: 24,
                                                 color: primaryColor,
                                               )
@@ -422,9 +420,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                                         children: [
                                           isSaved
                                               ? Icon(
-                                                PhosphorIcons.bookmark(
-                                                  PhosphorIconsStyle.fill,
-                                                ),
+                                                PhosphorIcons.bookmark,
                                                 size: 24,
                                                 color: Colors.black87,
                                               )

@@ -6,7 +6,7 @@ import 'package:bridge_ai/widgets/helpers/showLoading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class AddCommentPage extends StatefulWidget {
@@ -120,9 +120,7 @@ class _AddCommentPageState extends State<AddCommentPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  PhosphorIcons.paperPlaneTilt(
-                                    PhosphorIconsStyle.light,
-                                  ),
+                                  PhosphorIcons.paperPlaneTilt,
                                   color: Colors.white,
                                   size: 18,
                                 ),

@@ -7,10 +7,12 @@ import 'package:bridge_ai/controllers/chatbot_conversations.dart';
 import 'package:bridge_ai/models/chatbot_message.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:lottie/lottie.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatBotPage extends StatefulWidget {
@@ -21,13 +23,24 @@ class ChatBotPage extends StatefulWidget {
 }
 
 class _ChatBotPageState extends State<ChatBotPage> {
+  final user = types.User(
+    id: userController.userModel.value!.id,
+    firstName: userController.userModel.value!.name,
+  );
+  final partner = types.User(id: "chatbot", firstName: "Femi AI");
+
+  List messages = [];
+  TextEditingController responseMessage = TextEditingController();
+  bool isAityping = false;
+  bool loading = true;
+
   @override
   void initState() {
     super.initState();
     getMessages();
   }
 
-  getMessages() async {
+  Future<void> getMessages() async {
     List<ChatBotMessageModel> conversation =
         await ChatBotConversationsController.instance.getConversationMessages(
           userController.userModel.value!.id,
@@ -39,48 +52,27 @@ class _ChatBotPageState extends State<ChatBotPage> {
         messages.clear();
       });
       for (var message in conversation) {
-        if (message.userId == userController.userModel.value!.id) {
-          setState(() {
-            messages.insert(0, {
-              "id": message.id,
-              "userId": user.id,
-              "message": message.message,
-              "dateCreated": message.dateCreated,
-              "citation": message.citation,
-            });
+        setState(() {
+          messages.insert(0, {
+            "id": message.id,
+            "userId":
+                message.userId == userController.userModel.value!.id
+                    ? user.id
+                    : partner.id,
+            "message": message.message,
+            "dateCreated": message.dateCreated,
+            "citation": message.citation,
           });
-        } else {
-          setState(() {
-            messages.insert(0, {
-              "id": message.id,
-              "userId": partner.id,
-              "message": message.message,
-              "dateCreated": message.dateCreated,
-              "citation": message.citation,
-            });
-          });
-        }
-        print(messages);
+        });
       }
     }
 
-    setState(() {
-      loading = false;
-    });
+    setState(() => loading = false);
     if (messages.isEmpty) {
-      setState(() {
-        isAityping = true;
-      });
+      setState(() => isAityping = true);
       getChatBotResponse();
     }
   }
-
-  // List<types.Message> _messages = [];
-  final user = types.User(
-    id: userController.userModel.value!.id,
-    firstName: userController.userModel.value!.name,
-  );
-  final partner = types.User(id: "chatbot", firstName: "Femi AI");
 
   void addMessage(types.Message message, String text, var citation) async {
     setState(() {
@@ -101,31 +93,24 @@ class _ChatBotPageState extends State<ChatBotPage> {
       Timestamp.fromMillisecondsSinceEpoch(message.createdAt!).toDate(),
       citation,
     );
-    setState(() {});
   }
 
   void _handleSendPressed(types.PartialText message) async {
-    setState(() {
-      isAityping = true;
-    });
+    if (message.text.trim().isEmpty) return;
+    setState(() => isAityping = true);
     final textMessage = types.TextMessage(
       author: user,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: const Uuid().v4(),
       text: message.text,
     );
-
-    // _addMessage(textMessage);
     addMessage(textMessage, message.text, null);
-    setState(() {});
-    Future.delayed(Duration(seconds: 2), () {
-      getChatBotResponse();
-    });
+    Future.delayed(const Duration(seconds: 2), getChatBotResponse);
   }
 
-  getChatBotResponse() async {
+  Future<void> getChatBotResponse() async {
     if (messages.isEmpty) {
-      String response = await generateChatbotResponse(
+      String response = await VertexAIController.generateChatbotResponse(
         userController.userModel.value!,
         [],
         context,
@@ -135,16 +120,12 @@ class _ChatBotPageState extends State<ChatBotPage> {
         author: partner,
         createdAt: DateTime.now().millisecondsSinceEpoch,
         id: const Uuid().v4(),
-        text: result['message'].toString().replaceAll('''!''', ""),
+        text: result['message'].toString().replaceAll('!', ""),
       );
-
-      print("Message: ${result['message']}");
-      print("Citation JSON: ${result['citation']}");
       addMessage(textMessage, textMessage.text, result['citation']);
     } else {
       await getMessages();
-
-      String response = await generateChatbotResponse(
+      String response = await VertexAIController.generateChatbotResponse(
         userController.userModel.value!,
         messages,
         context,
@@ -154,334 +135,375 @@ class _ChatBotPageState extends State<ChatBotPage> {
         author: partner,
         createdAt: DateTime.now().millisecondsSinceEpoch,
         id: const Uuid().v4(),
-        text: result['message'].toString().replaceAll('''!''', ""),
+        text: result['message'].toString().replaceAll('!', ""),
       );
       addMessage(textMessage, textMessage.text, result['citation']);
     }
-    setState(() {
-      isAityping = false;
-    });
+    setState(() => isAityping = false);
   }
-
-  List messages = [];
-
-  TextEditingController responseMessage = TextEditingController();
-  bool isAityping = false;
-  bool loading = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        toolbarHeight: 64,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            size: 18,
+            color: Colors.black87,
+          ),
+          onPressed: () => Get.back(),
+        ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Lottie.asset('images/ai.json', height: 80),
-            ),
-            Text(
-              "Femi AI",
-              style: GoogleFonts.montserrat(
-                color: Colors.black87,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: primaryColor.withOpacity(0.2),
+                  width: 1.5,
+                ),
               ),
+              child: ClipOval(
+                child: Lottie.asset('images/ai.json', fit: BoxFit.cover),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Femi AI',
+                  style: GoogleFonts.montserrat(
+                    color: Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  isAityping ? 'Typing...' : 'Online',
+                  style: GoogleFonts.montserrat(
+                    color: isAityping ? primaryColor : Colors.black38,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, size: 19, color: Colors.black87),
-          onPressed: () {
-            Get.back();
-          },
-        ),
-        elevation: 0,
-        backgroundColor: Colors.white,
+        centerTitle: false,
       ),
-      backgroundColor: Colors.white,
-      body:
-          loading
-              ? Container(
-                height: 220,
-                width: 500,
-                child: Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 0,
-                    color: primaryColor,
-                  ),
-                ),
-              )
-              : Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Stack(
-                  children: [
-                    ListView.builder(
-                      reverse: true, // Display messages from bottom to top
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages[index];
-                        final bool isSentByMe =
-                            message["userId"] == user.id ? true : false;
+      body: loading ? _buildLoading() : _buildChat(),
+      bottomNavigationBar: _buildDisclaimer(),
+    );
+  }
 
-                        return isSentByMe
-                            ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                MessageSentByMe(message: message),
-                                SizedBox(height: 8),
-                                if (index == 0) ...{SizedBox(height: 160)},
-                              ],
-                            )
-                            : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                MessageRecievedByUser(message: message),
-                                SizedBox(height: 8),
-                                if (index == 0) ...{SizedBox(height: 110)},
-                              ],
-                            );
-                      },
-                    ),
-                    Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (isAityping) ...{
-                            Padding(
-                              padding: const EdgeInsets.only(right: 80),
-                              child: Column(
-                                children: [
-                                  SizedBox(height: 10),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: bgcolor,
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(10),
-                                        topRight: Radius.circular(10),
-                                        bottomRight: Radius.circular(10),
-                                      ),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Text(
-                                        "Femi AI is typing...",
-                                        style: GoogleFonts.montserrat(
-                                          color: Colors.black.withOpacity(0.8),
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                ],
-                              ),
-                            ),
-                          },
-                          Container(
-                            padding: EdgeInsets.only(
-                              left: 5,
-                              bottom: 5,
-                              top: 5,
-                            ),
-                            height: 80,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: bgcolor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: <Widget>[
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: responseMessage,
-                                      onChanged: (value) {
-                                        setState(() {});
-                                      },
-                                      keyboardType: TextInputType.multiline,
-                                      minLines:
-                                          1, // Set the minimum number of lines to 1
-                                      maxLines: null,
-                                      decoration: InputDecoration(
-                                        hintText: "Chat with Femi AI...",
-                                        hintStyle: GoogleFonts.montserrat(
-                                          color: Colors.black.withOpacity(0.3),
-                                          fontSize: 12,
-                                        ),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 15),
-                                  FloatingActionButton(
-                                    onPressed: () async {
-                                      _handleSendPressed(
-                                        types.PartialText(
-                                          text: responseMessage.text.trim(),
-                                        ),
-                                      );
-                                      setState(() {
-                                        responseMessage.clear();
-                                      });
-                                    },
-                                    child: Icon(
-                                      Icons.send,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                    backgroundColor:
-                                        responseMessage.text.trim().isNotEmpty
-                                            ? primaryColor
-                                            : primaryColor.withOpacity(.7),
-                                    elevation: 0,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-      bottomNavigationBar: Container(
-        height: 60,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            "Femi AI is not a substitute for professional medical advice or information. All information provided is based on publicly available health sources like WHO and CDC.",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.montserrat(
-              color: Colors.black54,
-              fontWeight: FontWeight.w500,
-              fontSize: 10,
-            ),
+  Widget _buildLoading() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(strokeWidth: 1.5, color: primaryColor),
+          const SizedBox(height: 16),
+          Text(
+            'Loading conversation...',
+            style: GoogleFonts.montserrat(color: Colors.black38, fontSize: 13),
           ),
-        ),
+        ],
       ),
     );
   }
-}
 
-class MessageSentByMe extends StatefulWidget {
-  const MessageSentByMe({Key? key, required this.message}) : super(key: key);
-  final message;
+  Widget _buildChat() {
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            reverse: true,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            itemCount: messages.length + (isAityping ? 1 : 0),
+            itemBuilder: (context, index) {
+              if (isAityping && index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildTypingBubble(),
+                );
+              }
+              final message = messages[isAityping ? index - 1 : index];
+              final bool isMine = message["userId"] == user.id;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: (isMine
+                        ? _buildSentMessage(message)
+                        : _buildReceivedMessage(message))
+                    .animate()
+                    .fadeIn(duration: 300.ms, curve: Curves.easeOut)
+                    .slideY(
+                      begin: 0.08,
+                      end: 0,
+                      duration: 300.ms,
+                      curve: Curves.easeOut,
+                    ),
+              );
+            },
+          ),
+        ),
+        _buildInputBar(),
+      ],
+    );
+  }
 
-  @override
-  State<MessageSentByMe> createState() => _MessageSentByMeState();
-}
-
-class _MessageSentByMeState extends State<MessageSentByMe> {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 80),
+  Widget _buildSentMessage(Map message) {
+    return Align(
+      alignment: Alignment.centerRight,
       child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.72,
+        ),
         decoration: BoxDecoration(
           color: primaryColor,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(10),
-            topRight: Radius.circular(10),
-            bottomLeft: Radius.circular(10),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(16),
+            bottomRight: Radius.circular(4),
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            "${widget.message["message"]}",
-            textAlign: TextAlign.start,
-            style: GoogleFonts.montserrat(
-              color: Colors.white.withOpacity(0.8),
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Text(
+          message["message"],
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
+            height: 1.5,
           ),
         ),
       ),
     );
   }
-}
 
-class MessageRecievedByUser extends StatefulWidget {
-  const MessageRecievedByUser({Key? key, required this.message})
-    : super(key: key);
-  final message;
-
-  @override
-  State<MessageRecievedByUser> createState() => _MessageRecievedByUserState();
-}
-
-class _MessageRecievedByUserState extends State<MessageRecievedByUser> {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 80),
+  Widget _buildReceivedMessage(Map message) {
+    return Align(
+      alignment: Alignment.centerLeft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.72,
+            ),
             decoration: BoxDecoration(
-              color: bgcolor,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(10),
-                topRight: Radius.circular(10),
-                bottomRight: Radius.circular(10),
+              color: const Color(0xFFF5F5F5),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
               ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: SelectableText(
-                "${widget.message["message"]}",
-                style: GoogleFonts.montserrat(
-                  color: Colors.black.withOpacity(0.8),
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: SelectableText(
+              message["message"],
+              style: GoogleFonts.montserrat(
+                color: Colors.black87,
+                fontWeight: FontWeight.w400,
+                fontSize: 14,
+                height: 1.55,
               ),
             ),
           ),
-          if (widget.message["citation"] != null) ...{
-            SizedBox(height: 2),
-            InkWell(
-              onTap: () {
-                print("\n====${widget.message}");
-                final sources = widget.message["citation"]["sources"];
+          if (message["citation"] != null) ...[
+            const SizedBox(height: 6),
+            _buildSourceChip(message["citation"]),
+          ],
+        ],
+      ),
+    );
+  }
 
-                print("\n===Sources: $sources");
+  Widget _buildTypingBubble() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F5F5),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(4),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(
+            3,
+            (i) => Container(
+                  margin: EdgeInsets.only(right: i < 2 ? 5 : 0),
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                )
+                .animate(onPlay: (c) => c.repeat())
+                .fadeIn(delay: (150 * i).ms, duration: 400.ms)
+                .then()
+                .fadeOut(duration: 400.ms),
+          ),
+        ),
+      ),
+    );
+  }
 
-                if (sources.isEmpty) {
-                  openLink("https://www.who.int/news");
-                } else {
-                  openLink(sources.first["url"]);
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: bgcolor,
-                  borderRadius: BorderRadius.circular(12),
+  Widget _buildSourceChip(Map citation) {
+    return GestureDetector(
+      onTap: () {
+        final sources = citation["sources"] ?? [];
+        openLink(
+          sources.isEmpty ? "https://www.who.int/news" : sources.first["url"],
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: primaryColor.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: primaryColor.withOpacity(0.2), width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(PhosphorIcons.link, size: 12, color: primaryColor),
+            const SizedBox(width: 5),
+            Text(
+              'View source',
+              style: GoogleFonts.montserrat(
+                color: primaryColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputBar() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: TextField(
+                controller: responseMessage,
+                onChanged: (_) => setState(() {}),
+                keyboardType: TextInputType.multiline,
+                minLines: 1,
+                maxLines: 4,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (value) {
+                  if (value.trim().isNotEmpty) {
+                    _handleSendPressed(types.PartialText(text: value.trim()));
+                    responseMessage.clear();
+                  }
+                },
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  color: Colors.black87,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Text(
-                    "View Source",
-                    style: GoogleFonts.quicksand(
-                      color: primaryColor,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                    ),
+                decoration: InputDecoration(
+                  hintText: 'Ask Femi AI...',
+                  hintStyle: GoogleFonts.montserrat(
+                    color: Colors.black26,
+                    fontSize: 14,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
                 ),
               ),
             ),
-          },
+          ),
+          const SizedBox(width: 8),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color:
+                  responseMessage.text.trim().isNotEmpty
+                      ? primaryColor
+                      : const Color(0xFFF5F5F5),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed: () {
+                if (responseMessage.text.trim().isNotEmpty) {
+                  _handleSendPressed(
+                    types.PartialText(text: responseMessage.text.trim()),
+                  );
+                  responseMessage.clear();
+                }
+              },
+              icon: Icon(
+                Icons.send_rounded,
+                size: 18,
+                color:
+                    responseMessage.text.trim().isNotEmpty
+                        ? Colors.white
+                        : Colors.black26,
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDisclaimer() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Icon(PhosphorIcons.info, size: 13, color: Colors.black26),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Not a substitute for professional medical advice. Info sourced from WHO & CDC.',
+                style: GoogleFonts.montserrat(
+                  color: Colors.black26,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -490,20 +512,15 @@ class _MessageRecievedByUserState extends State<MessageRecievedByUser> {
 Map<String, dynamic> extractCittionResponse(String aiOutput) {
   final regex = RegExp(r'```json\s*([\s\S]*?)\s*```', multiLine: true);
   final match = regex.firstMatch(aiOutput);
-
   if (match != null) {
     final jsonPart = match.group(1)?.trim() ?? '';
     final message = aiOutput.replaceFirst(regex, '').trim();
-
     try {
       final citation = json.decode(jsonPart);
       return {'message': message, 'citation': citation};
     } catch (e) {
-      print('Failed to parse JSON: $e');
       return {'message': message, 'citation': null};
     }
-  } else {
-    // No citation block found
-    return {'message': aiOutput.trim(), 'citation': null};
   }
+  return {'message': aiOutput.trim(), 'citation': null};
 }

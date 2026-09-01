@@ -19,7 +19,7 @@ class _FertilityInfoPageState extends State<FertilityInfoPage> {
   }
 
   getInfo() async {
-    generalInfo = await suggestFamilyPlanningSpecificInfo("fertility");
+    generalInfo = await  VertexAIController.suggestFamilyPlanningSpecificInfo("fertility");
     setState(() {
       isLoading = false;
     });

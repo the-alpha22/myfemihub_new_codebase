@@ -20,7 +20,7 @@ class _PreconceptionHealthPageState extends State<PreconceptionHealthPage> {
   }
 
   getInfo() async {
-    generalInfo = await suggestFamilyPlanningSpecificInfo(
+    generalInfo = await VertexAIController.suggestFamilyPlanningSpecificInfo(
       "Preconception Health",
     );
     setState(() {

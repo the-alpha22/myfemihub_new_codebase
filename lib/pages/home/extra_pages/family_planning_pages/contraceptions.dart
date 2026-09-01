@@ -18,7 +18,9 @@ class _ContraceptionInfoPageState extends State<ContraceptionInfoPage> {
   }
 
   getInfo() async {
-    generalInfo = await suggestFamilyPlanningSpecificInfo("contaceptions");
+    generalInfo = await VertexAIController.suggestFamilyPlanningSpecificInfo(
+      "contaceptions",
+    );
     setState(() {
       isLoading = false;
     });

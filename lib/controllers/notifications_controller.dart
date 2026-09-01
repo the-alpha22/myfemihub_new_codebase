@@ -6,59 +6,61 @@ import 'package:timezone/timezone.dart' as tz;
 
 class NotificationsController {
   Future<void> showNotification(
-      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
-      String notificationTitle,
-      String notificationMessage,
-      String channelName,
-      String channelId,
-      int notificationId,
-      String routeName) async {
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
+    String notificationTitle,
+    String notificationMessage,
+    String channelName,
+    String channelId,
+    int notificationId,
+    String routeName,
+  ) async {
     AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-            channelId, // Replace with your channel ID
-            channelName, // Replace with your channel name
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true);
+          channelId, // Replace with your channel ID
+          channelName, // Replace with your channel name
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+        );
     NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: DarwinNotificationDetails(
-          presentBadge: true,
-          presentSound: true,
-        ));
+      android: androidPlatformChannelSpecifics,
+      iOS: DarwinNotificationDetails(presentBadge: true, presentSound: true),
+    );
 
     await flutterLocalNotificationsPlugin.show(
-        notificationId,
-        notificationTitle, // Notification title
-        notificationMessage, // Notification body
-        platformChannelSpecifics,
-        payload: routeName);
+      id: notificationId,
+      title: notificationTitle, // Notification title
+      body: notificationMessage, // Notification body
+      notificationDetails: platformChannelSpecifics,
+      payload: routeName,
+    );
   }
 
   Future<void> scheduleInstantNotification(
-      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
-      String notificationTitle,
-      String notificationMessage,
-      String channelName,
-      String channelId,
-      int notificationId,
-      String routeName,
-      int duration) async {
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
+    String notificationTitle,
+    String notificationMessage,
+    String channelName,
+    String channelId,
+    int notificationId,
+    String routeName,
+    int duration,
+  ) async {
     AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-            channelId, // Replace with your channel ID
-            channelName, // Replace with your channel name
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true);
+          channelId, // Replace with your channel ID
+          channelName, // Replace with your channel name
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+        );
     NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: DarwinNotificationDetails(
-          presentBadge: true,
-          presentSound: true,
-        ));
-    final scheduledDate =
-        tz.TZDateTime.now(tz.local).add(Duration(seconds: duration));
+      android: androidPlatformChannelSpecifics,
+      iOS: DarwinNotificationDetails(presentBadge: true, presentSound: true),
+    );
+    final scheduledDate = tz.TZDateTime.now(
+      tz.local,
+    ).add(Duration(seconds: duration));
 
     // await flutterLocalNotificationsPlugin.zonedSchedule(
     //     notificationId,
@@ -91,57 +93,71 @@ class NotificationsController {
 
   Future<void> scheduleNotification() async {
     showNotification(
-        flutterLocalNotificationsPlugin,
-        "Welcome to bridge_ai",
-        "Explore a world of resources and support for women of all stages in life. We're here to empower you!",
-        "dailyNotification",
-        "bridge_ai",
-        1,
-        "/home");
+      flutterLocalNotificationsPlugin,
+      "Welcome to bridge_ai",
+      "Explore a world of resources and support for women of all stages in life. We're here to empower you!",
+      "dailyNotification",
+      "bridge_ai",
+      1,
+      "/home",
+    );
   }
 
   // Notifications for Women
   final List<NotificationModel> womenNotifications = [
     NotificationModel(
-        'Wellness Reminder',
-        'Take time for self-care and prioritize your well-being today.',
-        "/home"),
+      'Wellness Reminder',
+      'Take time for self-care and prioritize your well-being today.',
+      "/home",
+    ),
     NotificationModel(
-        'Health Checkup Reminder',
-        'Don\'t forget to schedule your regular health checkup with your doctor.',
-        "/shop"),
-    NotificationModel('Exercise Motivation',
-        'Stay active and fit with your favorite exercise routine!', "/shop"),
+      'Health Checkup Reminder',
+      'Don\'t forget to schedule your regular health checkup with your doctor.',
+      "/shop",
+    ),
+    NotificationModel(
+      'Exercise Motivation',
+      'Stay active and fit with your favorite exercise routine!',
+      "/shop",
+    ),
   ];
 
-// Notifications for Pregnant Women
+  // Notifications for Pregnant Women
   final List<NotificationModel> pregnantWomenNotifications = [
-    NotificationModel('Prenatal Checkup Reminder',
-        'Your prenatal checkup is so ensential, schedule one', "/more"),
     NotificationModel(
-        'Healthy Eating Tips',
-        'Get nutrition advice for a healthy pregnancy diet. Eat well for you and your baby.',
-        "/shop"),
+      'Prenatal Checkup Reminder',
+      'Your prenatal checkup is so ensential, schedule one',
+      "/more",
+    ),
     NotificationModel(
-        'Baby Kick Count',
-        'Track your baby\'s movements and monitor kick counts regularly.',
-        "/home"),
+      'Healthy Eating Tips',
+      'Get nutrition advice for a healthy pregnancy diet. Eat well for you and your baby.',
+      "/shop",
+    ),
+    NotificationModel(
+      'Baby Kick Count',
+      'Track your baby\'s movements and monitor kick counts regularly.',
+      "/home",
+    ),
   ];
 
-// Notifications for Mothers
+  // Notifications for Mothers
   final List<NotificationModel> mothersNotifications = [
     NotificationModel(
-        'Feeding Time Reminder',
-        'It\'s time to feed your little one. Make sure they get their nourishment.',
-        "/home"),
+      'Feeding Time Reminder',
+      'It\'s time to feed your little one. Make sure they get their nourishment.',
+      "/home",
+    ),
     NotificationModel(
-        'Diaper Change Alert',
-        'Check if it\'s time for a diaper change. Keep your baby comfortable.',
-        "/shop"),
+      'Diaper Change Alert',
+      'Check if it\'s time for a diaper change. Keep your baby comfortable.',
+      "/shop",
+    ),
     NotificationModel(
-        'Bedtime Routine',
-        'Create a calming bedtime routine for a good night\'s sleep for both of you.',
-        "/home"),
+      'Bedtime Routine',
+      'Create a calming bedtime routine for a good night\'s sleep for both of you.',
+      "/home",
+    ),
   ];
 }
 

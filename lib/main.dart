@@ -1,3 +1,4 @@
+import 'package:bridge_ai/controllers/ai_controller.dart';
 import 'package:bridge_ai/controllers/chatbot_conversations.dart';
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/controllers/appController.dart';
@@ -49,6 +50,7 @@ void main() async {
     print("Error initializing Firebase: $e");
   }
   await dotenv.load(fileName: "assets/.env");
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   ).then((value) {
@@ -76,10 +78,15 @@ void main() async {
     iOS: DarwinInitializationSettings(),
   );
   await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
+    settings: initializationSettings,
     onDidReceiveNotificationResponse: (details) {
       notificationPrompt.handleNotificationTap(details);
     },
+  );
+  await VertexAIController.initialize(
+    projectId: dotenv.env['GCP_PROJECT_ID'] ?? "",
+    serviceAccountEmail: dotenv.env['GCP_SERVICE_ACCOUNT_EMAIL'] ?? "",
+    privateKey: dotenv.env['GCP_PRIVATE_KEY'] ?? "",
   );
   runApp(MyApp());
 }
