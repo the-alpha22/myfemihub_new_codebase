@@ -1,11 +1,21 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/controllers.dart';
 import 'package:bridge_ai/pages/home/extra_pages/period_tracker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+
+const _rose = Color(0xFFE8567A);
+const _roseDark = Color(0xFFC03A5E);
+const _roseSoft = Color(0xFFFFF0F4);
+const _plum = Color(0xFF3D1A2E);
+const _muted = Color(0xFF9E8892);
+const _surface = Color(0xFFFDF7F9);
 
 class DueDateCalculatorScreen extends StatefulWidget {
   @override
@@ -20,153 +30,492 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
   final TextEditingController _cycleLengthController = TextEditingController(
     text: '28',
   );
-  final TextEditingController _lastPeriodController = TextEditingController();
+
   DateTime? _selectedDate;
+  bool _saving = false;
+
+  int get _periodLength => int.tryParse(_periodLengthController.text) ?? 3;
+  int get _cycleLength => int.tryParse(_cycleLengthController.text) ?? 28;
 
   void _pickDate() async {
-    DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
+      builder:
+          (context, child) => Theme(
+            data: ThemeData.light().copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: _rose,
+                onPrimary: Colors.white,
+              ),
+              dialogBackgroundColor: Colors.white,
+            ),
+            child: child!,
+          ),
     );
-
-    if (picked != null) {
-      setState(() {
-        _selectedDate = picked;
-        _lastPeriodController.text = DateFormat('MM/dd/yyyy').format(picked);
-      });
-    }
+    if (picked != null) setState(() => _selectedDate = picked);
   }
 
   void _addPeriodData() async {
     if (_selectedDate == null) return;
-    int cycleLength = int.tryParse(_cycleLengthController.text) ?? 28;
-    int periodLength = int.tryParse(_periodLengthController.text) ?? 5;
-
+    setState(() => _saving = true);
     await userController.updateUserData({
       "perioddate": Timestamp.fromDate(_selectedDate!),
-      "periodLength": periodLength,
-      "periodCycle": cycleLength,
+      "periodLength": _periodLength,
+      "periodCycle": _cycleLength,
     });
-
-    setState(() {
-      userController.userModel.value!.perioddate = _selectedDate!;
-      userController.userModel.value!.periodCycle = cycleLength;
-      userController.userModel.value!.periodLength = periodLength;
-    });
+    userController.userModel.value!.perioddate = _selectedDate!;
+    userController.userModel.value!.periodCycle = _cycleLength;
+    userController.userModel.value!.periodLength = _periodLength;
     Get.to(() => PeriodTrackerScreen(), transition: Transition.rightToLeft);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          "Period Data",
-          style: GoogleFonts.montserrat(fontSize: 14, color: Colors.black87),
-        ),
-        centerTitle: false,
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          onPressed: () {
-            Get.back();
-          },
-          icon: Icon(Icons.arrow_back_ios, color: Colors.black87, size: 16),
-        ),
-        elevation: 0,
-      ),
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      backgroundColor: _surface,
+      appBar: _buildAppBar(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInputField("Period length", _periodLengthController),
-            SizedBox(height: 16),
-            _buildInputField("Cycle length", _cycleLengthController),
-            SizedBox(height: 16),
-            GestureDetector(
-              onTap: _pickDate,
-              child: AbsorbPointer(
-                child: _buildInputField(
-                  "Start date of last period",
-                  _lastPeriodController,
-                  hintText: "MM/DD/YYYY",
+            _buildIntroCard()
+                .animate()
+                .fadeIn(duration: 500.ms, curve: Curves.easeOut)
+                .slideY(
+                  begin: 0.07,
+                  end: 0,
+                  duration: 500.ms,
+                  curve: Curves.easeOut,
+                ),
+            const SizedBox(height: 28),
+            Text(
+              "Your Cycle Details",
+              style: GoogleFonts.philosopher(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: _plum,
+              ),
+            ).animate().fadeIn(
+              delay: 120.ms,
+              duration: 400.ms,
+              curve: Curves.easeOut,
+            ),
+            const SizedBox(height: 16),
+            _buildStepperField(
+                  index: 1,
+                  label: "Period Length",
+                  sublabel: "How many days does your period last?",
+                  controller: _periodLengthController,
+                  min: 1,
+                  max: 10,
+                )
+                .animate()
+                .fadeIn(delay: 180.ms, duration: 400.ms, curve: Curves.easeOut)
+                .slideY(begin: 0.05, end: 0, delay: 180.ms, duration: 400.ms),
+            const SizedBox(height: 12),
+            _buildStepperField(
+                  index: 2,
+                  label: "Cycle Length",
+                  sublabel: "Days from period start to next period start",
+                  controller: _cycleLengthController,
+                  min: 21,
+                  max: 45,
+                )
+                .animate()
+                .fadeIn(delay: 240.ms, duration: 400.ms, curve: Curves.easeOut)
+                .slideY(begin: 0.05, end: 0, delay: 240.ms, duration: 400.ms),
+            const SizedBox(height: 12),
+            _buildDateField()
+                .animate()
+                .fadeIn(delay: 300.ms, duration: 400.ms, curve: Curves.easeOut)
+                .slideY(begin: 0.05, end: 0, delay: 300.ms, duration: 400.ms),
+            const SizedBox(height: 32),
+            _buildSaveButton()
+                .animate()
+                .fadeIn(delay: 380.ms, duration: 400.ms, curve: Curves.easeOut)
+                .slideY(begin: 0.05, end: 0, delay: 380.ms, duration: 400.ms),
+          ],
+        ),
+      ),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: _surface,
+      toolbarHeight: 64,
+      centerTitle: false,
+      title: Text(
+        "Period Data",
+        style: GoogleFonts.philosopher(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: _plum,
+        ),
+      ),
+      leading: IconButton(
+        onPressed: () => Get.back(),
+        icon: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(color: _roseSoft, shape: BoxShape.circle),
+          child: Icon(Icons.arrow_back_ios_new_rounded, color: _rose, size: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIntroCard() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [_rose, _roseDark],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: _rose.withOpacity(0.28),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -20,
+            bottom: -20,
+            child: Container(
+              width: 130,
+              height: 130,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.07),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(22),
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.18),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    PhosphorIcons.drop,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Set Up Tracker",
+                        style: GoogleFonts.philosopher(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "A few details help us personalise\nyour cycle predictions",
+                        style: GoogleFonts.plusJakartaSans(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 12.5,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepperField({
+    required int index,
+    required String label,
+    required String sublabel,
+    required TextEditingController controller,
+    required int min,
+    required int max,
+  }) {
+    final value = int.tryParse(controller.text) ?? min;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: _roseSoft,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  "$index",
+                  style: GoogleFonts.philosopher(
+                    color: _rose,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
-            SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _addPeriodData,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                minimumSize: Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.philosopher(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _plum,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    sublabel,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11.5,
+                      color: _muted,
+                    ),
+                  ),
+                ],
               ),
-              child: Text(
-                "Add Period Data",
-                style: GoogleFonts.montserrat(
-                  fontSize: 14,
-                  color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Row(
+              children: [
+                _stepBtn(
+                  icon: Icons.remove_rounded,
+                  onTap:
+                      value > min
+                          ? () =>
+                              setState(() => controller.text = "${value - 1}")
+                          : null,
                 ),
-              ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 32,
+                  child: Text(
+                    "${value}",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.philosopher(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: _plum,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                _stepBtn(
+                  icon: Icons.add_rounded,
+                  onTap:
+                      value < max
+                          ? () =>
+                              setState(() => controller.text = "${value + 1}")
+                          : null,
+                ),
+              ],
             ),
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        height: 80,
+    );
+  }
+
+  Widget _stepBtn({required IconData icon, VoidCallback? onTap}) {
+    final active = onTap != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: active ? _roseSoft : Colors.grey.shade100,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: active ? _rose : Colors.grey.shade400,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateField() {
+    final hasDate = _selectedDate != null;
+    return GestureDetector(
+      onTap: _pickDate,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: hasDate ? _rose.withOpacity(0.4) : Colors.transparent,
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            "Please provide us with your period data to start using FemiHub's period tracker",
-            style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black87),
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: _roseSoft,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    "3",
+                    style: GoogleFonts.philosopher(
+                      color: _rose,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Last Period Start",
+                      style: GoogleFonts.philosopher(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _plum,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hasDate
+                          ? DateFormat('MMMM d, yyyy').format(_selectedDate!)
+                          : "Tap to select date",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: hasDate ? 13 : 11.5,
+                        color: hasDate ? _rose : _muted,
+                        fontWeight: hasDate ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                PhosphorIcons.calendarBlank,
+                color: hasDate ? _rose : _muted,
+                size: 20,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInputField(
-    String label,
-    TextEditingController controller, {
-    String? hintText,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.montserrat(
-            fontSize: 14,
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-          ),
+  Widget _buildSaveButton() {
+    final canSave = _selectedDate != null && !_saving;
+    return GestureDetector(
+      onTap: canSave ? _addPeriodData : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 17),
+        decoration: BoxDecoration(
+          gradient:
+              canSave
+                  ? const LinearGradient(
+                    colors: [_rose, _roseDark],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                  : null,
+          color: canSave ? null : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow:
+              canSave
+                  ? [
+                    BoxShadow(
+                      color: _rose.withOpacity(0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ]
+                  : [],
         ),
-        SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          readOnly: hintText != null,
-          style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black87),
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: GoogleFonts.montserrat(
-              fontSize: 14,
-              color: Colors.black54,
-            ),
-            filled: true,
-            fillColor: Colors.grey[100],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          keyboardType: TextInputType.number,
-        ),
-      ],
+        child:
+            _saving
+                ? const Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+                : Text(
+                  "Save & Start Tracking",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    color: canSave ? Colors.white : Colors.grey.shade400,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+      ),
     );
   }
 }

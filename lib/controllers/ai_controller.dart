@@ -18,7 +18,6 @@ class VertexAIController {
   static DateTime? _tokenExpiry;
 
   /// Initialize Vertex AI Controller
-  /// Call this once on app startup
   static Future<void> initialize({
     required String projectId,
     required String serviceAccountEmail,
@@ -34,7 +33,6 @@ class VertexAIController {
     _serviceAccountEmail = serviceAccountEmail;
     _privateKey = privateKey;
 
-    // Validate key format
     if (!_privateKey.contains("BEGIN PRIVATE KEY") &&
         !_privateKey.contains("BEGIN RSA PRIVATE KEY")) {
       throw Exception(
@@ -46,13 +44,11 @@ class VertexAIController {
     print("✅ VertexAIController initialized successfully");
   }
 
-  /// Check if controller is ready to use
   static bool get isInitialized =>
       _projectId.isNotEmpty &&
       _serviceAccountEmail.isNotEmpty &&
       _privateKey.isNotEmpty;
 
-  /// Get or create access token (handles caching & refresh automatically)
   static Future<String> getAccessToken() async {
     if (!isInitialized) {
       throw Exception(
@@ -61,7 +57,6 @@ class VertexAIController {
       );
     }
 
-    // Return cached token if still valid (refresh 60s before expiry)
     if (_cachedAccessToken != null &&
         _tokenExpiry != null &&
         DateTime.now().isBefore(_tokenExpiry!)) {
@@ -71,13 +66,11 @@ class VertexAIController {
     try {
       print("🔄 Generating new Vertex AI access token...");
 
-      // Create JWT using FlutterJWTHelper
       final jwt = await FlutterJWTHelper.createJWT(
         clientEmail: _serviceAccountEmail,
         privateKeyPem: _privateKey,
       );
 
-      // Exchange JWT for access token
       final tokenResponse = await http
           .post(
             Uri.parse("https://oauth2.googleapis.com/token"),
@@ -104,7 +97,6 @@ class VertexAIController {
       _cachedAccessToken = data["access_token"];
       final expiresIn = data["expires_in"] as int? ?? 3600;
 
-      // Cache token, refresh 60 seconds before expiry
       _tokenExpiry = DateTime.now().add(Duration(seconds: expiresIn - 60));
 
       print("✅ Access token obtained (expires in ${expiresIn}s)");
@@ -115,6 +107,21 @@ class VertexAIController {
     }
   }
 
+  // FIX 1: Strip markdown symbols (**, *, #, etc.) from AI responses
+  static String _stripMarkdown(String text) {
+    return text
+        .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1') // **bold** → bold
+        .replaceAll(RegExp(r'\*(.+?)\*'), r'$1') // *italic* → italic
+        .replaceAll(RegExp(r'#{1,6}\s*'), '') // ## headings
+        .replaceAll(RegExp(r'`(.+?)`'), r'$1') // `code` → code
+        .replaceAll(RegExp(r'^\s*[-*+]\s+', multiLine: true), '• ') // bullets
+        .replaceAll(
+          RegExp(r'^\s*\d+\.\s+', multiLine: true),
+          '',
+        ) // numbered lists
+        .trim();
+  }
+
   /// Main chatbot response function
   static Future<String> generateChatbotResponse(
     UserModel user,
@@ -123,69 +130,70 @@ class VertexAIController {
   ) async {
     try {
       final token = await getAccessToken();
-      final history = _formatMessageHistory(user, messages);
-
-      print(
-        "📤 Sending request to Vertex AI (${history.length} messages in history)",
-      );
 
       late List<Map<String, dynamic>> contents;
 
-      if (history.isEmpty) {
-        // First message - just introduction
+      if (messages.isEmpty) {
+        // First message — introduction only
         contents = [
           {
             "role": "user",
             "parts": [
               {
                 "text":
-                    '''You are a health assistant called Femi AI, integrated into the FemiHub app.
-
-We provide:
-- Information on pregnancy and sexual/reproductive health
-- Virtual consultation services
-- Period and pregnancy tracking
-- Emotional support via community groups
-
-Your role: Answer questions related to women's health, pregnancy, and menstruation.
-Keep responses under 150 characters, informative and concise.
-
-Generate an introductory message about yourself.''',
+                    'You are a health assistant called Femi AI, integrated into the FemiHub app. '
+                    'You provide information on pregnancy, sexual/reproductive health, period and pregnancy tracking, '
+                    'and emotional support. Answer questions related to women\'s health concisely. '
+                    'Do NOT use markdown formatting (no **, *, #, or backticks). '
+                    'Generate a short, friendly introductory message about yourself in plain text.',
               },
             ],
           },
         ];
       } else {
-        // Continued conversation
+        // FIX 2: Build history in CORRECT order (oldest first) and extract
+        //         the latest user message separately so the model knows what
+        //         it is actually being asked right now.
+        final historyLines = _formatMessageHistory(user, messages);
+
+        // The last entry in the correctly-ordered list is the current user message
+        final currentMessage =
+            historyLines.isNotEmpty ? historyLines.last : "Hello";
+
+        // Everything before the last entry is prior context
+        final priorHistory =
+            historyLines.length > 1
+                ? historyLines.sublist(0, historyLines.length - 1).join("\n")
+                : "(no prior messages)";
+
         contents = [
           {
             "role": "user",
             "parts": [
               {
                 "text":
-                    '''You are Femi AI, a health assistant for the FemiHub app.
-
-INSTRUCTIONS:
-1. Answer questions about women's health, pregnancy, menstruation
-2. Keep responses under 150 characters
-3. Use only the provided context
-4. If unsure, suggest consulting a doctor
-
-USER: ${user.name}
-Date: ${DateTime.now()}
-
-HISTORY:
-${history.join("\n")}
-
-CURRENT MESSAGE:
-${history.last}
-
-Respond helpfully.''',
+                    'You are Femi AI, a women\'s health assistant for the FemiHub app.\n\n'
+                    'INSTRUCTIONS:\n'
+                    '1. Answer questions about women\'s health, pregnancy, and menstruation.\n'
+                    '2. Keep responses concise and helpful (2-4 sentences).\n'
+                    '3. Do NOT use markdown formatting — no **, *, #, or backticks. Plain text only.\n'
+                    '4. If a question is outside your scope, politely suggest consulting a doctor.\n\n'
+                    'USER: ${user.name}\n'
+                    'Date: ${DateTime.now()}\n\n'
+                    'CONVERSATION HISTORY (oldest to newest):\n'
+                    '$priorHistory\n\n'
+                    'CURRENT USER MESSAGE:\n'
+                    '$currentMessage\n\n'
+                    'Respond to the CURRENT USER MESSAGE using the history for context.',
               },
             ],
           },
         ];
       }
+
+      print(
+        "📤 Sending request to Vertex AI (${messages.length} messages in history)",
+      );
 
       final response = await http
           .post(
@@ -199,10 +207,13 @@ Respond helpfully.''',
             body: jsonEncode({
               "contents": contents,
               "generationConfig": {
-                "maxOutputTokens": 280,
-                "temperature": 0.9,
-                "topP": 0.1,
-                "topK": 16,
+                // FIX 3: 280 tokens was cutting responses mid-sentence; 1024 is safe
+                "maxOutputTokens": 1024,
+                "temperature": 0.7,
+                "topP": 0.9,
+                "topK": 40,
+                // FIX 1 (server-side): request plain text to reduce markdown
+                "responseMimeType": "text/plain",
               },
             }),
           )
@@ -220,15 +231,18 @@ Respond helpfully.''',
       }
 
       final data = jsonDecode(response.body);
-      final aiResponse =
+      final rawResponse =
           data["candidates"]?[0]?["content"]?["parts"]?[0]?["text"] ??
           "I couldn't generate a response. Please try again.";
+
+      // Apply client-side markdown stripping as a safety net
+      final aiResponse = _stripMarkdown(rawResponse);
 
       print("✅ Response generated (${aiResponse.length} chars)");
       return aiResponse;
     } catch (e) {
       print("❌ Chat error: $e");
-      return "An error occurred: $e";
+      return "An error occurred. Please try again.";
     }
   }
 
@@ -236,14 +250,9 @@ Respond helpfully.''',
   static Future<String> suggestGeneralPeriodInfo(String stage) async {
     return _callVertexAI(
       prompt:
-          '''Provide information about the $stage phase of the menstrual cycle.
-
-Include:
-1. Physiological changes
-2. Things to watch for
-3. Normal variations
-
-Keep tone clear, concise, empathetic.''',
+          'Provide information about the $stage phase of the menstrual cycle. '
+          'Include: physiological changes, things to watch for, and normal variations. '
+          'Keep the tone clear, concise, and empathetic. Use plain text only — no markdown.',
     );
   }
 
@@ -251,82 +260,52 @@ Keep tone clear, concise, empathetic.''',
   static Future<String> suggestGeneralPeriodRecommendation(String stage) async {
     return _callVertexAI(
       prompt:
-          '''Generate recommendations for the $stage phase of menstrual cycle.
-
-Cover:
-- Well-being & Self-Care
-- Physical Activity
-- Nutrition & Hydration
-- Family Planning & Intimacy
-- Shopping suggestions
-- Warning signs
-
-Use encouraging, actionable format.''',
+          'Generate recommendations for the $stage phase of the menstrual cycle. '
+          'Cover: well-being and self-care, physical activity, nutrition and hydration, '
+          'family planning and intimacy, shopping suggestions, and warning signs. '
+          'Use an encouraging, actionable format. Plain text only — no markdown.',
     );
   }
 
   /// Get symptoms for period stage
   static Future<String> suggestGeneralPeriodSymptoms(String stage) async {
     return _callVertexAI(
-      prompt: '''Describe common symptoms during the $stage phase.
-
-Include:
-- Physical Symptoms
-- Emotional/Mood Symptoms
-- Less Common Symptoms
-- When symptoms are concerning
-
-Use clear, sensitive, reassuring language.''',
+      prompt:
+          'Describe common symptoms during the $stage phase of the menstrual cycle. '
+          'Include: physical symptoms, emotional/mood symptoms, less common symptoms, '
+          'and when symptoms are concerning. Use clear, sensitive, reassuring language. '
+          'Plain text only — no markdown.',
     );
   }
 
   /// Get family planning information
   static Future<String> suggestFamilyPlanningInfo() async {
     return _callVertexAI(
-      prompt: '''Create a comprehensive family planning guide.
-
-Include:
-1. What is Family Planning?
-2. Why it matters
-3. Contraception methods
-4. Planning pregnancy
-5. Choosing methods
-6. Resources
-
-Use supportive, non-judgmental tone.''',
+      prompt:
+          'Create a comprehensive family planning guide covering: what family planning is, '
+          'why it matters, contraception methods, planning pregnancy, how to choose a method, '
+          'and resources. Use a supportive, non-judgmental tone. Plain text only — no markdown.',
     );
   }
 
   /// Get info on specific family planning method
   static Future<String> suggestFamilyPlanningSpecificInfo(String method) async {
     return _callVertexAI(
-      prompt: '''Provide detailed guide for $method family planning method.
-
-Include:
-1. Definition
-2. Merits
-3. Demerits
-4. Resources
-
-Use supportive tone.''',
+      prompt:
+          'Provide a detailed guide for the $method family planning method. '
+          'Include: definition, merits, demerits, and resources. '
+          'Use a supportive tone. Plain text only — no markdown.',
     );
   }
 
   /// Get pregnancy tips for specific trimester
   static Future<String> suggestPregnancyTip(String trimester) async {
     return _callVertexAI(
-      prompt: '''Generate pregnancy guidance for the $trimester trimester.
-
-Include:
-1. What to Expect
-2. Common Symptoms
-3. Nutrition & Hydration
-4. Well-being & Self-Care
-5. Preparations
-6. Things to Avoid
-7. Red Flags
-
-Use warm, empathetic tone.''',
+      prompt:
+          'Generate pregnancy guidance for the $trimester trimester. '
+          'Include: what to expect, common symptoms, nutrition and hydration, '
+          'well-being and self-care, preparations, things to avoid, and red flags. '
+          'Use a warm, empathetic tone. Plain text only — no markdown.',
     );
   }
 
@@ -356,10 +335,11 @@ Use warm, empathetic tone.''',
                 },
               ],
               "generationConfig": {
-                "maxOutputTokens": 512,
-                "temperature": 0.9,
-                "topP": 0.1,
-                "topK": 16,
+                "maxOutputTokens": 1024,
+                "temperature": 0.7,
+                "topP": 0.9,
+                "topK": 40,
+                "responseMimeType": "text/plain",
               },
             }),
           )
@@ -373,27 +353,29 @@ Use warm, empathetic tone.''',
       }
 
       final data = jsonDecode(response.body);
-      final aiResponse =
+      final rawResponse =
           data["candidates"]?[0]?["content"]?["parts"]?[0]?["text"] ??
           "Unable to generate response.";
+
+      final aiResponse = _stripMarkdown(rawResponse);
 
       print("✅ Response received (${aiResponse.length} chars)");
       return aiResponse;
     } catch (e) {
       print("❌ API error: $e");
-      return "An error occurred: $e";
+      return "An error occurred. Please try again.";
     }
   }
 
-  /// Format chat history
+  /// Format chat history — oldest message first (correct chronological order)
   static List<String> _formatMessageHistory(
     UserModel user,
     List<dynamic> messages,
   ) {
+    // FIX 2: Do NOT reverse — keep messages in original order (oldest → newest)
     final history = <String>[];
-    final reversedMessages = messages.reversed.toList();
 
-    for (var message in reversedMessages) {
+    for (var message in messages) {
       if (message["userId"] == "chatbot") {
         history.add("Femi AI: ${message["message"]}");
       } else {
@@ -404,14 +386,12 @@ Use warm, empathetic tone.''',
     return history;
   }
 
-  /// Clear token cache
   static void clearTokenCache() {
     _cachedAccessToken = null;
     _tokenExpiry = null;
     print("🧹 Token cache cleared");
   }
 
-  /// Reset everything
   static void reset() {
     _projectId = "";
     _serviceAccountEmail = "";

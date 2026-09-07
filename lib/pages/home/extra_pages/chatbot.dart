@@ -15,6 +15,13 @@ import 'package:lottie/lottie.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+const _rose = Color(0xFFE8567A);
+const _roseDark = Color(0xFFC03A5E);
+const _roseSoft = Color(0xFFFFF0F4);
+const _plum = Color(0xFF3D1A2E);
+const _muted = Color(0xFF9E8892);
+const _surface = Color(0xFFFDF7F9);
+
 class ChatBotPage extends StatefulWidget {
   const ChatBotPage({Key? key}) : super(key: key);
 
@@ -30,14 +37,23 @@ class _ChatBotPageState extends State<ChatBotPage> {
   final partner = types.User(id: "chatbot", firstName: "Femi AI");
 
   List messages = [];
-  TextEditingController responseMessage = TextEditingController();
-  bool isAityping = false;
+  final TextEditingController _inputController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  bool isAiTyping = false;
   bool loading = true;
 
   @override
   void initState() {
     super.initState();
+    _inputController.addListener(() => setState(() {}));
     getMessages();
+  }
+
+  @override
+  void dispose() {
+    _inputController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> getMessages() async {
@@ -47,10 +63,8 @@ class _ChatBotPageState extends State<ChatBotPage> {
         );
 
     if (conversation.isNotEmpty) {
-      setState(() {
-        conversation = conversation.reversed.toList();
-        messages.clear();
-      });
+      conversation = conversation.reversed.toList();
+      setState(() => messages.clear());
       for (var message in conversation) {
         setState(() {
           messages.insert(0, {
@@ -69,7 +83,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
 
     setState(() => loading = false);
     if (messages.isEmpty) {
-      setState(() => isAityping = true);
+      setState(() => isAiTyping = true);
       getChatBotResponse();
     }
   }
@@ -95,16 +109,18 @@ class _ChatBotPageState extends State<ChatBotPage> {
     );
   }
 
-  void _handleSendPressed(types.PartialText message) async {
-    if (message.text.trim().isEmpty) return;
-    setState(() => isAityping = true);
+  void _handleSendPressed() async {
+    final text = _inputController.text.trim();
+    if (text.isEmpty) return;
+    _inputController.clear();
+    setState(() => isAiTyping = true);
     final textMessage = types.TextMessage(
       author: user,
       createdAt: DateTime.now().millisecondsSinceEpoch,
       id: const Uuid().v4(),
-      text: message.text,
+      text: text,
     );
-    addMessage(textMessage, message.text, null);
+    addMessage(textMessage, text, null);
     Future.delayed(const Duration(seconds: 2), getChatBotResponse);
   }
 
@@ -139,70 +155,95 @@ class _ChatBotPageState extends State<ChatBotPage> {
       );
       addMessage(textMessage, textMessage.text, result['citation']);
     }
-    setState(() => isAityping = false);
+    setState(() => isAiTyping = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _surface,
+      appBar: _buildAppBar(),
+      body: loading ? _buildLoading() : _buildChat(),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      elevation: 0,
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        toolbarHeight: 64,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            size: 18,
-            color: Colors.black87,
-          ),
-          onPressed: () => Get.back(),
+      toolbarHeight: 68,
+      leading: IconButton(
+        onPressed: () => Get.back(),
+        icon: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(color: _roseSoft, shape: BoxShape.circle),
+          child: Icon(Icons.arrow_back_ios_new_rounded, color: _rose, size: 16),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: primaryColor.withOpacity(0.2),
-                  width: 1.5,
-                ),
+      ),
+      title: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [_rose, _roseDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: ClipOval(
-                child: Lottie.asset('images/ai.json', fit: BoxFit.cover),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Femi AI',
-                  style: GoogleFonts.montserrat(
-                    color: Colors.black87,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  isAityping ? 'Typing...' : 'Online',
-                  style: GoogleFonts.montserrat(
-                    color: isAityping ? primaryColor : Colors.black38,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w400,
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: _rose.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-          ],
-        ),
-        centerTitle: false,
+            child: ClipOval(
+              child: Lottie.asset('images/ai.json', fit: BoxFit.cover),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Femi AI',
+                style: GoogleFonts.philosopher(
+                  color: _plum,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: isAiTyping ? _amber : _sage,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    isAiTyping ? 'Typing...' : 'Online',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: isAiTyping ? _amber : _sage,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
-      body: loading ? _buildLoading() : _buildChat(),
-      bottomNavigationBar: _buildDisclaimer(),
+      centerTitle: false,
     );
   }
 
@@ -211,11 +252,11 @@ class _ChatBotPageState extends State<ChatBotPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(strokeWidth: 1.5, color: primaryColor),
+          CircularProgressIndicator(strokeWidth: 1.5, color: _rose),
           const SizedBox(height: 16),
           Text(
             'Loading conversation...',
-            style: GoogleFonts.montserrat(color: Colors.black38, fontSize: 13),
+            style: GoogleFonts.plusJakartaSans(color: _muted, fontSize: 13),
           ),
         ],
       ),
@@ -227,17 +268,18 @@ class _ChatBotPageState extends State<ChatBotPage> {
       children: [
         Expanded(
           child: ListView.builder(
+            controller: _scrollController,
             reverse: true,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            itemCount: messages.length + (isAityping ? 1 : 0),
+            itemCount: messages.length + (isAiTyping ? 1 : 0),
             itemBuilder: (context, index) {
-              if (isAityping && index == 0) {
+              if (isAiTyping && index == 0) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _buildTypingBubble(),
                 );
               }
-              final message = messages[isAityping ? index - 1 : index];
+              final message = messages[isAiTyping ? index - 1 : index];
               final bool isMine = message["userId"] == user.id;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -247,7 +289,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
                     .animate()
                     .fadeIn(duration: 300.ms, curve: Curves.easeOut)
                     .slideY(
-                      begin: 0.08,
+                      begin: 0.06,
                       end: 0,
                       duration: 300.ms,
                       curve: Curves.easeOut,
@@ -257,6 +299,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
           ),
         ),
         _buildInputBar(),
+        _buildDisclaimer(),
       ],
     );
   }
@@ -269,22 +312,33 @@ class _ChatBotPageState extends State<ChatBotPage> {
           maxWidth: MediaQuery.of(context).size.width * 0.72,
         ),
         decoration: BoxDecoration(
-          color: primaryColor,
+          gradient: const LinearGradient(
+            colors: [_rose, _roseDark],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-            bottomLeft: Radius.circular(16),
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+            bottomLeft: Radius.circular(18),
             bottomRight: Radius.circular(4),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: _rose.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
         child: Text(
           message["message"],
-          style: GoogleFonts.montserrat(
+          style: GoogleFonts.plusJakartaSans(
             color: Colors.white,
             fontWeight: FontWeight.w400,
-            fontSize: 14,
-            height: 1.5,
+            fontSize: 13.5,
+            height: 1.55,
           ),
         ),
       ),
@@ -294,37 +348,61 @@ class _ChatBotPageState extends State<ChatBotPage> {
   Widget _buildReceivedMessage(Map message) {
     return Align(
       alignment: Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.72,
-            ),
+            width: 28,
+            height: 28,
+            margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [_rose, _roseDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: SelectableText(
-              message["message"],
-              style: GoogleFonts.montserrat(
-                color: Colors.black87,
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
-                height: 1.55,
-              ),
+            child: ClipOval(
+              child: Lottie.asset('images/ai.json', fit: BoxFit.cover),
             ),
           ),
-          if (message["citation"] != null) ...[
-            const SizedBox(height: 6),
-            _buildSourceChip(message["citation"]),
-          ],
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.68,
+                ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(4),
+                    topRight: Radius.circular(18),
+                    bottomLeft: Radius.circular(18),
+                    bottomRight: Radius.circular(18),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 15,
+                  vertical: 11,
+                ),
+                child: SelectableText(
+                  message["message"],
+                  style: GoogleFonts.plusJakartaSans(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 13.5,
+                    height: 1.6,
+                  ),
+                ),
+              ),
+              if (message["citation"] != null) ...[
+                const SizedBox(height: 6),
+                _buildSourceChip(message["citation"]),
+              ],
+            ],
+          ),
         ],
       ),
     );
@@ -333,36 +411,57 @@ class _ChatBotPageState extends State<ChatBotPage> {
   Widget _buildTypingBubble() {
     return Align(
       alignment: Alignment.centerLeft,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(4),
-            topRight: Radius.circular(16),
-            bottomLeft: Radius.circular(16),
-            bottomRight: Radius.circular(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [_rose, _roseDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: ClipOval(
+              child: Lottie.asset('images/ai.json', fit: BoxFit.cover),
+            ),
           ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(
-            3,
-            (i) => Container(
-                  margin: EdgeInsets.only(right: i < 2 ? 5 : 0),
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.5),
-                    shape: BoxShape.circle,
-                  ),
-                )
-                .animate(onPlay: (c) => c.repeat())
-                .fadeIn(delay: (150 * i).ms, duration: 400.ms)
-                .then()
-                .fadeOut(duration: 400.ms),
+          Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(
+                3,
+                (i) => Container(
+                      margin: EdgeInsets.only(right: i < 2 ? 5 : 0),
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: _rose.withOpacity(0.5),
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                    .animate(onPlay: (c) => c.repeat())
+                    .fadeIn(delay: (150 * i).ms, duration: 400.ms)
+                    .then()
+                    .fadeOut(duration: 400.ms),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -378,19 +477,19 @@ class _ChatBotPageState extends State<ChatBotPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: primaryColor.withOpacity(0.06),
+          color: _roseSoft,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: primaryColor.withOpacity(0.2), width: 1),
+          border: Border.all(color: _rose.withOpacity(0.2)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(PhosphorIcons.link, size: 12, color: primaryColor),
+            Icon(PhosphorIcons.link, size: 12, color: _rose),
             const SizedBox(width: 5),
             Text(
               'View source',
-              style: GoogleFonts.montserrat(
-                color: primaryColor,
+              style: GoogleFonts.plusJakartaSans(
+                color: _rose,
                 fontWeight: FontWeight.w600,
                 fontSize: 11,
               ),
@@ -402,39 +501,36 @@ class _ChatBotPageState extends State<ChatBotPage> {
   }
 
   Widget _buildInputBar() {
+    final hasText = _inputController.text.trim().isNotEmpty;
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: _surface,
                 borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: _rose.withOpacity(0.15)),
               ),
               child: TextField(
-                controller: responseMessage,
-                onChanged: (_) => setState(() {}),
+                controller: _inputController,
                 keyboardType: TextInputType.multiline,
                 minLines: 1,
                 maxLines: 4,
                 textInputAction: TextInputAction.send,
-                onSubmitted: (value) {
-                  if (value.trim().isNotEmpty) {
-                    _handleSendPressed(types.PartialText(text: value.trim()));
-                    responseMessage.clear();
-                  }
-                },
-                style: GoogleFonts.montserrat(
-                  fontSize: 14,
+                onSubmitted: (_) => _handleSendPressed(),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13.5,
                   color: Colors.black87,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Ask Femi AI...',
-                  hintStyle: GoogleFonts.montserrat(
-                    color: Colors.black26,
-                    fontSize: 14,
+                  hintText: 'Ask Femi AI anything...',
+                  hintStyle: GoogleFonts.plusJakartaSans(
+                    color: _muted,
+                    fontSize: 13.5,
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -448,31 +544,36 @@ class _ChatBotPageState extends State<ChatBotPage> {
           const SizedBox(width: 8),
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
-              color:
-                  responseMessage.text.trim().isNotEmpty
-                      ? primaryColor
-                      : const Color(0xFFF5F5F5),
+              gradient:
+                  hasText
+                      ? const LinearGradient(
+                        colors: [_rose, _roseDark],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                      : null,
+              color: hasText ? null : const Color(0xFFEEE8EC),
               shape: BoxShape.circle,
+              boxShadow:
+                  hasText
+                      ? [
+                        BoxShadow(
+                          color: _rose.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                      : [],
             ),
             child: IconButton(
-              onPressed: () {
-                if (responseMessage.text.trim().isNotEmpty) {
-                  _handleSendPressed(
-                    types.PartialText(text: responseMessage.text.trim()),
-                  );
-                  responseMessage.clear();
-                }
-              },
+              onPressed: hasText ? _handleSendPressed : null,
               icon: Icon(
                 Icons.send_rounded,
                 size: 18,
-                color:
-                    responseMessage.text.trim().isNotEmpty
-                        ? Colors.white
-                        : Colors.black26,
+                color: hasText ? Colors.white : _muted,
               ),
             ),
           ),
@@ -484,19 +585,19 @@ class _ChatBotPageState extends State<ChatBotPage> {
   Widget _buildDisclaimer() {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
       child: SafeArea(
         top: false,
         child: Row(
           children: [
-            Icon(PhosphorIcons.info, size: 13, color: Colors.black26),
+            Icon(PhosphorIcons.info, size: 12, color: _muted),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 'Not a substitute for professional medical advice. Info sourced from WHO & CDC.',
-                style: GoogleFonts.montserrat(
-                  color: Colors.black26,
-                  fontSize: 11,
+                style: GoogleFonts.plusJakartaSans(
+                  color: _muted,
+                  fontSize: 10.5,
                   fontWeight: FontWeight.w400,
                   height: 1.4,
                 ),
@@ -508,6 +609,9 @@ class _ChatBotPageState extends State<ChatBotPage> {
     );
   }
 }
+
+const _sage = Color(0xFF6BAF92);
+const _amber = Color(0xFFFFA726);
 
 Map<String, dynamic> extractCittionResponse(String aiOutput) {
   final regex = RegExp(r'```json\s*([\s\S]*?)\s*```', multiLine: true);

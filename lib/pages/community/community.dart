@@ -13,6 +13,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+const _rose = Color(0xFFE8567A);
+const _roseDark = Color(0xFFC03A5E);
+const _roseSoft = Color(0xFFFFF0F4);
+const _plum = Color(0xFF3D1A2E);
+const _muted = Color(0xFF9E8892);
+const _surface = Color(0xFFFDF7F9);
+
 class CommunityPageNew extends StatefulWidget {
   const CommunityPageNew({super.key});
 
@@ -50,80 +57,98 @@ class _CommunityPageNewState extends State<CommunityPageNew> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        toolbarHeight: 64,
-        centerTitle: true,
-        title: Text(
-          'Community',
-          style: GoogleFonts.montserrat(
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-            color: Colors.black87,
-          ),
-        ),
-      ),
+      backgroundColor: _surface,
+      appBar: _buildAppBar(),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Row(
-                children: [
-                  _TabChip(
-                    label: 'Recommended',
-                    isSelected: selection == 'Recommended',
-                    onTap: () => setState(() => selection = 'Recommended'),
-                  ),
-                  const SizedBox(width: 8),
-                  _TabChip(
-                    label: 'Saved',
-                    isSelected: selection == 'Saved',
-                    onTap: () => setState(() => selection = 'Saved'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
+            _buildTabRow(),
+            const SizedBox(height: 12),
             Expanded(child: _buildContent()),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed:
-            () =>
-                Get.to(() => AddPostPage(), transition: Transition.rightToLeft),
-        backgroundColor: primaryColor,
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        icon: Icon(PhosphorIcons.paperPlaneTilt, color: Colors.white, size: 18),
-        label: Text(
-          'Share',
-          style: GoogleFonts.montserrat(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
+      floatingActionButton: _buildFAB(),
+      bottomNavigationBar: CustomBottomNavBar(),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: _surface,
+      toolbarHeight: 64,
+      centerTitle: false,
+      title: Text(
+        'Community',
+        style: GoogleFonts.philosopher(
+          fontWeight: FontWeight.w700,
+          fontSize: 22,
+          color: _plum,
         ),
       ),
-      bottomNavigationBar: CustomBottomNavBar(),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 16),
+          child: CircleAvatar(
+            radius: 18,
+            backgroundColor: _roseSoft,
+            child: Icon(PhosphorIcons.magnifyingGlass, size: 17, color: _rose),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabRow() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+      child: Row(
+        children: [
+          _TabChip(
+            label: 'Recommended',
+            isSelected: selection == 'Recommended',
+            onTap: () => setState(() => selection = 'Recommended'),
+          ),
+          const SizedBox(width: 8),
+          _TabChip(
+            label: 'Saved',
+            isSelected: selection == 'Saved',
+            onTap: () => setState(() => selection = 'Saved'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFAB() {
+    return FloatingActionButton.extended(
+      onPressed:
+          () => Get.to(() => AddPostPage(), transition: Transition.rightToLeft),
+      backgroundColor: _rose,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      icon: Icon(PhosphorIcons.paperPlaneTilt, color: Colors.white, size: 18),
+      label: Text(
+        'Share',
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
     );
   }
 
   Widget _buildContent() {
     if (isLoading) {
       return Center(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Lottie.asset(
-            'images/femihub_loading.json',
-            repeat: true,
-            frameRate: FrameRate(30),
-            height: 160,
-          ),
+        child: Lottie.asset(
+          'images/femihub_loading.json',
+          repeat: true,
+          frameRate: FrameRate(30),
+          height: 160,
         ),
       );
     }
@@ -135,22 +160,19 @@ class _CommunityPageNewState extends State<CommunityPageNew> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Lottie.asset(
-                'images/femihub_nothing_found.json',
-                repeat: true,
-                frameRate: FrameRate(30),
-                height: 140,
-              ),
+            Lottie.asset(
+              'images/femihub_nothing_found.json',
+              repeat: true,
+              frameRate: FrameRate(30),
+              height: 130,
             ),
             const SizedBox(height: 16),
             Text(
               selection == 'Recommended' ? 'No posts yet' : 'No saved posts',
-              style: GoogleFonts.montserrat(
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-                color: Colors.black87,
+              style: GoogleFonts.philosopher(
+                fontWeight: FontWeight.w700,
+                fontSize: 17,
+                color: _plum,
               ),
             ),
             const SizedBox(height: 6),
@@ -158,10 +180,10 @@ class _CommunityPageNewState extends State<CommunityPageNew> {
               selection == 'Recommended'
                   ? 'Check back later for new content'
                   : 'Tap the bookmark on any post to save it',
-              style: GoogleFonts.montserrat(
+              style: GoogleFonts.plusJakartaSans(
                 fontWeight: FontWeight.w400,
                 fontSize: 13,
-                color: Colors.black38,
+                color: _muted,
               ),
             ),
           ],
@@ -170,11 +192,11 @@ class _CommunityPageNewState extends State<CommunityPageNew> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
       itemCount: displayPosts.length,
       itemBuilder: (context, index) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.only(bottom: 12),
           child: PostCard(post: displayPosts[index])
               .animate()
               .fadeIn(
@@ -215,15 +237,31 @@ class _TabChip extends StatelessWidget {
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor : const Color(0xFFF5F5F5),
+          color: isSelected ? _rose : Colors.white,
           borderRadius: BorderRadius.circular(20),
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: _rose.withOpacity(0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                  : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
         ),
         child: Text(
           label,
-          style: GoogleFonts.montserrat(
+          style: GoogleFonts.plusJakartaSans(
             fontWeight: FontWeight.w600,
             fontSize: 13,
-            color: isSelected ? Colors.white : Colors.black54,
+            color: isSelected ? Colors.white : _muted,
           ),
         ),
       ),
@@ -267,16 +305,27 @@ class _PostCardState extends State<PostCard> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => Get.toNamed("/community/posts/${widget.post.id}"),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
         child: Ink(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFEEEEEE), width: 1),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_buildHeader(), _buildContent(), _buildActions()],
+            children: [
+              _buildHeader(),
+              _buildBody(),
+              _buildDivider(),
+              _buildActions(),
+            ],
           ),
         ),
       ),
@@ -285,15 +334,19 @@ class _PostCardState extends State<PostCard> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 12, 0),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFEEEEEE), width: 1),
+              gradient: LinearGradient(
+                colors: [_rose.withOpacity(0.3), _roseSoft],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
             child: ClipOval(
               child: Image.asset("images/image.jfif", fit: BoxFit.cover),
@@ -308,16 +361,16 @@ class _PostCardState extends State<PostCard> {
                   user != null ? user!.name : 'Anonymous',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.montserrat(
-                    color: Colors.black87,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  style: GoogleFonts.plusJakartaSans(
+                    color: _plum,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   timeAgo(widget.post.time),
-                  style: GoogleFonts.montserrat(
-                    color: Colors.black38,
+                  style: GoogleFonts.plusJakartaSans(
+                    color: _muted,
                     fontSize: 11,
                     fontWeight: FontWeight.w400,
                   ),
@@ -342,7 +395,7 @@ class _PostCardState extends State<PostCard> {
                 context: context,
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 position: RelativeRect.fromLTRB(
                   position.dx,
@@ -354,7 +407,7 @@ class _PostCardState extends State<PostCard> {
                   _menuItem(
                     icon: PhosphorIcons.bookmark,
                     label: 'Save Post',
-                    color: primaryColor,
+                    color: _rose,
                     onTap: () async {
                       appCommunication(
                         context,
@@ -403,7 +456,7 @@ class _PostCardState extends State<PostCard> {
                   _menuItem(
                     icon: PhosphorIcons.eye,
                     label: 'Not Interested',
-                    color: Colors.black45,
+                    color: _muted,
                     onTap: () async {
                       appCommunication(
                         context,
@@ -443,12 +496,8 @@ class _PostCardState extends State<PostCard> {
             },
             borderRadius: BorderRadius.circular(8),
             child: Padding(
-              padding: const EdgeInsets.all(6),
-              child: Icon(
-                PhosphorIcons.dotsThree,
-                color: Colors.black38,
-                size: 20,
-              ),
+              padding: const EdgeInsets.all(8),
+              child: Icon(PhosphorIcons.dotsThree, color: _muted, size: 20),
             ),
           ),
     );
@@ -468,10 +517,10 @@ class _PostCardState extends State<PostCard> {
           const SizedBox(width: 10),
           Text(
             label,
-            style: GoogleFonts.montserrat(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: label == 'Report' ? Colors.red : Colors.black87,
+              color: label == 'Report' ? Colors.red : _plum,
             ),
           ),
         ],
@@ -479,16 +528,16 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildBody() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
       child: Text(
         widget.post.details,
-        style: GoogleFonts.montserrat(
+        style: GoogleFonts.plusJakartaSans(
           color: Colors.black87,
-          fontSize: 14,
+          fontSize: 13.5,
           fontWeight: FontWeight.w400,
-          height: 1.55,
+          height: 1.6,
         ),
         maxLines: 4,
         overflow: TextOverflow.ellipsis,
@@ -496,16 +545,20 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  Widget _buildDivider() {
+    return Divider(height: 1, thickness: 1, color: _surface);
+  }
+
   Widget _buildActions() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(6, 8, 6, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       child: Row(
         children: [
           _actionBtn(
-            icon: PhosphorIcons.heart,
+            icon: isLiked ? PhosphorIcons.heartFill : PhosphorIcons.heart,
             count: widget.post.likes.toString(),
             active: isLiked,
-            activeColor: primaryColor,
+            activeColor: _rose,
             onTap: () async {
               setState(() => isLiked = !isLiked);
               if (widget.post.likedUserIds.contains(
@@ -548,14 +601,14 @@ class _PostCardState extends State<PostCard> {
             icon: PhosphorIcons.chatTeardropDots,
             count: widget.post.comments.toString(),
             active: false,
-            activeColor: primaryColor,
+            activeColor: _rose,
             onTap: () => Get.toNamed("/community/posts/${widget.post.id}"),
           ),
           _actionBtn(
-            icon: PhosphorIcons.bookmark,
+            icon: isSaved ? PhosphorIcons.bookmarkFill : PhosphorIcons.bookmark,
             count: widget.post.bookmarks.toString(),
             active: isSaved,
-            activeColor: Colors.black87,
+            activeColor: _plum,
             onTap: () async {
               setState(() => isSaved = !isSaved);
               if (userController.userModel.value!.savedPostIds.contains(
@@ -606,19 +659,24 @@ class _PostCardState extends State<PostCard> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      borderRadius: BorderRadius.circular(10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? activeColor.withOpacity(0.08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: active ? activeColor : Colors.black38),
+            Icon(icon, size: 18, color: active ? activeColor : _muted),
             const SizedBox(width: 5),
             Text(
               count,
-              style: GoogleFonts.montserrat(
-                color: Colors.black54,
+              style: GoogleFonts.plusJakartaSans(
+                color: active ? activeColor : _muted,
                 fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ],
