@@ -17,9 +17,21 @@ const _roseSoft = Color(0xFFFFF0F4);
 const _plum = Color(0xFF3D1A2E);
 const _sage = Color(0xFF6BAF92);
 const _amber = Color(0xFFFFA726);
-const _sky = Color(0xFF42A5F5);
 const _muted = Color(0xFF9E8892);
 const _surface = Color(0xFFFDF7F9);
+
+// Past period: deep solid rose
+const _pastPeriodColor = Color(0xFFB5294E);
+// Predicted future period: lighter rose
+const _futurePeriodColor = Color(0xFFEF8FAB);
+// Past fertile: solid sage
+const _pastFertileColor = Color(0xFF4A8F72);
+// Predicted future fertile: lighter sage
+const _futureFertileColor = Color(0xFFA5D4BE);
+// Past ovulation: solid amber
+const _pastOvulationColor = Color(0xFFE65100);
+// Predicted future ovulation: lighter amber
+const _futureOvulationColor = Color(0xFFFFCC80);
 
 class PeriodTrackerScreen extends StatefulWidget {
   @override
@@ -39,15 +51,14 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
     DateTime.now().year,
     DateTime.now().month,
   );
+  DateTime _selectedDay = DateTime.now();
 
   String generalInfo = "";
   bool isLoading = true;
 
-  // Daily log state
   final Map<String, Set<String>> _dailyLogs = {};
   String? _selectedLogDay;
 
-  // Symptom & mood options
   final List<_LogOption> _symptomOptions = [
     _LogOption('Cramps', PhosphorIcons.lightning, Color(0xFFE8567A)),
     _LogOption('Headache', PhosphorIcons.brain, Color(0xFF9C27B0)),
@@ -107,15 +118,16 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
 
   Future<void> getInfo() async {
     final today = DateTime.now();
-    final currentPeriodStatus = calculateCycleDayType(
+    final status = calculateCycleDayType(
       today,
       lastPeriodStartDate,
       periodLength,
       cycleLength,
     );
-    String stage = getPeriodStageText(currentPeriodStatus);
-    generalInfo = await VertexAIController.suggestGeneralPeriodInfo(stage);
+    final stage = getPeriodStageText(status);
     if (mounted) setState(() => isLoading = false);
+    generalInfo = await VertexAIController.suggestGeneralPeriodInfo(stage);
+
     notificationPrompt.showNotification(
       flutterLocalNotificationsPlugin,
       "Hi ${userController.userModel.value!.name.capitalize}",
@@ -141,8 +153,215 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
     });
   }
 
-  bool _hasLog(DateTime day, String item) {
-    return _dailyLogs[_dayKey(day)]?.contains(item) ?? false;
+  bool _hasLog(DateTime day, String item) =>
+      _dailyLogs[_dayKey(day)]?.contains(item) ?? false;
+
+  // Shows popup when tapping a day
+  void _onDayTapped(DateTime date) {
+    setState(() => _selectedDay = date);
+    _showDayPopup(date);
+  }
+
+  void _showDayPopup(DateTime date) {
+    final isPast = date.isBefore(DateTime.now());
+    final isToday = DateUtils.isSameDay(date, DateTime.now());
+    final type = calculateCycleDayType(
+      date,
+      lastPeriodStartDate,
+      periodLength,
+      cycleLength,
+    );
+    final info = _getStatusInfo(type, isPast: isPast);
+    final cycleDay = _cycleDayFor(date);
+    final fertilityLabel = _fertilityLabel(type, isPast: isPast);
+    final hasLog = (_dailyLogs[_dayKey(date)]?.isNotEmpty) ?? false;
+    final Color phaseColor = info['color'];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder:
+          (_) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Handle bar
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                // Date + cycle day
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isToday ? "Today" : _formatFullDate(date),
+                          style: GoogleFonts.philosopher(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: _plum,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isToday
+                              ? _formatFullDate(date)
+                              : isPast
+                              ? "Past date"
+                              : "Predicted",
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.5,
+                            color: _muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: phaseColor.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "Day $cycleDay",
+                        style: GoogleFonts.philosopher(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: phaseColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Phase info card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: phaseColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: phaseColor.withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: phaseColor.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(info['icon'], color: phaseColor, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              info['title'],
+                              style: GoogleFonts.philosopher(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: _plum,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              fertilityLabel,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12.5,
+                                color: phaseColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (hasLog) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(PhosphorIcons.checkCircle, color: _sage, size: 15),
+                      const SizedBox(width: 6),
+                      Text(
+                        "You logged symptoms for this day",
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12.5,
+                          color: _sage,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 20),
+                // CTA button
+                GestureDetector(
+                  onTap: () {
+                    Get.back();
+                    setState(() => _selectedLogDay = _dayKey(date));
+                    _tabController.animateTo(1);
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [phaseColor, phaseColor.withOpacity(0.75)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: phaseColor.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      hasLog ? "Edit Day Log" : "Log This Day",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
   }
 
   @override
@@ -156,22 +375,16 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
     );
 
     return Scaffold(
-      backgroundColor: _surface,
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body:
           isLoading
               ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 60),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Lottie.asset(
-                      'images/femihub_loading.json',
-                      repeat: true,
-                      frameRate: FrameRate(30),
-                      height: 160,
-                    ),
-                  ),
+                child: Lottie.asset(
+                  'images/femihub_loading.json',
+                  repeat: true,
+                  frameRate: FrameRate(30),
+                  height: 160,
                 ),
               )
               : Column(
@@ -283,35 +496,35 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
         _buildPhaseHero(currentStatus, today)
             .animate()
             .fadeIn(duration: 500.ms, curve: Curves.easeOut)
-            .slideY(
-              begin: 0.08,
-              end: 0,
-              duration: 500.ms,
-              curve: Curves.easeOut,
-            ),
+            .slideY(begin: 0.08, end: 0, duration: 500.ms),
         const SizedBox(height: 20),
-        _buildCycleRing(today).animate().fadeIn(
+        _buildCalendarCard().animate().fadeIn(
           delay: 100.ms,
           duration: 500.ms,
           curve: Curves.easeOut,
         ),
         const SizedBox(height: 20),
-        _buildCalendarCard(),
+        _buildStatsRow().animate().fadeIn(
+          delay: 200.ms,
+          duration: 500.ms,
+          curve: Curves.easeOut,
+        ),
         const SizedBox(height: 20),
-        _buildLegendRow(),
-        const SizedBox(height: 20),
-        _buildStatsRow(),
-        const SizedBox(height: 20),
-        _buildUpdateButton(),
+        _buildUpdateButton().animate().fadeIn(
+          delay: 280.ms,
+          duration: 500.ms,
+          curve: Curves.easeOut,
+        ),
       ],
     );
   }
 
   Widget _buildPhaseHero(CycleDayType currentStatus, DateTime today) {
-    final info = _getStatusInfo(currentStatus);
+    final isPast = today.isBefore(DateTime.now());
+    final info = _getStatusInfo(currentStatus, isPast: true);
     final Color phaseColor = info['color'];
     final daysUntilNext = _daysUntilNextPeriod(today);
-    final cycleDay = _currentCycleDay(today);
+    final cycleDay = _cycleDayFor(today);
 
     return Container(
       decoration: BoxDecoration(
@@ -386,22 +599,21 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 14),
                 Text(
                   info['subtitle'],
                   style: GoogleFonts.plusJakartaSans(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 13,
-                    fontWeight: FontWeight.w400,
                     height: 1.5,
                   ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
                 Row(
                   children: [
-                    _buildHeroStat("Next period", "$daysUntilNext days"),
+                    _heroStat("Next period", "$daysUntilNext days"),
                     const SizedBox(width: 24),
-                    _buildHeroStat("Cycle day", "$cycleDay / $cycleLength"),
+                    _heroStat("Cycle day", "$cycleDay / $cycleLength"),
                   ],
                 ),
               ],
@@ -412,7 +624,7 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
     );
   }
 
-  Widget _buildHeroStat(String label, String value) {
+  Widget _heroStat(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -437,125 +649,6 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
     );
   }
 
-  Widget _buildCycleRing(DateTime today) {
-    final cycleDay = _currentCycleDay(today);
-    final progress = cycleDay / cycleLength;
-    final currentStatus = calculateCycleDayType(
-      today,
-      lastPeriodStartDate,
-      periodLength,
-      cycleLength,
-    );
-    final info = _getStatusInfo(currentStatus);
-    final Color phaseColor = info['color'];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(22),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 90,
-              height: 90,
-              child: CustomPaint(
-                painter: _RingPainter(progress: progress, color: phaseColor),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "$cycleDay",
-                        style: GoogleFonts.philosopher(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: _plum,
-                        ),
-                      ),
-                      Text(
-                        "of $cycleLength",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          color: _muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Cycle Progress",
-                    style: GoogleFonts.philosopher(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: _plum,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildPhaseBar(),
-                  const SizedBox(height: 10),
-                  Text(
-                    "You're ${(progress * 100).round()}% through your cycle",
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      color: _muted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 150.ms, duration: 500.ms, curve: Curves.easeOut);
-  }
-
-  Widget _buildPhaseBar() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(6),
-      child: SizedBox(
-        height: 10,
-        child: Row(
-          children: [
-            Flexible(
-              flex: periodLength,
-              child: Container(color: _rose.withOpacity(0.85)),
-            ),
-            Flexible(
-              flex: (_daysUntilOvulation() - periodLength).clamp(
-                0,
-                cycleLength,
-              ),
-              child: Container(color: _sky.withOpacity(0.6)),
-            ),
-            Flexible(flex: 5, child: Container(color: _sage.withOpacity(0.7))),
-            Flexible(
-              flex: (cycleLength - periodLength - 5 - _daysUntilOvulation())
-                  .clamp(0, cycleLength),
-              child: Container(color: _sky.withOpacity(0.3)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildCalendarCard() {
     return Container(
       decoration: BoxDecoration(
@@ -563,216 +656,195 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 12,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                _calNavBtn(Icons.chevron_left, _goToPreviousMonth),
                 Text(
-                  "Your Cycle",
+                  _getMonthYearLabel(_displayedMonth),
                   style: GoogleFonts.philosopher(
-                    fontSize: 17,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: _plum,
                   ),
                 ),
-                Row(
-                  children: [
-                    _calNavBtn(Icons.chevron_left, _goToPreviousMonth),
-                    const SizedBox(width: 4),
-                    Text(
-                      _getMonthYearLabel(_displayedMonth),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _plum,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    _calNavBtn(Icons.chevron_right, _goToNextMonth),
-                  ],
+                _calNavBtn(Icons.chevron_right, _goToNextMonth),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              children:
+                  ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+                      .map(
+                        (d) => Expanded(
+                          child: Center(
+                            child: Text(
+                              d,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: _muted,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: _buildGrid(),
+          ),
+          const SizedBox(height: 8),
+          _buildLegendStrip(),
+          const SizedBox(height: 4),
+          // Subtle tap hint
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(PhosphorIcons.handTap, color: _muted, size: 13),
+                const SizedBox(width: 5),
+                Text(
+                  "Tap any day for details",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: _muted,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            _buildCalendarGrid(),
-          ],
-        ),
+          ),
+        ],
       ),
-    ).animate().fadeIn(delay: 200.ms, duration: 500.ms, curve: Curves.easeOut);
+    );
   }
 
   Widget _calNavBtn(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 28,
-        height: 28,
+        width: 32,
+        height: 32,
         decoration: BoxDecoration(color: _roseSoft, shape: BoxShape.circle),
-        child: Icon(icon, size: 16, color: _rose),
+        child: Icon(icon, size: 18, color: _rose),
       ),
     );
   }
 
-  Widget _buildCalendarGrid() {
+  Widget _buildGrid() {
     final daysInMonth = DateUtils.getDaysInMonth(
       _displayedMonth.year,
       _displayedMonth.month,
     );
     final firstWeekday =
         DateTime(_displayedMonth.year, _displayedMonth.month, 1).weekday % 7;
+    final weeks = ((daysInMonth + firstWeekday) / 7).ceil();
 
     return Column(
-      children: [
-        Row(
-          children:
-              ["S", "M", "T", "W", "T", "F", "S"]
-                  .map(
-                    (d) => Expanded(
-                      child: Center(
-                        child: Text(
-                          d,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: _muted,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-        ),
-        const SizedBox(height: 10),
-        ...List.generate(((daysInMonth + firstWeekday) / 7).ceil(), (week) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              children: List.generate(7, (day) {
-                final dayNum = week * 7 + day - firstWeekday + 1;
-                if (dayNum < 1 || dayNum > daysInMonth) {
-                  return const Expanded(child: SizedBox());
-                }
-                final date = DateTime(
-                  _displayedMonth.year,
-                  _displayedMonth.month,
-                  dayNum,
-                );
-                final type = calculateCycleDayType(
-                  date,
-                  lastPeriodStartDate,
-                  periodLength,
-                  cycleLength,
-                );
-                final isToday = DateUtils.isSameDay(date, DateTime.now());
-                final hasLog = (_dailyLogs[_dayKey(date)]?.isNotEmpty) ?? false;
-                final color = _getDayColor(type);
+      children: List.generate(weeks, (week) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            children: List.generate(7, (col) {
+              final dayNum = week * 7 + col - firstWeekday + 1;
+              if (dayNum < 1 || dayNum > daysInMonth) {
+                return const Expanded(child: SizedBox(height: 48));
+              }
+              final date = DateTime(
+                _displayedMonth.year,
+                _displayedMonth.month,
+                dayNum,
+              );
+              final today = DateTime.now();
+              final isPast = date.isBefore(
+                DateTime(today.year, today.month, today.day),
+              );
+              final isToday = DateUtils.isSameDay(date, today);
+              final isSelected = DateUtils.isSameDay(date, _selectedDay);
+              final type = calculateCycleDayType(
+                date,
+                lastPeriodStartDate,
+                periodLength,
+                cycleLength,
+              );
+              final hasLog = (_dailyLogs[_dayKey(date)]?.isNotEmpty) ?? false;
 
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() => _selectedLogDay = _dayKey(date));
-                      _tabController.animateTo(1);
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.all(2),
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.25),
-                        shape: BoxShape.circle,
-                        border:
-                            isToday ? Border.all(color: _plum, width: 2) : null,
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Text(
-                            "$dayNum",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 12,
-                              fontWeight:
-                                  isToday ? FontWeight.w700 : FontWeight.w500,
-                              color: isToday ? _plum : Colors.black87,
-                            ),
-                          ),
-                          if (hasLog)
-                            Positioned(
-                              bottom: 3,
-                              child: Container(
-                                width: 4,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: _rose,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => _onDayTapped(date),
+                  child: _GridCell(
+                    day: dayNum,
+                    type: type,
+                    isPast: isPast,
+                    isToday: isToday,
+                    isSelected: isSelected,
+                    hasLog: hasLog,
                   ),
-                );
-              }),
-            ),
-          );
-        }),
-      ],
+                ),
+              );
+            }),
+          ),
+        );
+      }),
     );
   }
 
-  Widget _buildLegendRow() {
-    return Row(
-      children: [
-        _legendChip("Period", _rose),
-        const SizedBox(width: 8),
-        _legendChip("Fertile", _sage),
-        const SizedBox(width: 8),
-        _legendChip("Ovulation", _amber),
-        const SizedBox(width: 8),
-        _legendChip("Safe", _sky),
-      ],
-    ).animate().fadeIn(delay: 250.ms, duration: 500.ms, curve: Curves.easeOut);
+  Widget _buildLegendStrip() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: _surface,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _legendItem(_pastPeriodColor, "Period (past)", _LegendShape.circle),
+          _legendItem(
+            _futurePeriodColor,
+            "Predicted",
+            _LegendShape.circleDashed,
+          ),
+          _legendItem(_sage, "Fertile", _LegendShape.arrow),
+          _legendItem(_amber, "Ovulation", _LegendShape.diamond),
+        ],
+      ),
+    );
   }
 
-  Widget _legendChip(String label, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4),
-          ],
+  Widget _legendItem(Color color, String label, _LegendShape shape) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _LegendDot(color: color, shape: shape),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w500,
+            color: _plum,
+          ),
         ),
-        child: Column(
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: _plum,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 
@@ -793,7 +865,7 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
             PhosphorIcons.drop,
             "Period",
             "$periodLength days",
-            _sky,
+            const Color(0xFF42A5F5),
           ),
         ),
         const SizedBox(width: 12),
@@ -801,7 +873,7 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
           child: _statCard(PhosphorIcons.sparkle, "Fertile", "~5 days", _sage),
         ),
       ],
-    ).animate().fadeIn(delay: 300.ms, duration: 500.ms, curve: Curves.easeOut);
+    );
   }
 
   Widget _statCard(IconData icon, String label, String value, Color color) {
@@ -833,11 +905,7 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
           const SizedBox(height: 8),
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              color: _muted,
-              fontWeight: FontWeight.w400,
-            ),
+            style: GoogleFonts.plusJakartaSans(fontSize: 11, color: _muted),
           ),
           const SizedBox(height: 2),
           Text(
@@ -889,7 +957,7 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
           ),
         ),
       ),
-    ).animate().fadeIn(delay: 350.ms, duration: 500.ms, curve: Curves.easeOut);
+    );
   }
 
   Widget _buildLogTab(DateTime today) {
@@ -901,7 +969,7 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
       periodLength,
       cycleLength,
     );
-    final info = _getStatusInfo(type);
+    final info = _getStatusInfo(type, isPast: logDate.isBefore(today));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
@@ -913,22 +981,22 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
         const SizedBox(height: 16),
         _buildLogSection("Flow", _flowOptions, logDate)
             .animate()
-            .fadeIn(delay: 80.ms, duration: 400.ms, curve: Curves.easeOut)
+            .fadeIn(delay: 80.ms, duration: 400.ms)
             .slideY(begin: 0.06, end: 0, delay: 80.ms, duration: 400.ms),
         const SizedBox(height: 16),
         _buildLogSection("Symptoms", _symptomOptions, logDate)
             .animate()
-            .fadeIn(delay: 140.ms, duration: 400.ms, curve: Curves.easeOut)
+            .fadeIn(delay: 140.ms, duration: 400.ms)
             .slideY(begin: 0.06, end: 0, delay: 140.ms, duration: 400.ms),
         const SizedBox(height: 16),
         _buildLogSection("Mood", _moodOptions, logDate)
             .animate()
-            .fadeIn(delay: 200.ms, duration: 400.ms, curve: Curves.easeOut)
+            .fadeIn(delay: 200.ms, duration: 400.ms)
             .slideY(begin: 0.06, end: 0, delay: 200.ms, duration: 400.ms),
         const SizedBox(height: 16),
         _buildLogSection("Energy", _energyOptions, logDate)
             .animate()
-            .fadeIn(delay: 260.ms, duration: 400.ms, curve: Curves.easeOut)
+            .fadeIn(delay: 260.ms, duration: 400.ms)
             .slideY(begin: 0.06, end: 0, delay: 260.ms, duration: 400.ms),
       ],
     );
@@ -953,7 +1021,9 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isToday ? "Today · ${_formatDate(date)}" : _formatDate(date),
+                  isToday
+                      ? "Today · ${_formatFullDate(date)}"
+                      : _formatFullDate(date),
                   style: GoogleFonts.philosopher(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -1086,7 +1156,7 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
       children: [
         _buildAIInfoCard(currentStatus)
             .animate()
-            .fadeIn(duration: 400.ms, curve: Curves.easeOut)
+            .fadeIn(duration: 400.ms)
             .slideY(begin: 0.06, end: 0, duration: 400.ms),
         const SizedBox(height: 16),
         SymptomTile(
@@ -1094,7 +1164,7 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
               stage: getPeriodStageText(currentStatus),
             )
             .animate()
-            .fadeIn(delay: 100.ms, duration: 400.ms, curve: Curves.easeOut)
+            .fadeIn(delay: 100.ms, duration: 400.ms)
             .slideY(begin: 0.06, end: 0, delay: 100.ms, duration: 400.ms),
         const SizedBox(height: 12),
         SymptomTile(
@@ -1102,19 +1172,19 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
               stage: getPeriodStageText(currentStatus),
             )
             .animate()
-            .fadeIn(delay: 160.ms, duration: 400.ms, curve: Curves.easeOut)
+            .fadeIn(delay: 160.ms, duration: 400.ms)
             .slideY(begin: 0.06, end: 0, delay: 160.ms, duration: 400.ms),
         const SizedBox(height: 16),
         _buildTipCard()
             .animate()
-            .fadeIn(delay: 220.ms, duration: 400.ms, curve: Curves.easeOut)
+            .fadeIn(delay: 220.ms, duration: 400.ms)
             .slideY(begin: 0.06, end: 0, delay: 220.ms, duration: 400.ms),
       ],
     );
   }
 
   Widget _buildAIInfoCard(CycleDayType currentStatus) {
-    final info = _getStatusInfo(currentStatus);
+    final info = _getStatusInfo(currentStatus, isPast: true);
     final Color phaseColor = info['color'];
     return Container(
       decoration: BoxDecoration(
@@ -1236,62 +1306,72 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
     if (picked != null) setState(() => _selectedLogDay = _dayKey(picked));
   }
 
-  int _currentCycleDay(DateTime today) {
-    final daysSince = today.difference(lastPeriodStartDate).inDays;
-    if (daysSince < 0) return 1;
-    return (daysSince % cycleLength) + 1;
+  int _cycleDayFor(DateTime date) {
+    final days = date.difference(lastPeriodStartDate).inDays;
+    if (days < 0) return 1;
+    return (days % cycleLength) + 1;
   }
 
   int _daysUntilNextPeriod(DateTime today) {
-    final cycleDay = _currentCycleDay(today);
+    final cycleDay = _cycleDayFor(today);
     return cycleLength - cycleDay + 1;
   }
 
-  int _daysUntilOvulation() => (cycleLength ~/ 2).clamp(10, 18);
-
-  Color _getDayColor(CycleDayType type) {
-    switch (type) {
-      case CycleDayType.period:
-        return _rose;
-      case CycleDayType.fertile:
-        return _sage;
-      case CycleDayType.ovulation:
-        return _amber;
-      case CycleDayType.safe:
-        return _sky;
-    }
-  }
-
-  Map<String, dynamic> _getStatusInfo(CycleDayType type) {
+  Map<String, dynamic> _getStatusInfo(
+    CycleDayType type, {
+    required bool isPast,
+  }) {
     switch (type) {
       case CycleDayType.period:
         return {
-          'title': 'On Your Period',
-          'subtitle': 'Low fertility • Focus on self-care and rest',
-          'color': _rose,
+          'title': isPast ? 'Period' : 'Predicted Period',
+          'subtitle':
+              isPast
+                  ? 'Low fertility • Period phase'
+                  : 'Predicted period • Mark as started if it begins',
+          'color': isPast ? _pastPeriodColor : _futurePeriodColor,
           'icon': PhosphorIcons.drop,
         };
       case CycleDayType.ovulation:
         return {
-          'title': 'Ovulating Today',
-          'subtitle': 'Peak fertility • Best time to conceive',
-          'color': _amber,
+          'title': isPast ? 'Ovulation' : 'Predicted Ovulation',
+          'subtitle':
+              isPast
+                  ? 'Peak fertility • Ovulation day'
+                  : 'Predicted peak fertility',
+          'color': isPast ? _pastOvulationColor : _futureOvulationColor,
           'icon': PhosphorIcons.sparkle,
         };
       case CycleDayType.fertile:
         return {
-          'title': 'Fertile Window',
-          'subtitle': 'High fertility • Good days to conceive',
-          'color': _sage,
+          'title': isPast ? 'Fertile Window' : 'Predicted Fertile',
+          'subtitle':
+              isPast ? 'High fertility window' : 'Predicted fertile days',
+          'color': isPast ? _pastFertileColor : _futureFertileColor,
           'icon': PhosphorIcons.heart,
         };
       case CycleDayType.safe:
         return {
           'title': 'Safe Window',
           'subtitle': 'Low fertility • Unlikely to conceive',
-          'color': _sky,
+          'color': _muted,
           'icon': PhosphorIcons.checkCircle,
         };
+    }
+  }
+
+  String _fertilityLabel(CycleDayType type, {required bool isPast}) {
+    switch (type) {
+      case CycleDayType.period:
+        return isPast
+            ? "Low fertility · Period phase"
+            : "Predicted period · Not confirmed";
+      case CycleDayType.fertile:
+        return isPast ? "HIGH · Fertile window" : "Predicted HIGH fertility";
+      case CycleDayType.ovulation:
+        return isPast ? "PEAK · Ovulation day" : "Predicted PEAK fertility";
+      case CycleDayType.safe:
+        return "LOW · Unlikely to conceive";
     }
   }
 
@@ -1313,8 +1393,23 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
     return "${months[date.month - 1]} ${date.year}";
   }
 
-  String _formatDate(DateTime d) =>
-      "${_getMonthYearLabel(d).split(' ').first} ${d.day}, ${d.year}";
+  String _formatFullDate(DateTime d) {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return "${months[d.month - 1]} ${d.day}, ${d.year}";
+  }
 
   DateTime _parseDayKey(String key) {
     final parts = key.split('-');
@@ -1326,47 +1421,293 @@ class _PeriodTrackerScreenState extends State<PeriodTrackerScreen>
   }
 }
 
+// ─────────────────────────────────────────────
+// GRID CELL — past vs future distinction
+// ─────────────────────────────────────────────
+
+class _GridCell extends StatelessWidget {
+  final int day;
+  final CycleDayType type;
+  final bool isPast;
+  final bool isToday;
+  final bool isSelected;
+  final bool hasLog;
+
+  const _GridCell({
+    required this.day,
+    required this.type,
+    required this.isPast,
+    required this.isToday,
+    required this.isSelected,
+    required this.hasLog,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(height: 48, child: Center(child: _buildInner()));
+  }
+
+  Widget _buildInner() {
+    switch (type) {
+      case CycleDayType.period:
+        return _buildPeriodCell();
+      case CycleDayType.ovulation:
+        return _buildOvulationCell();
+      case CycleDayType.fertile:
+        return _buildFertileCell();
+      case CycleDayType.safe:
+        return _buildSafeCell();
+    }
+  }
+
+  // Past period: solid deep rose circle
+  // Future period: lighter rose circle with dashed look (lower opacity + border)
+  Widget _buildPeriodCell() {
+    final bg = isPast ? _pastPeriodColor : _futurePeriodColor;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: isPast ? bg : bg.withOpacity(0.5),
+            shape: BoxShape.circle,
+            border:
+                isPast
+                    ? (isSelected
+                        ? Border.all(color: Colors.white, width: 2.5)
+                        : null)
+                    : Border.all(
+                      color: _futurePeriodColor,
+                      width: 1.5,
+                      strokeAlign: BorderSide.strokeAlignOutside,
+                    ),
+            boxShadow:
+                isPast
+                    ? [
+                      BoxShadow(
+                        color: bg.withOpacity(0.35),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : [],
+          ),
+          child: Center(
+            child: Text(
+              "$day",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: isPast ? Colors.white : _roseDark,
+              ),
+            ),
+          ),
+        ),
+        if (hasLog)
+          Positioned(
+            bottom: 0,
+            child: Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(
+                color: isPast ? Colors.white : _roseDark,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // Past ovulation: solid dark amber rotated square
+  // Future ovulation: lighter amber rotated square
+  Widget _buildOvulationCell() {
+    final bg = isPast ? _pastOvulationColor : _futureOvulationColor;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Transform.rotate(
+          angle: 0.785398,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: isPast ? bg : bg.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(6),
+              border:
+                  isPast
+                      ? null
+                      : Border.all(color: _futureOvulationColor, width: 1.5),
+              boxShadow:
+                  isPast
+                      ? [
+                        BoxShadow(
+                          color: bg.withOpacity(0.35),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                      : [],
+            ),
+          ),
+        ),
+        Text(
+          "$day",
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: isPast ? Colors.white : _pastOvulationColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Past fertile: solid sage rounded rect + up arrow
+  // Future fertile: lighter sage + arrow
+  Widget _buildFertileCell() {
+    final bg = isPast ? _pastFertileColor : _futureFertileColor;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 36,
+          height: 26,
+          decoration: BoxDecoration(
+            color: isPast ? bg : bg.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(8),
+            border:
+                isPast
+                    ? null
+                    : Border.all(color: _futureFertileColor, width: 1.2),
+            boxShadow:
+                isPast
+                    ? [
+                      BoxShadow(
+                        color: bg.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : [],
+          ),
+          child: Center(
+            child: Text(
+              "$day",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isPast ? Colors.white : _pastFertileColor,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 1),
+        Icon(
+          Icons.arrow_drop_up_rounded,
+          color: isPast ? _pastFertileColor : _futureFertileColor,
+          size: 14,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSafeCell() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: isSelected ? _roseSoft : Colors.transparent,
+        shape: BoxShape.circle,
+        border:
+            isToday
+                ? Border.all(color: _plum, width: 2)
+                : isSelected
+                ? Border.all(color: _rose.withOpacity(0.4), width: 1.5)
+                : null,
+      ),
+      child: Center(
+        child: Text(
+          "$day",
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
+            color: isToday ? _plum : Colors.black87.withOpacity(0.65),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _LegendShape { circle, circleDashed, arrow, diamond }
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final _LegendShape shape;
+  const _LegendDot({required this.color, required this.shape});
+
+  @override
+  Widget build(BuildContext context) {
+    if (shape == _LegendShape.diamond) {
+      return Transform.rotate(
+        angle: 0.785398,
+        child: Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      );
+    }
+    if (shape == _LegendShape.arrow) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 12,
+            height: 7,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+          Icon(Icons.arrow_drop_up_rounded, color: color, size: 10),
+        ],
+      );
+    }
+    if (shape == _LegendShape.circleDashed) {
+      return Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.4),
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 1.5),
+        ),
+      );
+    }
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
 class _LogOption {
   final String label;
   final IconData icon;
   final Color color;
   const _LogOption(this.label, this.icon, this.color);
-}
-
-class _RingPainter extends CustomPainter {
-  final double progress;
-  final Color color;
-  const _RingPainter({required this.progress, required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 8;
-    final trackPaint =
-        Paint()
-          ..color = color.withOpacity(0.12)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 10
-          ..strokeCap = StrokeCap.round;
-    final progressPaint =
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 10
-          ..strokeCap = StrokeCap.round;
-    canvas.drawCircle(center, radius, trackPaint);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -3.14159 / 2,
-      2 * 3.14159 * progress,
-      false,
-      progressPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_RingPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.color != color;
 }
 
 enum CycleDayType { period, fertile, ovulation, safe }
@@ -1377,19 +1718,15 @@ CycleDayType calculateCycleDayType(
   int periodLength,
   int cycleLength,
 ) {
-  final daysSinceLastPeriod =
-      currentDate.difference(lastPeriodStartDate).inDays;
-  if (daysSinceLastPeriod < 0) return CycleDayType.safe;
-  final cyclePosition = daysSinceLastPeriod % cycleLength;
-  if (cyclePosition < periodLength) return CycleDayType.period;
-  final ovulationDay = (cycleLength ~/ 2).clamp(10, 18);
-  final fertileWindowStart = (ovulationDay - 5).clamp(0, cycleLength - 1);
-  final fertileWindowEnd = (ovulationDay + 1).clamp(0, cycleLength - 1);
-  if (cyclePosition == ovulationDay) return CycleDayType.ovulation;
-  if (cyclePosition >= fertileWindowStart &&
-      cyclePosition <= fertileWindowEnd) {
-    return CycleDayType.fertile;
-  }
+  final daysSince = currentDate.difference(lastPeriodStartDate).inDays;
+  if (daysSince < 0) return CycleDayType.safe;
+  final pos = daysSince % cycleLength;
+  if (pos < periodLength) return CycleDayType.period;
+  final ovDay = (cycleLength ~/ 2).clamp(10, 18);
+  final fertStart = (ovDay - 5).clamp(0, cycleLength - 1);
+  final fertEnd = (ovDay + 1).clamp(0, cycleLength - 1);
+  if (pos == ovDay) return CycleDayType.ovulation;
+  if (pos >= fertStart && pos <= fertEnd) return CycleDayType.fertile;
   return CycleDayType.safe;
 }
 
@@ -1502,7 +1839,7 @@ class _SymptomTileState extends State<SymptomTile> {
                       ),
                     ),
                     expanding
-                        ? SizedBox(
+                        ? const SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(

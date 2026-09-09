@@ -1,9 +1,20 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/controllers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+
+const _rose = Color(0xFFE8567A);
+const _roseDark = Color(0xFFC03A5E);
+const _roseSoft = Color(0xFFFFF0F4);
+const _plum = Color(0xFF3D1A2E);
+const _muted = Color(0xFF9E8892);
+const _surface = Color(0xFFFDF7F9);
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);
@@ -13,415 +24,510 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+  final _formKey = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _phone = TextEditingController();
+  final _stage = TextEditingController();
+  bool _loading = false;
+
+  final List<String> _stages = ['Not Yet Pregnant', 'Pregnant', 'A Mother'];
+
   @override
   void initState() {
     super.initState();
-    mapAvailableData();
+    _mapData();
   }
 
-  mapAvailableData() {
-    setState(() {
-      name.text = userController.userModel.value!.name.toString();
-      email.text = userController.userModel.value!.email.toString();
-      phone.text = userController.userModel.value!.phone.toString();
-      stage.text = userController.userModel.value!.stage.toString();
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _phone.dispose();
+    _stage.dispose();
+    super.dispose();
+  }
+
+  void _mapData() {
+    final u = userController.userModel.value!;
+    _name.text = u.name;
+    _email.text = u.email;
+    _phone.text = u.phone;
+    _stage.text = u.stage;
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    await userController.updateUserData({
+      "name": _name.text.trim(),
+      "email": _email.text.trim(),
+      "phone": _phone.text.trim(),
+      "stage": _stage.text,
     });
+    await addActivityLog(
+      "updated personal details",
+      userController.userModel.value!.id,
+      "user activity",
+      "",
+      "",
+    );
+    setState(() => _loading = false);
+    Get.snackbar(
+      "Profile Updated",
+      "Your details have been saved successfully",
+      backgroundColor: _roseSoft,
+      colorText: _rose,
+      snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 12,
+    );
   }
 
-  final formKey = GlobalKey<FormState>();
-  TextEditingController name = TextEditingController();
-  TextEditingController email = TextEditingController();
-  TextEditingController phone = TextEditingController(text: "+256");
-  TextEditingController stage = TextEditingController();
-  bool loading = false;
-  var image;
-  List stages = ['Not Yet Pregnant', 'Pregnant', "A Mother"];
   @override
   Widget build(BuildContext context) {
+    final u = userController.userModel.value!;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Profile Details',
-          style: GoogleFonts.montserrat(color: Colors.black87, fontSize: 12),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, size: 19, color: Colors.black87),
-          onPressed: () {
-            Get.back();
-          },
-        ),
-        elevation: 0,
-        backgroundColor: Colors.white,
-      ),
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: InkWell(
-                    onTap: () async {},
-                    child: Container(
-                      height: 120,
-                      width: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: primaryColor,
-                      ),
-                      child: ClipOval(
-                        child:
-                            userController.userModel.value!.pic.isNotEmpty
-                                ? CachedNetworkImage(
-                                  height: 120,
-                                  width: 120,
-                                  fit: BoxFit.cover,
-                                  imageUrl: userController.userModel.value!.pic,
-                                  placeholder:
-                                      (context, url) => Center(
-                                        child: Container(
-                                          height: 120,
-                                          width: 120,
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      ),
-                                  errorWidget:
-                                      (context, url, error) =>
-                                          Image.asset("images/logo_circle.png"),
-                                )
-                                : Center(
-                                  child: Text(
-                                    '${userController.userModel.value!.name.isNotEmpty ? userController.userModel.value!.name.substring(0, 1).toUpperCase() : ""}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                      fontSize: 32,
-                                    ),
-                                  ),
-                                ),
-                      ),
-                    ),
-                  ),
+      backgroundColor: _surface,
+      appBar: _buildAppBar(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildAvatarSection(u)
+                  .animate()
+                  .fadeIn(duration: 500.ms, curve: Curves.easeOut)
+                  .slideY(begin: 0.06, end: 0, duration: 500.ms),
+              const SizedBox(height: 28),
+              Text(
+                "Personal Details",
+                style: GoogleFonts.philosopher(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: _plum,
                 ),
-                SizedBox(height: 24),
-                Form(
-                  key: formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      // Add TextFormFields and ElevatedButton here.
-                      Text(
-                        'Personal Details',
-                        style: GoogleFonts.montserrat(
-                          color: Colors.black87.withOpacity(.6),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 35,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "Name",
-                        style: GoogleFonts.montserrat(
-                          color: Colors.black87,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: bgcolor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: TextFormField(
-                          controller: name,
-                          keyboardType: TextInputType.name,
-                          style: GoogleFonts.montserrat(
-                            color: Colors.black87,
-                            fontSize: 12,
-                          ),
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Name Required';
-                            } else if (value.length < 2) {
-                              return 'Enter a valid name';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "Email Address",
-                        style: GoogleFonts.montserrat(
-                          color: Colors.black87.withOpacity(0.9),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: bgcolor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: TextFormField(
-                          controller: email,
-                          readOnly: true,
-                          keyboardType: TextInputType.emailAddress,
-                          style: GoogleFonts.montserrat(
-                            color: Colors.black87,
-                            fontSize: 12,
-                          ),
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Email Required';
-                            } else if (value.length < 5) {
-                              return 'Enter a valid email';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 12),
-
-                      Text(
-                        "Phone Number(+256xxxxxxxxx)",
-                        style: GoogleFonts.montserrat(
-                          color: Colors.black87.withOpacity(0.9),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: bgcolor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: TextFormField(
-                          controller: phone,
-                          keyboardType: TextInputType.number,
-                          style: GoogleFonts.montserrat(
-                            color: Colors.black87,
-                            fontSize: 12,
-                          ),
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Phone Number Required';
-                            } else if (value.length < 9) {
-                              return 'Enter a valid phone number';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        "Current Stage",
-                        style: GoogleFonts.montserrat(
-                          color: Colors.black87.withOpacity(0.9),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Builder(
-                        builder: (context) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: bgcolor,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: TextFormField(
-                              onTap: () async {
-                                final RenderBox box =
-                                    context.findRenderObject() as RenderBox;
-                                final Offset position = box.localToGlobal(
-                                  Offset.zero,
-                                );
-
-                                String? selected = await showMenu<String>(
-                                  context: context,
-                                  color: Colors.white,
-                                  position: RelativeRect.fromLTRB(
-                                    position.dx,
-                                    position.dy + box.size.height,
-                                    position.dx + box.size.width,
-                                    position.dy,
-                                  ),
-                                  items:
-                                      stages
-                                          .map(
-                                            (e) => PopupMenuItem<String>(
-                                              value: e,
-                                              child: Text(
-                                                e,
-                                                style: GoogleFonts.quicksand(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
-                                );
-
-                                if (selected != null) {
-                                  setState(() {
-                                    stage.text = selected;
-                                  });
-                                }
-                              },
-                              controller: stage,
-                              readOnly: true,
-                              keyboardType: TextInputType.text,
-                              style: GoogleFonts.montserrat(
-                                color: Colors.black87,
-                                fontSize: 12,
-                              ),
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Stage Required';
-                                }
-                                return null;
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                      SizedBox(height: 12),
-                      InkWell(
-                        onTap: () async {
-                          // Validate returns true if the form is valid, or false otherwise.
-                          if (formKey.currentState!.validate()) {
-                            setState(() {
-                              loading = true;
-                            });
-                            await userController.updateUserData({
-                              "name": name.text,
-                              "email": email.text,
-                              "phone": phone.text,
-                              "stage": stage.text,
-                            });
-                            await addActivityLog(
-                              "updated personal details",
-                              userController.userModel.value!.id,
-                              "user activity",
-                              "",
-                              "",
-                            );
-                            setState(() {
-                              loading = false;
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "Profile Details Updated Successfully",
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(4),
-                            color:
-                                loading
-                                    ? primaryColor.withOpacity(.5)
-                                    : primaryColor,
-                          ),
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(18.0),
-                              child:
-                                  loading
-                                      ? CircularProgressIndicator()
-                                      : Text(
-                                        "Update Profile",
-                                        style: GoogleFonts.montserrat(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 24),
-                      Center(
-                        child: TextButton(
-                          onPressed: () async {
-                            await addActivityLog(
-                              "signed out",
-                              userController.userModel.value!.id,
-                              "user activity",
-                              "",
-                              "",
-                            );
-                            userController.signOut();
-                          },
-                          child: Text(
-                            "Log Out",
-                            style: GoogleFonts.montserrat(
-                              color: Colors.red,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 24),
-                    ],
-                  ),
+              ).animate().fadeIn(
+                delay: 100.ms,
+                duration: 400.ms,
+                curve: Curves.easeOut,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Update your account information",
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12.5,
+                  color: _muted,
                 ),
-              ],
-            ),
+              ).animate().fadeIn(
+                delay: 130.ms,
+                duration: 400.ms,
+                curve: Curves.easeOut,
+              ),
+              const SizedBox(height: 16),
+              _buildFields()
+                  .animate()
+                  .fadeIn(
+                    delay: 180.ms,
+                    duration: 400.ms,
+                    curve: Curves.easeOut,
+                  )
+                  .slideY(begin: 0.05, end: 0, delay: 180.ms, duration: 400.ms),
+              const SizedBox(height: 24),
+              _buildSaveButton()
+                  .animate()
+                  .fadeIn(
+                    delay: 260.ms,
+                    duration: 400.ms,
+                    curve: Curves.easeOut,
+                  )
+                  .slideY(begin: 0.05, end: 0, delay: 260.ms, duration: 400.ms),
+            ],
           ),
         ),
       ),
-      bottomNavigationBar: Container(
-        height: 80,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              "v6.0.0+18",
-              style: GoogleFonts.montserrat(
-                color: Colors.black87,
-                fontSize: 10,
+      bottomNavigationBar: _buildVersionBar(),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: _surface,
+      toolbarHeight: 64,
+      centerTitle: false,
+      title: Text(
+        "Account Details",
+        style: GoogleFonts.philosopher(
+          fontSize: 22,
+          fontWeight: FontWeight.w700,
+          color: _plum,
+        ),
+      ),
+      leading: IconButton(
+        onPressed: () => Get.back(),
+        icon: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(color: _roseSoft, shape: BoxShape.circle),
+          child: Icon(Icons.arrow_back_ios_new_rounded, color: _rose, size: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarSection(user) {
+    return Center(
+      child: Stack(
+        children: [
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [_rose, _roseDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _rose.withOpacity(0.3),
+                  blurRadius: 16,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child:
+                  user.pic.isNotEmpty
+                      ? CachedNetworkImage(
+                        imageUrl: user.pic,
+                        fit: BoxFit.cover,
+                        placeholder:
+                            (_, __) => const CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              color: Colors.white,
+                            ),
+                        errorWidget: (_, __, ___) => _avatarInitial(user),
+                      )
+                      : _avatarInitial(user),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: _plum,
+                shape: BoxShape.circle,
+                border: Border.all(color: _surface, width: 2),
+              ),
+              child: Icon(PhosphorIcons.camera, color: Colors.white, size: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _avatarInitial(user) {
+    return Center(
+      child: Text(
+        user.name.isNotEmpty ? user.name[0].toUpperCase() : "U",
+        style: GoogleFonts.philosopher(
+          color: Colors.white,
+          fontSize: 34,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFields() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _inputField(
+            label: "Full Name",
+            controller: _name,
+            icon: PhosphorIcons.user,
+            keyboard: TextInputType.name,
+            isFirst: true,
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Name is required';
+              if (v.trim().length < 2) return 'Enter a valid name';
+              return null;
+            },
+          ),
+          _divider(),
+          _inputField(
+            label: "Email Address",
+            controller: _email,
+            icon: PhosphorIcons.envelope,
+            keyboard: TextInputType.emailAddress,
+            readOnly: true,
+            hint: "Cannot be changed",
+            validator: (v) {
+              if (v == null || v.isEmpty) return 'Email is required';
+              return null;
+            },
+          ),
+          _divider(),
+          _inputField(
+            label: "Phone Number",
+            controller: _phone,
+            icon: PhosphorIcons.phone,
+            keyboard: TextInputType.phone,
+            hint: "+256xxxxxxxxx",
+            validator: (v) {
+              if (v == null || v.isEmpty) return 'Phone number is required';
+              if (v.length < 9) return 'Enter a valid phone number';
+              return null;
+            },
+          ),
+          _divider(),
+          _stageField(),
+        ],
+      ),
+    );
+  }
+
+  Widget _inputField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required TextInputType keyboard,
+    String? hint,
+    bool readOnly = false,
+    bool isFirst = false,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        keyboardType: keyboard,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 13.5,
+          color: readOnly ? _muted : Colors.black87,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            color: _muted,
+            fontWeight: FontWeight.w500,
+          ),
+          hintText: hint,
+          hintStyle: GoogleFonts.plusJakartaSans(fontSize: 13, color: _muted),
+          prefixIcon: Icon(icon, color: _muted, size: 18),
+          border: InputBorder.none,
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: _rose.withOpacity(0.4), width: 1.5),
+          ),
+          enabledBorder: InputBorder.none,
+          errorBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.red.shade300, width: 1),
+          ),
+          focusedErrorBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.red.shade300, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 0,
+          ),
+        ),
+        validator: validator,
+      ),
+    );
+  }
+
+  Widget _stageField() {
+    return Builder(
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: TextFormField(
+            controller: _stage,
+            readOnly: true,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13.5,
+              color: Colors.black87,
+            ),
+            onTap: () async {
+              final RenderBox box = context.findRenderObject() as RenderBox;
+              final Offset pos = box.localToGlobal(Offset.zero);
+              final selected = await showMenu<String>(
+                context: context,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                position: RelativeRect.fromLTRB(
+                  pos.dx,
+                  pos.dy + box.size.height,
+                  pos.dx + box.size.width,
+                  pos.dy,
+                ),
+                items:
+                    _stages
+                        .map(
+                          (s) => PopupMenuItem<String>(
+                            value: s,
+                            child: Text(
+                              s,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w500,
+                                color: _plum,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+              );
+              if (selected != null) setState(() => _stage.text = selected);
+            },
+            decoration: InputDecoration(
+              labelText: "Current Stage",
+              labelStyle: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                color: _muted,
                 fontWeight: FontWeight.w500,
               ),
+              prefixIcon: Icon(PhosphorIcons.baby, color: _muted, size: 18),
+              suffixIcon: Icon(
+                Icons.expand_more_rounded,
+                color: _muted,
+                size: 20,
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(
+                  color: _rose.withOpacity(0.4),
+                  width: 1.5,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 14,
+                horizontal: 0,
+              ),
             ),
+            validator: (v) {
+              if (v == null || v.isEmpty) return 'Please select your stage';
+              return null;
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _divider() {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: 52,
+      endIndent: 16,
+      color: _surface,
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return GestureDetector(
+      onTap: _loading ? null : _save,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 17),
+        decoration: BoxDecoration(
+          gradient:
+              _loading
+                  ? null
+                  : const LinearGradient(
+                    colors: [_rose, _roseDark],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+          color: _loading ? Colors.grey.shade200 : null,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow:
+              _loading
+                  ? []
+                  : [
+                    BoxShadow(
+                      color: _rose.withOpacity(0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+        ),
+        child:
+            _loading
+                ? const Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+                : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      PhosphorIcons.floppyDisk,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Save Changes",
+                      style: GoogleFonts.plusJakartaSans(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+      ),
+    );
+  }
+
+  Widget _buildVersionBar() {
+    return Container(
+      color: _surface,
+      height: 48,
+      child: Center(
+        child: Text(
+          "v6.0.0+28",
+          style: GoogleFonts.plusJakartaSans(
+            color: _muted,
+            fontSize: 11,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ),

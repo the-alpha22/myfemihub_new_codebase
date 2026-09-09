@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
 
 import 'package:bridge_ai/constants/app_constants.dart';
@@ -20,7 +22,8 @@ const _roseDark = Color(0xFFC03A5E);
 const _roseSoft = Color(0xFFFFF0F4);
 const _plum = Color(0xFF3D1A2E);
 const _muted = Color(0xFF9E8892);
-const _surface = Color(0xFFFDF7F9);
+const _sage = Color(0xFF6BAF92);
+const _amber = Color(0xFFFFA726);
 
 class ChatBotPage extends StatefulWidget {
   const ChatBotPage({Key? key}) : super(key: key);
@@ -55,6 +58,8 @@ class _ChatBotPageState extends State<ChatBotPage> {
     _scrollController.dispose();
     super.dispose();
   }
+
+  // ─── Data helpers ────────────────────────────────────────────────────────
 
   Future<void> getMessages() async {
     List<ChatBotMessageModel> conversation =
@@ -109,6 +114,33 @@ class _ChatBotPageState extends State<ChatBotPage> {
     );
   }
 
+  Future<void> _deleteMessage(String messageId) async {
+    setState(() {
+      messages.removeWhere((m) => m["id"] == messageId);
+    });
+    await ChatBotConversationsController.instance.deleteConversationMessage(
+      userController.userModel.value!.id,
+      messageId,
+    );
+  }
+
+  Future<void> _clearChat() async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ClearChatSheet(),
+    );
+    if (confirmed != true) return;
+
+    setState(() => messages.clear());
+    await ChatBotConversationsController.instance.clearEntireConversation(
+      userController.userModel.value!.id,
+    );
+
+    setState(() => isAiTyping = true);
+    getChatBotResponse();
+  }
+
   void _handleSendPressed() async {
     final text = _inputController.text.trim();
     if (text.isEmpty) return;
@@ -125,43 +157,28 @@ class _ChatBotPageState extends State<ChatBotPage> {
   }
 
   Future<void> getChatBotResponse() async {
-    if (messages.isEmpty) {
-      String response = await VertexAIController.generateChatbotResponse(
-        userController.userModel.value!,
-        [],
-        context,
-      );
-      final result = extractCittionResponse(response);
-      final textMessage = types.TextMessage(
-        author: partner,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-        id: const Uuid().v4(),
-        text: result['message'].toString().replaceAll('!', ""),
-      );
-      addMessage(textMessage, textMessage.text, result['citation']);
-    } else {
-      await getMessages();
-      String response = await VertexAIController.generateChatbotResponse(
-        userController.userModel.value!,
-        messages,
-        context,
-      );
-      final result = extractCittionResponse(response);
-      final textMessage = types.TextMessage(
-        author: partner,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-        id: const Uuid().v4(),
-        text: result['message'].toString().replaceAll('!', ""),
-      );
-      addMessage(textMessage, textMessage.text, result['citation']);
-    }
+    final response = await VertexAIController.generateChatbotResponse(
+      userController.userModel.value!,
+      messages.isEmpty ? [] : messages,
+      context,
+    );
+    final result = extractCittionResponse(response);
+    final textMessage = types.TextMessage(
+      author: partner,
+      createdAt: DateTime.now().millisecondsSinceEpoch,
+      id: const Uuid().v4(),
+      text: result['message'].toString().replaceAll('!', ""),
+    );
+    addMessage(textMessage, textMessage.text, result['citation']);
     setState(() => isAiTyping = false);
   }
+
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _surface,
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: loading ? _buildLoading() : _buildChat(),
     );
@@ -177,8 +194,15 @@ class _ChatBotPageState extends State<ChatBotPage> {
         icon: Container(
           width: 36,
           height: 36,
-          decoration: BoxDecoration(color: _roseSoft, shape: BoxShape.circle),
-          child: Icon(Icons.arrow_back_ios_new_rounded, color: _rose, size: 16),
+          decoration: const BoxDecoration(
+            color: _roseSoft,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: _rose,
+            size: 16,
+          ),
         ),
       ),
       title: Row(
@@ -244,6 +268,28 @@ class _ChatBotPageState extends State<ChatBotPage> {
         ],
       ),
       centerTitle: false,
+      // ── Clear-chat action in the app bar ──────────────────────────────
+      actions: [
+        if (!loading && messages.isNotEmpty)
+          IconButton(
+            tooltip: 'Clear chat',
+            onPressed: _clearChat,
+            icon: Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: _roseSoft,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.delete_sweep_rounded,
+                color: _rose,
+                size: 18,
+              ),
+            ),
+          ),
+        const SizedBox(width: 4),
+      ],
     );
   }
 
@@ -252,7 +298,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(strokeWidth: 1.5, color: _rose),
+          const CircularProgressIndicator(strokeWidth: 1.5, color: _rose),
           const SizedBox(height: 16),
           Text(
             'Loading conversation...',
@@ -304,41 +350,47 @@ class _ChatBotPageState extends State<ChatBotPage> {
     );
   }
 
+  // ─── Message bubbles ──────────────────────────────────────────────────────
+
   Widget _buildSentMessage(Map message) {
     return Align(
       alignment: Alignment.centerRight,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.72,
-        ),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [_rose, _roseDark],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      // Long-press to delete a single sent message.
+      child: GestureDetector(
+        onLongPress: () => _showDeleteMessageSheet(message["id"]),
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.72,
           ),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(18),
-            topRight: Radius.circular(18),
-            bottomLeft: Radius.circular(18),
-            bottomRight: Radius.circular(4),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _rose.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [_rose, _roseDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
-        child: Text(
-          message["message"],
-          style: GoogleFonts.plusJakartaSans(
-            color: Colors.white,
-            fontWeight: FontWeight.w400,
-            fontSize: 13.5,
-            height: 1.55,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(18),
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(4),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _rose.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
+          child: Text(
+            message["message"],
+            style: GoogleFonts.plusJakartaSans(
+              color: Colors.white,
+              fontWeight: FontWeight.w400,
+              fontSize: 13.5,
+              height: 1.55,
+            ),
           ),
         ),
       ),
@@ -355,9 +407,9 @@ class _ChatBotPageState extends State<ChatBotPage> {
             width: 28,
             height: 28,
             margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [_rose, _roseDark],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -367,41 +419,45 @@ class _ChatBotPageState extends State<ChatBotPage> {
               child: Lottie.asset('images/ai.json', fit: BoxFit.cover),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.68,
-                ),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(4),
-                    topRight: Radius.circular(18),
-                    bottomLeft: Radius.circular(18),
-                    bottomRight: Radius.circular(18),
+          // Long-press to delete a single AI message.
+          GestureDetector(
+            onLongPress: () => _showDeleteMessageSheet(message["id"]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.68,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      topRight: Radius.circular(18),
+                      bottomLeft: Radius.circular(18),
+                      bottomRight: Radius.circular(18),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 11,
+                  ),
+                  child: SelectableText(
+                    message["message"],
+                    style: GoogleFonts.plusJakartaSans(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 13.5,
+                      height: 1.6,
+                    ),
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 11,
-                ),
-                child: SelectableText(
-                  message["message"],
-                  style: GoogleFonts.plusJakartaSans(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w400,
-                    fontSize: 13.5,
-                    height: 1.6,
-                  ),
-                ),
-              ),
-              if (message["citation"] != null) ...[
-                const SizedBox(height: 6),
-                _buildSourceChip(message["citation"]),
+                if (message["citation"] != null) ...[
+                  const SizedBox(height: 6),
+                  _buildSourceChip(message["citation"]),
+                ],
               ],
-            ],
+            ),
           ),
         ],
       ),
@@ -418,9 +474,9 @@ class _ChatBotPageState extends State<ChatBotPage> {
             width: 28,
             height: 28,
             margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [_rose, _roseDark],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -484,7 +540,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(PhosphorIcons.link, size: 12, color: _rose),
+            const Icon(PhosphorIcons.link, size: 12, color: _rose),
             const SizedBox(width: 5),
             Text(
               'View source',
@@ -500,6 +556,20 @@ class _ChatBotPageState extends State<ChatBotPage> {
     );
   }
 
+  // ─── Delete sheets ────────────────────────────────────────────────────────
+
+  /// Bottom sheet for deleting a single message.
+  Future<void> _showDeleteMessageSheet(String messageId) async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _DeleteMessageSheet(),
+    );
+    if (confirmed == true) _deleteMessage(messageId);
+  }
+
+  // ─── Input bar & disclaimer ───────────────────────────────────────────────
+
   Widget _buildInputBar() {
     final hasText = _inputController.text.trim().isNotEmpty;
     return Container(
@@ -511,7 +581,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: _surface,
+                color: const Color(0xFFF5F0F2),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: _rose.withOpacity(0.15)),
               ),
@@ -590,7 +660,7 @@ class _ChatBotPageState extends State<ChatBotPage> {
         top: false,
         child: Row(
           children: [
-            Icon(PhosphorIcons.info, size: 12, color: _muted),
+            const Icon(PhosphorIcons.info, size: 12, color: _muted),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
@@ -610,8 +680,171 @@ class _ChatBotPageState extends State<ChatBotPage> {
   }
 }
 
-const _sage = Color(0xFF6BAF92);
-const _amber = Color(0xFFFFA726);
+// ─── Reusable bottom sheets ───────────────────────────────────────────────────
+
+/// Confirmation sheet shown before deleting a single message.
+class _DeleteMessageSheet extends StatelessWidget {
+  const _DeleteMessageSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return _ConfirmSheet(
+      icon: Icons.delete_outline_rounded,
+      title: 'Delete message',
+      body: 'This message will be permanently removed from your conversation.',
+      confirmLabel: 'Delete',
+      onConfirm: () => Navigator.pop(context, true),
+      onCancel: () => Navigator.pop(context, false),
+    );
+  }
+}
+
+/// Confirmation sheet shown before clearing the entire chat.
+class _ClearChatSheet extends StatelessWidget {
+  const _ClearChatSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return _ConfirmSheet(
+      icon: Icons.delete_sweep_rounded,
+      title: 'Clear conversation',
+      body:
+          'All messages will be permanently deleted and Femi AI will start fresh.',
+      confirmLabel: 'Clear chat',
+      onConfirm: () => Navigator.pop(context, true),
+      onCancel: () => Navigator.pop(context, false),
+    );
+  }
+}
+
+/// Generic destructive-action sheet used by both delete sheets above.
+class _ConfirmSheet extends StatelessWidget {
+  const _ConfirmSheet({
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.confirmLabel,
+    required this.onConfirm,
+    required this.onCancel,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+  final String confirmLabel;
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Icon badge
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF0F4),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: _rose, size: 26),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: GoogleFonts.philosopher(
+              color: _plum,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              color: _muted,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onCancel,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _plum,
+                    side: BorderSide(color: _plum.withOpacity(0.2)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [_rose, _roseDark],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _rose.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: onConfirm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      confirmLabel,
+                      style: GoogleFonts.plusJakartaSans(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 Map<String, dynamic> extractCittionResponse(String aiOutput) {
   final regex = RegExp(r'```json\s*([\s\S]*?)\s*```', multiLine: true);

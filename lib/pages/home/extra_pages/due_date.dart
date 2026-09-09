@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
+import 'package:bridge_ai/services/cycle_notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:bridge_ai/constants/controllers.dart';
 import 'package:bridge_ai/pages/home/extra_pages/period_tracker.dart';
@@ -24,24 +25,52 @@ class DueDateCalculatorScreen extends StatefulWidget {
 }
 
 class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
-  final TextEditingController _periodLengthController = TextEditingController(
-    text: '3',
-  );
-  final TextEditingController _cycleLengthController = TextEditingController(
-    text: '28',
-  );
+  // FIX 2: Pre-fill from user's saved data, not hardcoded defaults
+  late final TextEditingController _periodLengthController =
+      TextEditingController(
+        text: '${userController.userModel.value?.periodLength ?? 3}',
+      );
+  late final TextEditingController _cycleLengthController =
+      TextEditingController(
+        text: '${userController.userModel.value?.periodCycle ?? 28}',
+      );
 
-  DateTime? _selectedDate;
+  // FIX 2: Pre-fill saved date
+  DateTime? _selectedDate = userController.userModel.value?.perioddate;
+
+  // FIX 1: Track original values to detect any change
+  late final int _originalPeriodLength =
+      userController.userModel.value?.periodLength ?? 3;
+  late final int _originalCycleLength =
+      userController.userModel.value?.periodCycle ?? 28;
+  late final DateTime? _originalDate =
+      userController.userModel.value?.perioddate;
+
   bool _saving = false;
 
-  int get _periodLength => int.tryParse(_periodLengthController.text) ?? 3;
-  int get _cycleLength => int.tryParse(_cycleLengthController.text) ?? 28;
+  int get _periodLength =>
+      int.tryParse(_periodLengthController.text) ?? _originalPeriodLength;
+  int get _cycleLength =>
+      int.tryParse(_cycleLengthController.text) ?? _originalCycleLength;
+
+  bool get _canSave {
+    if (_saving) return false;
+    if (_selectedDate == null) return false;
+    final dateChanged =
+        _originalDate == null ||
+        _selectedDate!.year != _originalDate.year ||
+        _selectedDate!.month != _originalDate.month ||
+        _selectedDate!.day != _originalDate.day;
+    final periodChanged = _periodLength != _originalPeriodLength;
+    final cycleChanged = _cycleLength != _originalCycleLength;
+    return dateChanged || periodChanged || cycleChanged;
+  }
 
   void _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder:
           (context, child) => Theme(
@@ -58,8 +87,8 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
     if (picked != null) setState(() => _selectedDate = picked);
   }
 
-  void _addPeriodData() async {
-    if (_selectedDate == null) return;
+  Future<void> _addPeriodData() async {
+    if (!_canSave) return;
     setState(() => _saving = true);
     await userController.updateUserData({
       "perioddate": Timestamp.fromDate(_selectedDate!),
@@ -69,7 +98,20 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
     userController.userModel.value!.perioddate = _selectedDate!;
     userController.userModel.value!.periodCycle = _cycleLength;
     userController.userModel.value!.periodLength = _periodLength;
+    await CycleNotificationService.scheduleAll(
+      lastPeriodStart: _selectedDate!,
+      periodLength: _periodLength,
+      cycleLength: _cycleLength,
+      userName: userController.userModel.value!.name,
+    );
     Get.to(() => PeriodTrackerScreen(), transition: Transition.rightToLeft);
+  }
+
+  @override
+  void dispose() {
+    _periodLengthController.dispose();
+    _cycleLengthController.dispose();
+    super.dispose();
   }
 
   @override
@@ -85,12 +127,7 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
             _buildIntroCard()
                 .animate()
                 .fadeIn(duration: 500.ms, curve: Curves.easeOut)
-                .slideY(
-                  begin: 0.07,
-                  end: 0,
-                  duration: 500.ms,
-                  curve: Curves.easeOut,
-                ),
+                .slideY(begin: 0.07, end: 0, duration: 500.ms),
             const SizedBox(height: 28),
             Text(
               "Your Cycle Details",
@@ -99,11 +136,12 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
                 fontWeight: FontWeight.w700,
                 color: _plum,
               ),
-            ).animate().fadeIn(
-              delay: 120.ms,
-              duration: 400.ms,
-              curve: Curves.easeOut,
-            ),
+            ).animate().fadeIn(delay: 120.ms, duration: 400.ms),
+            const SizedBox(height: 4),
+            Text(
+              "Tap +/− to adjust, then save",
+              style: GoogleFonts.plusJakartaSans(fontSize: 12.5, color: _muted),
+            ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
             const SizedBox(height: 16),
             _buildStepperField(
                   index: 1,
@@ -114,7 +152,7 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
                   max: 10,
                 )
                 .animate()
-                .fadeIn(delay: 180.ms, duration: 400.ms, curve: Curves.easeOut)
+                .fadeIn(delay: 180.ms, duration: 400.ms)
                 .slideY(begin: 0.05, end: 0, delay: 180.ms, duration: 400.ms),
             const SizedBox(height: 12),
             _buildStepperField(
@@ -126,17 +164,24 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
                   max: 45,
                 )
                 .animate()
-                .fadeIn(delay: 240.ms, duration: 400.ms, curve: Curves.easeOut)
+                .fadeIn(delay: 240.ms, duration: 400.ms)
                 .slideY(begin: 0.05, end: 0, delay: 240.ms, duration: 400.ms),
             const SizedBox(height: 12),
             _buildDateField()
                 .animate()
-                .fadeIn(delay: 300.ms, duration: 400.ms, curve: Curves.easeOut)
+                .fadeIn(delay: 300.ms, duration: 400.ms)
                 .slideY(begin: 0.05, end: 0, delay: 300.ms, duration: 400.ms),
-            const SizedBox(height: 32),
+            const SizedBox(height: 8),
+            // FIX 1: Show what changed as a hint
+            if (_selectedDate != null)
+              _buildChangeSummary().animate().fadeIn(
+                delay: 340.ms,
+                duration: 350.ms,
+              ),
+            const SizedBox(height: 24),
             _buildSaveButton()
                 .animate()
-                .fadeIn(delay: 380.ms, duration: 400.ms, curve: Curves.easeOut)
+                .fadeIn(delay: 380.ms, duration: 400.ms)
                 .slideY(begin: 0.05, end: 0, delay: 380.ms, duration: 400.ms),
           ],
         ),
@@ -224,7 +269,7 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Set Up Tracker",
+                        "Update Your Cycle",
                         style: GoogleFonts.philosopher(
                           color: Colors.white,
                           fontSize: 20,
@@ -233,7 +278,7 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "A few details help us personalise\nyour cycle predictions",
+                        "Your current data is pre-filled.\nChange any field and tap Save.",
                         style: GoogleFonts.plusJakartaSans(
                           color: Colors.white.withOpacity(0.8),
                           fontSize: 12.5,
@@ -334,7 +379,7 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
                 SizedBox(
                   width: 32,
                   child: Text(
-                    "${value}",
+                    "$value",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.philosopher(
                       fontSize: 18,
@@ -463,27 +508,69 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
     );
   }
 
+  Widget _buildChangeSummary() {
+    final changes = <String>[];
+    if (_periodLength != _originalPeriodLength) {
+      changes.add("Period: $_originalPeriodLength → $_periodLength days");
+    }
+    if (_cycleLength != _originalCycleLength) {
+      changes.add("Cycle: $_originalCycleLength → $_cycleLength days");
+    }
+    if (_originalDate != null && _selectedDate != null) {
+      final orig = DateFormat('d MMM').format(_originalDate);
+      final sel = DateFormat('d MMM').format(_selectedDate!);
+      if (orig != sel) changes.add("Start date: $orig → $sel");
+    }
+
+    if (changes.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: _roseSoft,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _rose.withOpacity(0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(PhosphorIcons.arrowsClockwise, color: _rose, size: 14),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              changes.join("  •  "),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11.5,
+                color: _rose,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSaveButton() {
-    final canSave = _selectedDate != null && !_saving;
     return GestureDetector(
-      onTap: canSave ? _addPeriodData : null,
+      onTap: _canSave ? _addPeriodData : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 17),
         decoration: BoxDecoration(
           gradient:
-              canSave
+              _canSave
                   ? const LinearGradient(
                     colors: [_rose, _roseDark],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                   : null,
-          color: canSave ? null : Colors.grey.shade200,
+          color: _canSave ? null : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(14),
           boxShadow:
-              canSave
+              _canSave
                   ? [
                     BoxShadow(
                       color: _rose.withOpacity(0.35),
@@ -505,15 +592,25 @@ class _DueDateCalculatorScreenState extends State<DueDateCalculatorScreen> {
                     ),
                   ),
                 )
-                : Text(
-                  "Save & Start Tracking",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.plusJakartaSans(
-                    color: canSave ? Colors.white : Colors.grey.shade400,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                  ),
+                : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _canSave ? PhosphorIcons.floppyDisk : PhosphorIcons.lock,
+                      color: _canSave ? Colors.white : Colors.grey.shade400,
+                      size: 17,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _canSave ? "Save & Update" : "No changes detected",
+                      style: GoogleFonts.plusJakartaSans(
+                        color: _canSave ? Colors.white : Colors.grey.shade400,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
                 ),
       ),
     );

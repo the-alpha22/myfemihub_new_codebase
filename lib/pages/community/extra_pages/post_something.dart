@@ -73,7 +73,7 @@ class _AddPostPageState extends State<AddPostPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _surface,
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
@@ -171,10 +171,9 @@ class _AddPostPageState extends State<AddPostPage> {
   Widget _buildPromptCard() {
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [_rose, _roseDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        image: DecorationImage(
+          image: AssetImage("images/share_post.jpg"),
+          fit: BoxFit.cover,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [

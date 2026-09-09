@@ -1,3 +1,4 @@
+import 'package:bridge_ai/constants/controllers.dart';
 import 'package:bridge_ai/controllers/ai_controller.dart';
 import 'package:bridge_ai/controllers/chatbot_conversations.dart';
 import 'package:bridge_ai/constants/app_constants.dart';
@@ -16,6 +17,7 @@ import 'package:bridge_ai/controllers/storiesController.dart';
 import 'package:bridge_ai/firebase_options.dart';
 import 'package:bridge_ai/pages/community/community.dart';
 import 'package:bridge_ai/pages/community/extra_pages/post_details.dart';
+import 'package:bridge_ai/pages/home/extra_pages/period_tracker.dart';
 import 'package:bridge_ai/pages/home/home.dart';
 import 'package:bridge_ai/pages/settings/settings.dart';
 import 'package:bridge_ai/pages/shop/shop.dart';
@@ -23,6 +25,7 @@ import 'package:bridge_ai/pages/authentication/login.dart';
 import 'package:bridge_ai/pages/authentication/onboarding_page.dart';
 import 'package:bridge_ai/pages/authentication/signup.dart';
 import 'package:bridge_ai/pages/shop/productdetail/productdetail.dart';
+import 'package:bridge_ai/services/cycle_notification_service.dart';
 import 'package:bridge_ai/splash.dart';
 import 'package:bridge_ai/waiting.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -32,6 +35,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:workmanager/workmanager.dart';
 
 Future<void> backgroundHandler(RemoteMessage message) async {
   print(message.notification!.title);
@@ -43,6 +47,9 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
+  await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+
+  await CycleNotificationService.init();
   try {
     await Firebase.initializeApp();
     print("Firebase initialized successfully");
@@ -68,6 +75,19 @@ void main() async {
     Get.lazyPut(() => ProducsController());
 
     Get.lazyPut(() => ChatBotConversationsController());
+
+    ever(userController.userModel, (user) {
+      if (user == null) return;
+      final periodDate = user.perioddate;
+      if (periodDate == null) return; // user hasn't entered period data yet
+
+      CycleNotificationService.scheduleAll(
+        lastPeriodStart: periodDate,
+        periodLength: user.periodLength,
+        cycleLength: user.periodCycle,
+        userName: user.name,
+      ).then((_) => print('[CycleNotifications] Scheduled for ${user.name}'));
+    });
   });
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
 
@@ -125,6 +145,11 @@ class _MyAppState extends State<MyApp> {
         GetPage(
           name: '/home',
           page: () => HomePageNew(),
+          transition: Transition.fadeIn,
+        ),
+        GetPage(
+          name: '/period-tracker',
+          page: () => PeriodTrackerScreen(),
           transition: Transition.fadeIn,
         ),
         GetPage(

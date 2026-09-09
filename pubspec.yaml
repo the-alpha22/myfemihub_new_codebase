@@ -5,7 +5,7 @@ description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 
-version: 6.0.0+27
+version: 6.0.0+30
 
 environment:
   sdk: ^3.7.2
@@ -49,6 +49,8 @@ dependencies:
   pointycastle: any
   cryptography: any
   basic_utils: any
+  shared_preferences: ^2.5.5
+  workmanager: ^0.10.10
 
 dev_dependencies:
   flutter_test:

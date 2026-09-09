@@ -151,20 +151,19 @@ class VertexAIController {
           },
         ];
       } else {
-        // FIX 2: Build history in CORRECT order (oldest first) and extract
-        //         the latest user message separately so the model knows what
-        //         it is actually being asked right now.
-        final historyLines = _formatMessageHistory(user, messages);
+        // messages list is newest-first (UI uses insert(0,...)).
+        // _formatMessageHistory reverses it to oldest-first for the prompt.
+        final history = _formatMessageHistory(user, messages);
 
-        // The last entry in the correctly-ordered list is the current user message
-        final currentMessage =
-            historyLines.isNotEmpty ? historyLines.last : "Hello";
+        // The latest user message is at index 0 in the raw list.
+        final latestUserMsg = messages.firstWhere(
+          (m) => m["userId"] != "chatbot",
+          orElse: () => {"message": ""},
+        );
+        final currentMessage = latestUserMsg["message"] as String;
 
-        // Everything before the last entry is prior context
         final priorHistory =
-            historyLines.length > 1
-                ? historyLines.sublist(0, historyLines.length - 1).join("\n")
-                : "(no prior messages)";
+            history.isNotEmpty ? history.join("\n") : "(no prior messages)";
 
         contents = [
           {
@@ -367,15 +366,15 @@ class VertexAIController {
     }
   }
 
-  /// Format chat history — oldest message first (correct chronological order)
+  /// Format chat history — reversed because UI stores newest-first (insert(0,...))
   static List<String> _formatMessageHistory(
     UserModel user,
     List<dynamic> messages,
   ) {
-    // FIX 2: Do NOT reverse — keep messages in original order (oldest → newest)
     final history = <String>[];
+    final reversedMessages = messages.reversed.toList();
 
-    for (var message in messages) {
+    for (var message in reversedMessages) {
       if (message["userId"] == "chatbot") {
         history.add("Femi AI: ${message["message"]}");
       } else {

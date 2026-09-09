@@ -33,4 +33,35 @@ class ChatBotConversationsController extends GetxController {
       return [];
     }
   }
+
+  Future<void> deleteConversationMessage(String userId, String messageId) async {
+  try {
+    await FirebaseFirestore.instance
+        .collection(collection)
+        .doc(userId)
+        .collection("messages")
+        .doc(messageId)
+        .delete();
+  } catch (e) {
+    print("\n===========Error deleting chatbot message: $e============\n");
+  }
+}
+
+Future<void> clearEntireConversation(String userId) async {
+  try {
+    final snapshot = await FirebaseFirestore.instance
+        .collection(collection)
+        .doc(userId)
+        .collection("messages")
+        .get();
+
+    final batch = FirebaseFirestore.instance.batch();
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  } catch (e) {
+    print("\n===========Error clearing conversation: $e============\n");
+  }
+}
 }

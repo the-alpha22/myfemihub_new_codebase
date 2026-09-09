@@ -36,11 +36,12 @@ class _HomePageNewState extends State<HomePageNew> {
 
   final List<_BannerData> _banners = const [
     _BannerData(
-      tag: "New Feature",
+      tag: "Your Health Partner",
       headline: "Know your\ncycle better",
       sub: "Smart period & pregnancy tracking",
       gradient: [Color(0xFFE8567A), Color(0xFF3D1A2E)],
       accent: Color(0xFFFFD6E3),
+      image: "images/banner_1.jpg",
     ),
     _BannerData(
       tag: "AI-Powered",
@@ -48,6 +49,7 @@ class _HomePageNewState extends State<HomePageNew> {
       sub: "Your personal women's health assistant",
       gradient: [Color(0xFF6BAF92), Color(0xFF1C4A35)],
       accent: Color(0xFFD4F0E4),
+      image: "images/banner_2.jpg",
     ),
     _BannerData(
       tag: "Family",
@@ -55,6 +57,7 @@ class _HomePageNewState extends State<HomePageNew> {
       sub: "Shared family health planning tools",
       gradient: [Color(0xFF7C5CBF), Color(0xFF2A1550)],
       accent: Color(0xFFE8DEFF),
+      image: "images/banner_3.jpg",
     ),
   ];
 
@@ -142,29 +145,8 @@ class _HomePageNewState extends State<HomePageNew> {
       elevation: 0,
       backgroundColor: Colors.white,
       toolbarHeight: 60,
-      title: Image.asset("images/logo_text.png", height: 36),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: CircleAvatar(
-                radius: 18,
-                backgroundColor: _roseSoft,
-                child: Icon(
-                  Icons.person_outline_rounded,
-                  size: 20,
-                  color: _rose,
-                ),
-              )
-              .animate()
-              .fadeIn(duration: 400.ms)
-              .scale(
-                begin: const Offset(0.85, 0.85),
-                end: const Offset(1, 1),
-                duration: 400.ms,
-                curve: Curves.easeOut,
-              ),
-        ),
-      ],
+      centerTitle: true,
+      title: Image.asset("images/logo_text.png", height: 52),
     );
   }
 
@@ -449,12 +431,14 @@ class _BannerData {
   final String sub;
   final List<Color> gradient;
   final Color accent;
+  final String image;
   const _BannerData({
     required this.tag,
     required this.headline,
     required this.sub,
     required this.gradient,
     required this.accent,
+    required this.image,
   });
 }
 
@@ -468,11 +452,15 @@ class _BannerCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: data.gradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          image: DecorationImage(
+            image: AssetImage(data.image),
+            fit: BoxFit.cover,
           ),
+          // gradient: LinearGradient(
+          //   colors: data.gradient,
+          //   begin: Alignment.topLeft,
+          //   end: Alignment.bottomRight,
+          // ),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Stack(

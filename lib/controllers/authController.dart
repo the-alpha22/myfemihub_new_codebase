@@ -100,15 +100,15 @@ class UserController extends GetxController {
           .then((result) {
             _clearControllers();
             dismissLoadingWidget();
-            // notificationPrompt.showNotification(
-            //   flutterLocalNotificationsPlugin,
-            //   "Hey there 🥰",
-            //   "Welcome back to femihub",
-            //   "login",
-            //   "login",
-            //   1,
-            //   "/home",
-            // );
+            notificationPrompt.showNotification(
+              flutterLocalNotificationsPlugin,
+              "Hey there 🥰",
+              "Welcome back to femihub",
+              "login",
+              "login",
+              1,
+              "/home",
+            );
             isLoggedIn = true;
           });
     } catch (e) {

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/bottom_nav_bar.dart';
@@ -14,7 +16,6 @@ import 'package:lottie/lottie.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 const _rose = Color(0xFFE8567A);
-const _roseDark = Color(0xFFC03A5E);
 const _roseSoft = Color(0xFFFFF0F4);
 const _plum = Color(0xFF3D1A2E);
 const _muted = Color(0xFF9E8892);

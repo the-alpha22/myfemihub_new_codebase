@@ -1113,7 +1113,7 @@ class _PregnancyTrackerPageState extends State<PregnancyTrackerPage>
                             ),
                             const SizedBox(height: 14),
                             Text(
-                              "When did you\nconceive?",
+                              "When did you conceive?",
                               style: GoogleFonts.philosopher(
                                 color: Colors.white,
                                 fontSize: 26,
@@ -1123,7 +1123,7 @@ class _PregnancyTrackerPageState extends State<PregnancyTrackerPage>
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              "We'll use this to track your baby's growth\nand give you personalised weekly tips.",
+                              "We'll use this to track your baby's growth and give you personalised weekly tips.",
                               style: GoogleFonts.plusJakartaSans(
                                 color: Colors.white.withOpacity(0.8),
                                 fontSize: 13,
@@ -1140,18 +1140,20 @@ class _PregnancyTrackerPageState extends State<PregnancyTrackerPage>
                 .fadeIn(duration: 500.ms, curve: Curves.easeOut)
                 .slideY(begin: 0.07, end: 0, duration: 500.ms),
             const SizedBox(height: 40),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Lottie.asset(
-                'images/pregnancy.json',
-                repeat: true,
-                frameRate: FrameRate(30),
-                height: 180,
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Lottie.asset(
+                  'images/pregnancy.json',
+                  repeat: true,
+                  frameRate: FrameRate(30),
+                  height: 180,
+                ),
+              ).animate().fadeIn(
+                delay: 120.ms,
+                duration: 500.ms,
+                curve: Curves.easeOut,
               ),
-            ).animate().fadeIn(
-              delay: 120.ms,
-              duration: 500.ms,
-              curve: Curves.easeOut,
             ),
             const SizedBox(height: 40),
             GestureDetector(

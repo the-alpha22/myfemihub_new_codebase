@@ -34,7 +34,7 @@ class FamilyPlanningPage extends StatefulWidget {
 
 class _FamilyPlanningPageState extends State<FamilyPlanningPage> {
   bool isLoading = true;
-  String generalInfo = "";
+  String generalInfo = "...";
 
   @override
   void initState() {
@@ -43,8 +43,8 @@ class _FamilyPlanningPageState extends State<FamilyPlanningPage> {
   }
 
   Future<void> getInfo() async {
-    generalInfo = await VertexAIController.suggestFamilyPlanningInfo();
     if (mounted) setState(() => isLoading = false);
+    generalInfo = await VertexAIController.suggestFamilyPlanningInfo();
   }
 
   @override
