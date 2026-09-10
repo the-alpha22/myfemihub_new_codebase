@@ -1,21 +1,7 @@
 // lib/services/cycle_notification_service.dart
-//
-// Background notification service for Bridge AI period tracker.
-//
-// DEPENDENCIES (add to pubspec.yaml):
-//   flutter_local_notifications: ^17.2.2
-//   workmanager: ^0.5.2
-//   shared_preferences: ^2.2.2
-//   timezone: ^0.9.4
-//
-// SETUP REQUIRED:
-//   1. Android: AndroidManifest.xml — see comments at the bottom of this file.
-//   2. iOS: AppDelegate.swift — call FlutterLocalNotificationsPlugin.setPluginRegistrantCallback
-//      and add background fetch capability.
-//   3. Call CycleNotificationService.init() inside main() before runApp().
-//   4. Call CycleNotificationService.scheduleAll(...) after the user logs in / updates period data.
 
-import 'dart:math';
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -96,7 +82,7 @@ class CycleNotificationService {
 
     // Android init
     const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
+      '@mipmap/launcher_icon',
     );
 
     // iOS init
@@ -162,7 +148,6 @@ class CycleNotificationService {
     await prefs.setInt(_PrefKeys.eveningHour, eveningHour);
   }
 
-  // ── Master function: cancel all old, schedule fresh set ───────────────────
   static Future<void> scheduleAll({
     required DateTime lastPeriodStart,
     required int periodLength,
@@ -194,8 +179,6 @@ class CycleNotificationService {
       userName: userName,
     );
 
-    // Register periodic WorkManager task (every 12 hours)
-    // This fires even when the app is fully closed.
     await Workmanager().cancelByTag(_bgTaskTag);
     await Workmanager().registerPeriodicTask(
       _bgTaskName,
@@ -283,7 +266,6 @@ class CycleNotificationService {
       final ovDay = (cycleLength ~/ 2).clamp(10, 18);
       final fertStart = (ovDay - 5).clamp(0, cycleLength - 1);
 
-      // 1. Next period start
       final nextPeriodDate = _atMorning(cycleStart);
       if (nextPeriodDate.isAfter(now)) {
         await _scheduleOnce(
@@ -296,7 +278,6 @@ class CycleNotificationService {
         );
       }
 
-      // 2. 2-day period warning
       final periodSoonDate = _atMorning(
         cycleStart.subtract(const Duration(days: 2)),
       );
@@ -311,7 +292,6 @@ class CycleNotificationService {
         );
       }
 
-      // 3. Fertile window starts
       final fertileDate = _atMorning(cycleStart.add(Duration(days: fertStart)));
       if (fertileDate.isAfter(now)) {
         await _scheduleOnce(
@@ -326,7 +306,6 @@ class CycleNotificationService {
         );
       }
 
-      // 4. Ovulation day
       final ovulationDate = _atMorning(cycleStart.add(Duration(days: ovDay)));
       if (ovulationDate.isAfter(now)) {
         await _scheduleOnce(
@@ -339,7 +318,6 @@ class CycleNotificationService {
         );
       }
 
-      // 5. 1-day ovulation warning
       final ovSoonDate = _atMorning(cycleStart.add(Duration(days: ovDay - 1)));
       if (ovSoonDate.isAfter(now)) {
         await _scheduleOnce(
