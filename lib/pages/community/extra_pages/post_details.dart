@@ -1,6 +1,9 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/controllers.dart';
+import 'package:bridge_ai/constants/seeded_data.dart';
 import 'package:bridge_ai/controllers/storiesController.dart';
 import 'package:bridge_ai/models/story.dart';
 import 'package:bridge_ai/models/user.dart';
@@ -28,6 +31,7 @@ class PostDetailsPage extends StatefulWidget {
 
 class _PostDetailsPageState extends State<PostDetailsPage> {
   final String postId = Get.parameters["id"] ?? "";
+  final bool isSeeded = Get.parameters["isSeeded"] == "true";
 
   UserModel? user;
   StoryModel? post;
@@ -43,6 +47,17 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   }
 
   Future<void> _loadPost() async {
+    if (isSeeded) {
+      // Resolve seeded post entirely from local data — no Firestore call needed
+      final seeded = kSeededPosts.firstWhereOrNull((s) => s.id == postId);
+      if (seeded != null) {
+        post = seeded.toStoryModel();
+      }
+      setState(() => isLoading = false);
+      // Seeded posts have no real comments to load
+      return;
+    }
+
     post = await getPostDetails(postId);
     if (post != null) {
       user = await getUserDetails(post!.userId);
@@ -61,7 +76,7 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _surface,
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body:
           isLoading
@@ -71,6 +86,16 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                   repeat: true,
                   frameRate: FrameRate(30),
                   height: 160,
+                ),
+              )
+              : post == null
+              ? Center(
+                child: Text(
+                  "Post not found",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    color: _muted,
+                  ),
                 ),
               )
               : ListView(
@@ -116,14 +141,15 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
                     }).toList(),
                 ],
               ),
-      bottomNavigationBar: post == null ? null : _buildCommentBar(),
+      bottomNavigationBar:
+          (post == null || isSeeded) ? null : _buildCommentBar(),
     );
   }
 
   AppBar _buildAppBar() {
     return AppBar(
       elevation: 0,
-      backgroundColor: _surface,
+      backgroundColor: Colors.white,
       toolbarHeight: 64,
       centerTitle: false,
       title: Text(
@@ -144,106 +170,112 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
         ),
       ),
       actions: [
-        Builder(
-          builder:
-              (context) => IconButton(
-                onPressed: () async {
-                  final RenderBox box = context.findRenderObject() as RenderBox;
-                  final Offset position = box.localToGlobal(Offset.zero);
-                  await showMenu<String>(
-                    context: context,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+        if (!isSeeded)
+          Builder(
+            builder:
+                (context) => IconButton(
+                  onPressed: () async {
+                    final RenderBox box =
+                        context.findRenderObject() as RenderBox;
+                    final Offset position = box.localToGlobal(Offset.zero);
+                    await showMenu<String>(
+                      context: context,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      position: RelativeRect.fromLTRB(
+                        position.dx,
+                        position.dy + box.size.height,
+                        position.dx + box.size.width,
+                        position.dy,
+                      ),
+                      items: [
+                        _menuItem(
+                          icon: PhosphorIcons.bookmark,
+                          label: 'Save Post',
+                          color: _rose,
+                          onTap: () async {
+                            appCommunication(
+                              context,
+                              "Post Saved",
+                              "Added to your saved posts",
+                              "/community/posts/$postId",
+                            );
+                            await userController.updateUserData({
+                              "savedPostIds": FieldValue.arrayUnion([postId]),
+                            });
+                          },
+                        ),
+                        _menuItem(
+                          icon: PhosphorIcons.warning,
+                          label: 'Flag Content',
+                          color: Colors.orange,
+                          onTap: () async {
+                            appCommunication(
+                              context,
+                              "Post Flagged",
+                              "Our team will review this content",
+                              "/community/posts/$postId",
+                            );
+                            await userController.updateUserData({
+                              "flaggedPostIds": FieldValue.arrayUnion([postId]),
+                            });
+                            Get.offAllNamed("/community");
+                          },
+                        ),
+                        _menuItem(
+                          icon: PhosphorIcons.eye,
+                          label: 'Not Interested',
+                          color: _muted,
+                          onTap: () async {
+                            appCommunication(
+                              context,
+                              "Noted",
+                              "We won't recommend similar posts",
+                              "/community/posts/$postId",
+                            );
+                            await userController.updateUserData({
+                              "flaggedPostIds": FieldValue.arrayUnion([postId]),
+                            });
+                            Get.offAllNamed("/community");
+                          },
+                        ),
+                        _menuItem(
+                          icon: PhosphorIcons.prohibit,
+                          label: 'Report',
+                          color: Colors.red,
+                          onTap: () async {
+                            appCommunication(
+                              context,
+                              "Reported",
+                              "Our team will investigate this",
+                              "/community/posts/$postId",
+                            );
+                            await userController.updateUserData({
+                              "flaggedPostIds": FieldValue.arrayUnion([postId]),
+                            });
+                            Get.offAllNamed("/community");
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                  icon: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: _roseSoft,
+                      shape: BoxShape.circle,
                     ),
-                    position: RelativeRect.fromLTRB(
-                      position.dx,
-                      position.dy + box.size.height,
-                      position.dx + box.size.width,
-                      position.dy,
+                    child: Icon(
+                      PhosphorIcons.dotsThree,
+                      color: _rose,
+                      size: 18,
                     ),
-                    items: [
-                      _menuItem(
-                        icon: PhosphorIcons.bookmark,
-                        label: 'Save Post',
-                        color: _rose,
-                        onTap: () async {
-                          appCommunication(
-                            context,
-                            "Post Saved",
-                            "Added to your saved posts",
-                            "/community/posts/$postId",
-                          );
-                          await userController.updateUserData({
-                            "savedPostIds": FieldValue.arrayUnion([postId]),
-                          });
-                        },
-                      ),
-                      _menuItem(
-                        icon: PhosphorIcons.warning,
-                        label: 'Flag Content',
-                        color: Colors.orange,
-                        onTap: () async {
-                          appCommunication(
-                            context,
-                            "Post Flagged",
-                            "Our team will review this content",
-                            "/community/posts/$postId",
-                          );
-                          await userController.updateUserData({
-                            "flaggedPostIds": FieldValue.arrayUnion([postId]),
-                          });
-                          Get.offAllNamed("/community");
-                        },
-                      ),
-                      _menuItem(
-                        icon: PhosphorIcons.eye,
-                        label: 'Not Interested',
-                        color: _muted,
-                        onTap: () async {
-                          appCommunication(
-                            context,
-                            "Noted",
-                            "We won't recommend similar posts",
-                            "/community/posts/$postId",
-                          );
-                          await userController.updateUserData({
-                            "flaggedPostIds": FieldValue.arrayUnion([postId]),
-                          });
-                          Get.offAllNamed("/community");
-                        },
-                      ),
-                      _menuItem(
-                        icon: PhosphorIcons.prohibit,
-                        label: 'Report',
-                        color: Colors.red,
-                        onTap: () async {
-                          appCommunication(
-                            context,
-                            "Reported",
-                            "Our team will investigate this",
-                            "/community/posts/$postId",
-                          );
-                          await userController.updateUserData({
-                            "flaggedPostIds": FieldValue.arrayUnion([postId]),
-                          });
-                          Get.offAllNamed("/community");
-                        },
-                      ),
-                    ],
-                  );
-                },
-                icon: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: _roseSoft,
-                    shape: BoxShape.circle,
                   ),
-                  child: Icon(PhosphorIcons.dotsThree, color: _rose, size: 18),
                 ),
-              ),
-        ),
+          ),
         const SizedBox(width: 8),
       ],
     );
@@ -310,14 +342,23 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [_rose.withOpacity(0.3), _roseSoft],
+                colors:
+                    isSeeded
+                        ? [_muted.withOpacity(0.25), _surface]
+                        : [_rose.withOpacity(0.3), _roseSoft],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
-            child: ClipOval(
-              child: Image.asset("images/image.jfif", fit: BoxFit.cover),
-            ),
+            child:
+                isSeeded
+                    ? Icon(PhosphorIcons.userCircle, color: _muted, size: 28)
+                    : ClipOval(
+                      child: Image.asset(
+                        "images/image.jfif",
+                        fit: BoxFit.cover,
+                      ),
+                    ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -325,7 +366,9 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user != null ? user!.name : "Anonymous",
+                  isSeeded
+                      ? "Anonymous"
+                      : (user != null ? user!.name : "Anonymous"),
                   style: GoogleFonts.plusJakartaSans(
                     color: _plum,
                     fontSize: 14,
@@ -371,34 +414,39 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             count: post!.likes.toString(),
             active: isLiked,
             activeColor: _rose,
-            onTap: () async {
-              setState(() => isLiked = !isLiked);
-              if (post!.likedUserIds.contains(
-                userController.userModel.value!.id,
-              )) {
-                setState(
-                  () => post!.likedUserIds.remove(
-                    userController.userModel.value!.id,
-                  ),
-                );
-                await updatePostDetails(post!.id, {
-                  "likedUserIds": FieldValue.arrayRemove([
-                    userController.userModel.value!.id,
-                  ]),
-                });
-              } else {
-                setState(() {
-                  post!.likedUserIds.add(userController.userModel.value!.id);
-                  post!.likes = post!.likes + 1;
-                });
-                await updatePostDetails(post!.id, {
-                  "likedUserIds": FieldValue.arrayUnion([
-                    userController.userModel.value!.id,
-                  ]),
-                  "likes": post!.likes + 1,
-                });
-              }
-            },
+            onTap:
+                isSeeded
+                    ? () {}
+                    : () async {
+                      setState(() => isLiked = !isLiked);
+                      if (post!.likedUserIds.contains(
+                        userController.userModel.value!.id,
+                      )) {
+                        setState(
+                          () => post!.likedUserIds.remove(
+                            userController.userModel.value!.id,
+                          ),
+                        );
+                        await updatePostDetails(post!.id, {
+                          "likedUserIds": FieldValue.arrayRemove([
+                            userController.userModel.value!.id,
+                          ]),
+                        });
+                      } else {
+                        setState(() {
+                          post!.likedUserIds.add(
+                            userController.userModel.value!.id,
+                          );
+                          post!.likes = post!.likes + 1;
+                        });
+                        await updatePostDetails(post!.id, {
+                          "likedUserIds": FieldValue.arrayUnion([
+                            userController.userModel.value!.id,
+                          ]),
+                          "likes": post!.likes + 1,
+                        });
+                      }
+                    },
           ),
           _actionBtn(
             icon: PhosphorIcons.chatTeardropDots,
@@ -412,32 +460,42 @@ class _PostDetailsPageState extends State<PostDetailsPage> {
             count: post!.bookmarks.toString(),
             active: isSaved,
             activeColor: _plum,
-            onTap: () async {
-              setState(() => isSaved = !isSaved);
-              if (userController.userModel.value!.savedPostIds.contains(
-                post!.id,
-              )) {
-                setState(
-                  () => userController.userModel.value!.savedPostIds.remove(
-                    post!.id,
-                  ),
-                );
-                await updateUserDetails(userController.userModel.value!.id, {
-                  "savedPostIds": FieldValue.arrayRemove([post!.id]),
-                });
-              } else {
-                setState(() {
-                  userController.userModel.value!.savedPostIds.add(post!.id);
-                  post!.bookmarks = post!.bookmarks + 1;
-                });
-                await updateUserDetails(userController.userModel.value!.id, {
-                  "savedPostIds": FieldValue.arrayUnion([post!.id]),
-                });
-                await updatePostDetails(post!.id, {
-                  "bookmarks": post!.bookmarks + 1,
-                });
-              }
-            },
+            onTap:
+                isSeeded
+                    ? () {}
+                    : () async {
+                      setState(() => isSaved = !isSaved);
+                      if (userController.userModel.value!.savedPostIds.contains(
+                        post!.id,
+                      )) {
+                        setState(
+                          () => userController.userModel.value!.savedPostIds
+                              .remove(post!.id),
+                        );
+                        await updateUserDetails(
+                          userController.userModel.value!.id,
+                          {
+                            "savedPostIds": FieldValue.arrayRemove([post!.id]),
+                          },
+                        );
+                      } else {
+                        setState(() {
+                          userController.userModel.value!.savedPostIds.add(
+                            post!.id,
+                          );
+                          post!.bookmarks = post!.bookmarks + 1;
+                        });
+                        await updateUserDetails(
+                          userController.userModel.value!.id,
+                          {
+                            "savedPostIds": FieldValue.arrayUnion([post!.id]),
+                          },
+                        );
+                        await updatePostDetails(post!.id, {
+                          "bookmarks": post!.bookmarks + 1,
+                        });
+                      }
+                    },
           ),
         ],
       ),
@@ -702,7 +760,7 @@ class _CommentWidgetState extends State<CommentWidget> {
                         ),
                       ),
                       Text(
-                        timeAgo(widget.comment["time"]),
+                        timeAgo(widget.comment["time"].toDate()),
                         style: GoogleFonts.plusJakartaSans(
                           color: _muted,
                           fontSize: 11,

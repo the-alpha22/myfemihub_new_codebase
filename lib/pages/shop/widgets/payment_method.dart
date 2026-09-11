@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/controllers.dart';
 import 'package:bridge_ai/controllers/cart_controller.dart';
 import 'package:bridge_ai/pages/shop/widgets/paymentpage.dart';

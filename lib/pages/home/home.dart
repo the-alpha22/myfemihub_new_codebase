@@ -1,10 +1,13 @@
 import 'package:bridge_ai/constants/app_constants.dart';
 import 'package:bridge_ai/constants/bottom_nav_bar.dart';
 import 'package:bridge_ai/constants/controllers.dart';
+import 'package:bridge_ai/constants/exercise_data.dart';
 import 'package:bridge_ai/controllers/product_controller.dart';
+import 'package:bridge_ai/models/exercise.dart';
 import 'package:bridge_ai/models/product.dart';
 import 'package:bridge_ai/pages/home/extra_pages/chatbot.dart';
 import 'package:bridge_ai/pages/home/extra_pages/due_date.dart';
+import 'package:bridge_ai/pages/home/extra_pages/exercise_detail.dart';
 import 'package:bridge_ai/pages/home/extra_pages/family_planner.dart';
 import 'package:bridge_ai/pages/home/extra_pages/period_tracker.dart';
 import 'package:bridge_ai/pages/home/extra_pages/pregnancy_tracker.dart';
@@ -14,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 const _rose = Color(0xFFE8567A);
 const _roseSoft = Color(0xFFFFF0F4);
@@ -130,6 +134,8 @@ class _HomePageNewState extends State<HomePageNew> {
             _buildBannerCarousel(),
             const SizedBox(height: 32),
             _buildToolsSection(),
+            const SizedBox(height: 32),
+            _buildExercisesSection(),
             const SizedBox(height: 32),
             _buildTrendingSection(),
             const SizedBox(height: 32),
@@ -308,6 +314,80 @@ class _HomePageNewState extends State<HomePageNew> {
     );
   }
 
+  Widget _buildExercisesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children:
+          exerciseCategories.asMap().entries.map((catEntry) {
+            final catIndex = catEntry.key;
+            final category = catEntry.value;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (catIndex > 0) const SizedBox(height: 28),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                        category.title,
+                        style: GoogleFonts.philosopher(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: _plum,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(
+                        delay: (350 + 80 * catIndex).ms,
+                        duration: 500.ms,
+                        curve: Curves.easeOut,
+                      )
+                      .slideX(
+                        begin: -0.06,
+                        end: 0,
+                        delay: (350 + 80 * catIndex).ms,
+                        duration: 500.ms,
+                        curve: Curves.easeOut,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 200,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: category.exercises.length,
+                    itemBuilder: (context, cardIndex) {
+                      final exercise = category.exercises[cardIndex];
+                      return _ExerciseCard(
+                            exercise: exercise,
+                            onTap:
+                                () => Get.to(
+                                  () => ExerciseDetailPage(exercise: exercise),
+                                  transition: Transition.rightToLeft,
+                                ),
+                          )
+                          .animate()
+                          .fadeIn(
+                            delay: (400 + 60 * cardIndex + 80 * catIndex).ms,
+                            duration: 420.ms,
+                            curve: Curves.easeOut,
+                          )
+                          .slideY(
+                            begin: 0.1,
+                            end: 0,
+                            delay: (400 + 60 * cardIndex + 80 * catIndex).ms,
+                            duration: 420.ms,
+                            curve: Curves.easeOut,
+                          );
+                    },
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
+    );
+  }
+
   Widget _buildTrendingSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,11 +536,6 @@ class _BannerCard extends StatelessWidget {
             image: AssetImage(data.image),
             fit: BoxFit.cover,
           ),
-          // gradient: LinearGradient(
-          //   colors: data.gradient,
-          //   begin: Alignment.topLeft,
-          //   end: Alignment.bottomRight,
-          // ),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Stack(
@@ -603,6 +678,124 @@ class _ToolCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExerciseCard extends StatelessWidget {
+  final ExerciseModel exercise;
+  final VoidCallback onTap;
+  const _ExerciseCard({required this.exercise, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 160,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: exercise.cardBg,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(18),
+                  bottomRight: Radius.circular(18),
+                ),
+                child:
+                    exercise.illustration.toLowerCase().contains(".json")
+                        ? Lottie.asset(
+                          exercise.illustration,
+                          height: 140,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (_, __, ___) => Container(
+                                height: 140,
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.self_improvement_rounded,
+                                  size: 48,
+                                  color: exercise.accent.withOpacity(0.3),
+                                ),
+                              ),
+                        )
+                        : Image.asset(
+                          exercise.illustration,
+                          height: 140,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (_, __, ___) => Container(
+                                height: 140,
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.self_improvement_rounded,
+                                  size: 48,
+                                  color: exercise.accent.withOpacity(0.3),
+                                ),
+                              ),
+                        ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
+              child: Text(
+                exercise.title,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _plum,
+                  height: 1.3,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 12,
+              left: 12,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.9),
+                ),
+                child: Icon(
+                  Icons.play_arrow_rounded,
+                  color: exercise.accent,
+                  size: 20,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  "${exercise.steps.length} steps",
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: exercise.accent,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -60,7 +60,7 @@ class CustomBottomNavBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 20, 12, 20),
+          padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: items.map((item) => _NavButton(item: item)).toList(),
@@ -97,17 +97,14 @@ class _NavButton extends StatelessWidget {
       onTap: item.onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
+        duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(
-          horizontal: item.isActive ? 16 : 12,
-          vertical: 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: item.isActive ? _roseSoft : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SvgPicture.asset(
@@ -118,25 +115,14 @@ class _NavButton extends StatelessWidget {
                 BlendMode.srcIn,
               ),
             ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeInOut,
-              child:
-                  item.isActive
-                      ? Row(
-                        children: [
-                          const SizedBox(width: 7),
-                          Text(
-                            item.label,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _rose,
-                            ),
-                          ),
-                        ],
-                      )
-                      : const SizedBox.shrink(),
+            const SizedBox(height: 4),
+            Text(
+              item.label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: item.isActive ? FontWeight.w600 : FontWeight.w400,
+                color: item.isActive ? _rose : _muted,
+              ),
             ),
           ],
         ),
