@@ -37,6 +37,8 @@ class UserModel {
   late List flaggedPostIds;
   late List savedPostIds;
   late DateTime? conceptionDate;
+  late DateTime? dueDate;
+  late DateTime? lastPeriodDate;
 
   UserModel({
     required this.id,
@@ -56,6 +58,8 @@ class UserModel {
     required this.flaggedPostIds,
     required this.savedPostIds,
     required this.conceptionDate,
+    required this.dueDate,
+    required this.lastPeriodDate,
   });
 
   UserModel.fromSnapshot(DocumentSnapshot snapshot) {
@@ -78,6 +82,9 @@ class UserModel {
     cart = _convertCartItems(data['cart'] ?? []);
     conceptionDate =
         data['conceptionDate'] != null ? data['conceptionDate'].toDate() : null;
+    dueDate = data['dueDate'] != null ? data['dueDate'].toDate() : null;
+    lastPeriodDate =
+        data['lastPeriodDate'] != null ? data['lastPeriodDate'].toDate() : null;
   }
 
   factory UserModel.fromMap(Map data) {
@@ -112,6 +119,11 @@ class UserModel {
       conceptionDate:
           data['conceptionDate'] != null
               ? data['conceptionDate'].toDate()
+              : null,
+      dueDate: data['dueDate'] != null ? data['dueDate'].toDate() : null,
+      lastPeriodDate:
+          data['lastPeriodDate'] != null
+              ? data['lastPeriodDate'].toDate()
               : null,
     );
   }

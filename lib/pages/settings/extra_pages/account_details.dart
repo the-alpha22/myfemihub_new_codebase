@@ -58,13 +58,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final previousStage = userController.userModel.value?.stage ?? '';
+    final newStage = _stage.text;
+
     setState(() => _loading = true);
+
     await userController.updateUserData({
       "name": _name.text.trim(),
       "email": _email.text.trim(),
       "phone": _phone.text.trim(),
-      "stage": _stage.text,
+      "stage": newStage,
     });
+
+    userController.userModel.value?.stage = newStage;
+
     await addActivityLog(
       "updated personal details",
       userController.userModel.value!.id,
@@ -72,7 +80,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       "",
       "",
     );
+
     setState(() => _loading = false);
+
+    if (newStage == 'Pregnant' && previousStage != 'Pregnant') {
+      await _showPregnancySetupDialog();
+      return;
+    }
+
     Get.snackbar(
       "Profile Updated",
       "Your details have been saved successfully",
@@ -81,6 +96,233 @@ class _EditProfilePageState extends State<EditProfilePage> {
       snackPosition: SnackPosition.BOTTOM,
       margin: const EdgeInsets.all(16),
       borderRadius: 12,
+    );
+  }
+
+  Future<void> _showPregnancySetupDialog() async {
+    DateTime selectedLastPeriod = DateTime.now().subtract(
+      const Duration(days: 14),
+    );
+    int cycleLength = 28;
+
+    DateTime calcConception(DateTime lmp) => lmp.add(const Duration(days: 14));
+    DateTime calcDueDate(DateTime lmp) => lmp.add(const Duration(days: 280));
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final conception = calcConception(selectedLastPeriod);
+            final due = calcDueDate(selectedLastPeriod);
+
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                'Pregnancy Details',
+                style: GoogleFonts.philosopher(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
+                  color: _plum,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Help us personalise your experience by sharing a few details.',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        color: _muted,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'First day of last period',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: _muted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: ctx,
+                          initialDate: selectedLastPeriod,
+                          firstDate: DateTime.now().subtract(
+                            const Duration(days: 300),
+                          ),
+                          lastDate: DateTime.now(),
+                          builder:
+                              (context, child) => Theme(
+                                data: ThemeData.light().copyWith(
+                                  colorScheme: const ColorScheme.light(
+                                    primary: _rose,
+                                    onPrimary: Colors.white,
+                                  ),
+                                  dialogBackgroundColor: Colors.white,
+                                ),
+                                child: child!,
+                              ),
+                        );
+                        if (picked != null) {
+                          setDialogState(() => selectedLastPeriod = picked);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 13,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _roseSoft,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: _rose.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              PhosphorIcons.calendarBlank,
+                              color: _rose,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              '${selectedLastPeriod.day}/${selectedLastPeriod.month}/${selectedLastPeriod.year}',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13.5,
+                                color: _plum,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              'Change',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 12,
+                                color: _rose,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Cycle length: $cycleLength days',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: _muted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Slider(
+                      value: cycleLength.toDouble(),
+                      min: 21,
+                      max: 35,
+                      divisions: 14,
+                      activeColor: _rose,
+                      inactiveColor: _roseSoft,
+                      onChanged:
+                          (v) => setDialogState(() => cycleLength = v.round()),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _roseSoft,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          _infoRow(
+                            'Est. Conception',
+                            '${conception.day}/${conception.month}/${conception.year}',
+                          ),
+                          const SizedBox(height: 6),
+                          _infoRow(
+                            'Est. Due Date',
+                            '${due.day}/${due.month}/${due.year}',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () async {
+                    final conception = calcConception(selectedLastPeriod);
+                    final due = calcDueDate(selectedLastPeriod);
+
+                    await userController.updateUserData({
+                      "conceptionDate": conception,
+                      "dueDate": due,
+                      "lastPeriodDate": selectedLastPeriod,
+                      "periodCycle": cycleLength,
+                    });
+
+                    userController.userModel.value?.conceptionDate = conception;
+                    userController.userModel.value?.dueDate = due;
+                    userController.userModel.value?.lastPeriodDate =
+                        selectedLastPeriod;
+                    userController.userModel.value?.periodCycle = cycleLength;
+
+                    Navigator.of(ctx).pop();
+                    Get.offAllNamed('/home');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _rose,
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Save & Continue',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: _muted),
+        ),
+        Text(
+          value,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: _plum,
+          ),
+        ),
+      ],
     );
   }
 
@@ -523,7 +765,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       height: 48,
       child: Center(
         child: Text(
-          "v6.0.0+28",
+          "v6.0.0+34",
           style: GoogleFonts.plusJakartaSans(
             color: _muted,
             fontSize: 11,

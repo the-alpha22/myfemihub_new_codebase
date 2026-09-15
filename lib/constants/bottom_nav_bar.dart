@@ -1,7 +1,9 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 const _rose = Color(0xFFE8567A);
 const _roseSoft = Color(0xFFFFF0F4);
@@ -17,29 +19,33 @@ class CustomBottomNavBar extends StatelessWidget {
 
     final items = [
       _NavItem(
-        svgPath: "images/house-line-light.svg",
+        activeIcon: PhosphorIcons.houseFill,
+        inactiveIcon: PhosphorIcons.house,
         label: "Home",
         route: "/home",
         isActive: currentRoute == "/home",
         onTap: () => Get.offAllNamed("/home"),
       ),
       _NavItem(
-        svgPath: "images/shopping-bag-open-light.svg",
+        activeIcon: PhosphorIcons.bagFill,
+        inactiveIcon: PhosphorIcons.bag,
         label: "Shop",
         route: "/shop",
         isActive: currentRoute.contains("shop"),
         onTap: () => Get.offAllNamed("/shop"),
       ),
       _NavItem(
-        svgPath: "images/users-light.svg",
+        activeIcon: PhosphorIcons.usersThreeFill,
+        inactiveIcon: PhosphorIcons.usersThree,
         label: "Community",
         route: "/community",
         isActive: currentRoute == "/community",
         onTap: () => Get.offAllNamed("/community"),
       ),
       _NavItem(
-        svgPath: "images/gear-light.svg",
-        label: "Settings",
+        activeIcon: PhosphorIcons.userCircleFill,
+        inactiveIcon: PhosphorIcons.userCircle,
+        label: "Profile",
         route: "/settings",
         isActive: currentRoute == "/settings",
         onTap: () => Get.offAllNamed("/settings"),
@@ -60,7 +66,7 @@ class CustomBottomNavBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+          padding: const EdgeInsets.fromLTRB(8, 10, 8, 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: items.map((item) => _NavButton(item: item)).toList(),
@@ -72,14 +78,16 @@ class CustomBottomNavBar extends StatelessWidget {
 }
 
 class _NavItem {
-  final String svgPath;
+  final IconData activeIcon;
+  final IconData inactiveIcon;
   final String label;
   final String route;
   final bool isActive;
   final VoidCallback onTap;
 
   const _NavItem({
-    required this.svgPath,
+    required this.activeIcon,
+    required this.inactiveIcon,
     required this.label,
     required this.route,
     required this.isActive,
@@ -97,32 +105,37 @@ class _NavButton extends StatelessWidget {
       onTap: item.onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 220),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         decoration: BoxDecoration(
           color: item.isActive ? _roseSoft : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
-              item.svgPath,
-              height: 22,
-              colorFilter: ColorFilter.mode(
-                item.isActive ? _rose : _muted,
-                BlendMode.srcIn,
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              transitionBuilder:
+                  (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+              child: Icon(
+                item.isActive ? item.activeIcon : item.inactiveIcon,
+                key: ValueKey(item.isActive),
+                size: 24,
+                color: item.isActive ? _rose : _muted,
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              item.label,
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 11,
-                fontWeight: item.isActive ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: item.isActive ? FontWeight.w700 : FontWeight.w400,
                 color: item.isActive ? _rose : _muted,
               ),
+              child: Text(item.label),
             ),
           ],
         ),

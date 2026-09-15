@@ -1,6 +1,10 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:bridge_ai/constants/bottom_nav_bar.dart';
+import 'package:bridge_ai/constants/controllers.dart';
 import 'package:bridge_ai/controllers/product_controller.dart';
 import 'package:bridge_ai/models/product.dart';
+import 'package:bridge_ai/pages/shop/addproduct.dart';
 import 'package:bridge_ai/pages/shop/widgets/shopping_cart.dart';
 import 'package:bridge_ai/pages/shop/widgets/single_product.dart';
 import 'package:flutter/material.dart';
@@ -29,17 +33,22 @@ class _ShopPageNewState extends State<ShopPageNew> {
     _CategoryData(label: "Maternity", icon: PhosphorIcons.baby),
     _CategoryData(label: "Baby", icon: PhosphorIcons.heart),
     _CategoryData(label: "Essentials", icon: PhosphorIcons.sparkle),
+    _CategoryData(label: "Skincare", icon: PhosphorIcons.flower),
+    _CategoryData(label: "Nutrition", icon: PhosphorIcons.bowlFood),
+    _CategoryData(label: "Postpartum", icon: PhosphorIcons.handHeart),
     _CategoryData(label: "Contraceptions", icon: PhosphorIcons.shieldCheck),
   ];
 
   String selection = "Maternity";
-  List<ProductModel> babyProducts = [];
-  List<ProductModel> maternityProducts = [];
-  List<ProductModel> essentialProducts = [];
-  List<ProductModel> contraceptionProducts = [];
+  final Map<String, List<ProductModel>> _productCache = {};
   bool isLoading = true;
   String _searchQuery = "";
   final TextEditingController _searchController = TextEditingController();
+
+  String get _userSegment {
+    final stage = userController.userModel.value?.stage ?? '';
+    return CustomerSegment.fromStageLabel(stage);
+  }
 
   @override
   void initState() {
@@ -55,38 +64,48 @@ class _ShopPageNewState extends State<ShopPageNew> {
 
   Future<void> getProducts() async {
     setState(() => isLoading = true);
-    babyProducts = await ProducsController.instance.getProductsByCategory(
-      "baby",
-    );
-    maternityProducts = await ProducsController.instance.getProductsByCategory(
-      "maternity",
-    );
-    essentialProducts = await ProducsController.instance.getProductsByCategory(
-      "essential",
-    );
-    contraceptionProducts = await ProducsController.instance
-        .getProductsByCategory("contraceptions");
+
+    final categoryKeys = {
+      "Maternity": "maternity",
+      "Baby": "baby",
+      "Essentials": "essential",
+      "Skincare": "skincare",
+      "Nutrition": "nutrition",
+      "Postpartum": "postpartum",
+      "Contraceptions": "contraceptions",
+    };
+
+    for (final entry in categoryKeys.entries) {
+      _productCache[entry.key] = await ProducsController.instance
+          .getProductsByCategory(entry.value);
+    }
+
     setState(() => isLoading = false);
   }
 
   List<ProductModel> get _currentProducts {
-    final base = switch (selection) {
-      "Maternity" => maternityProducts,
-      "Baby" => babyProducts,
-      "Essentials" => essentialProducts,
-      "Contraceptions" => contraceptionProducts,
-      _ => maternityProducts,
-    };
-    if (_searchQuery.isEmpty) return base;
-    return base
+    final base = _productCache[selection] ?? [];
+    final segment = _userSegment;
+
+    final segmentFiltered =
+        base.where((p) => p.isVisibleToSegment(segment)).toList();
+
+    if (_searchQuery.isEmpty) return segmentFiltered;
+    return segmentFiltered
         .where((p) => p.name.toLowerCase().contains(_searchQuery.toLowerCase()))
         .toList();
+  }
+
+  int get _hiddenCount {
+    final base = _productCache[selection] ?? [];
+    final segment = _userSegment;
+    return base.where((p) => !p.isVisibleToSegment(segment)).length;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _surface,
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: SafeArea(
         child: Column(
@@ -109,7 +128,13 @@ class _ShopPageNewState extends State<ShopPageNew> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            if (!isLoading && _hiddenCount > 0)
+              _buildSegmentBanner().animate().fadeIn(
+                delay: 120.ms,
+                duration: 350.ms,
+              ),
+            const SizedBox(height: 4),
             Expanded(child: _buildContent()),
           ],
         ),
@@ -121,15 +146,18 @@ class _ShopPageNewState extends State<ShopPageNew> {
   AppBar _buildAppBar() {
     return AppBar(
       elevation: 0,
-      backgroundColor: _surface,
+      backgroundColor: Colors.white,
       toolbarHeight: 64,
       centerTitle: false,
-      title: Text(
-        'Shop',
-        style: GoogleFonts.philosopher(
-          fontWeight: FontWeight.w700,
-          fontSize: 22,
-          color: _plum,
+      title: GestureDetector(
+        onDoubleTap: () => _showPasswordDialog(),
+        child: Text(
+          'Shop',
+          style: GoogleFonts.philosopher(
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+            color: _plum,
+          ),
         ),
       ),
       actions: [
@@ -148,6 +176,161 @@ class _ShopPageNewState extends State<ShopPageNew> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showPasswordDialog() {
+    final TextEditingController _passController = TextEditingController();
+    bool _obscure = true;
+    String? _error;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                'Admin Access',
+                style: GoogleFonts.philosopher(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  color: _plum,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Enter the admin password to continue.',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      color: _muted,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _passController,
+                    obscureText: _obscure,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13.5,
+                      color: Colors.black87,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                      hintStyle: GoogleFonts.plusJakartaSans(
+                        color: _muted,
+                        fontSize: 13.5,
+                      ),
+                      errorText: _error,
+                      suffixIcon: GestureDetector(
+                        onTap: () => setDialogState(() => _obscure = !_obscure),
+                        child: Icon(
+                          _obscure ? PhosphorIcons.eye : PhosphorIcons.eyeSlash,
+                          color: _muted,
+                          size: 18,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: _roseSoft,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 14,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: _rose.withOpacity(0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: _muted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_passController.text == 'baker44') {
+                      Navigator.of(ctx).pop();
+                      Get.to(
+                        () => AddProduct(),
+                        transition: Transition.rightToLeft,
+                      );
+                    } else {
+                      setDialogState(() => _error = 'Incorrect password');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _rose,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Continue',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSegmentBanner() {
+    final stageName = userController.userModel.value?.stage ?? 'Everyone';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: _roseSoft,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _rose.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(PhosphorIcons.sparkle, color: _rose, size: 15),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Showing products curated for ${stageName.toLowerCase() == "pregnant" ? "Pregnant Women" : stageName}',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: _rose,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -246,7 +429,7 @@ class _ShopPageNewState extends State<ShopPageNew> {
             Text(
               _searchQuery.isNotEmpty
                   ? 'No results for "$_searchQuery"'
-                  : 'No products available',
+                  : 'No products here yet',
               style: GoogleFonts.philosopher(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
